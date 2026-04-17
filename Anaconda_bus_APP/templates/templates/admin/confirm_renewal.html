@@ -1,0 +1,39 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1>تأكيد تجديد الرحلات</h1>
+<p>يرجى اختيار المدة الزمنية التي تريد إضافتها إلى تواريخ الرحلات:</p>
+
+<form method="post" action="">
+    {% csrf_token %}
+    <input type="hidden" name="action_checkbox_name" value="{{ action_checkbox_name }}">
+    {% for obj in queryset %}
+        <input type="hidden" name="selected_objects" value="{{ obj.pk }}">
+    {% endfor %}
+    
+    <div>
+        <label>
+            <input type="radio" name="time_period" value="one_day" required>
+            إضافة يوم واحد
+        </label>
+        <br>
+        <label>
+            <input type="radio" name="time_period" value="two_days" required>
+            إضافة يومين
+        </label>
+        <br>
+        <label>
+            <input type="radio" name="time_period" value="one_week" required>
+            إضافة أسبوع
+        </label>
+        <br>
+        <label>
+            <input type="radio" name="time_period" value="one_month" required>
+            إضافة شهر
+        </label>
+    </div>
+    
+    <button type="submit" name="apply" class="button">تأكيد</button>
+</form>
+{% endblock %}

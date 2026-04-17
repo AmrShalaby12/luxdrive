@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{{ title }}</h1>
+    <p>أنت على وشك تجديد الرحلة القديمة <strong>"{{ old_trip.trip_name }}"</strong> التي كانت بتاريخ {{ old_trip.date }}.</p>
+    <p>سيتم إنشاء رحلة جديدة بتاريخ اليوم ونقل جميع الحجوزات إليها بحالة "بانتظار المراجعة".</p>
+
+    <form method="POST" action="">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <h2>بيانات الرحلة الجديدة</h2>
+            
+            <div class="form-row">
+                {{ form.trip_name.label_tag }}
+                {{ form.trip_name }}
+            </div>
+            <div class="form-row">
+                {{ form.start_time.label_tag }}
+                {{ form.start_time }}
+            </div>
+            <div class="form-row">
+                {{ form.category.label_tag }}
+                {{ form.category }}
+            </div>
+            <div class="form-row">
+                {{ form.bus.label_tag }}
+                {{ form.bus }}
+                <div class="help">اختر الجامعة أولاً لتظهر الحافلات المتاحة.</div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="تأكيد التجديد وإنشاء الرحلة الجديدة">
+        </div>
+    </form>
+</div>
+<!-- ... (داخل وسم <script>) ... -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('id_category_filter');
+    const busSelect = document.getElementById('id_bus_select');
+    
+    // ✅ --- السطر المصحح --- ✅
+    const url = "{% url 'ajax_load_buses' %}";
+
+    categorySelect.addEventListener('change', function() {
+        const categoryId = this.value;
+        fetch(`${url}?category_id=${categoryId}`)
+            .then(response => response.text())
+            .then(html => {
+                busSelect.innerHTML = html;
+            });
+    });
+});
+</script>
+<!-- ... -->
+
+{% endblock %}

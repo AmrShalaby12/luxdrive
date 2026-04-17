@@ -1,0 +1,32 @@
+/* navigation.css */
+/* تصميم النافيجيشن فقط */
+.custom-navbar {
+    background-color: #007bff; /* لون الخلفية */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* ظل النافيجيشن */
+    position: sticky; /* النافيجيشن يظل ثابتًا في أعلى الصفحة */
+    top: 0;
+    z-index: 1000;
+}
+
+.custom-navbar .navbar-brand {
+    font-weight: bold;
+    color: #ffffff !important;
+}
+
+.custom-navbar .nav-link {
+    color: #f8f9fa !important;
+    transition: color 0.3s ease;
+}
+
+.custom-navbar .nav-link:hover {
+    color: #ffc107 !important;
+}
+
+.custom-navbar .btn {
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.custom-navbar .btn:hover {
+    transform: scale(1.1);
+}

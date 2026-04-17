@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>ملخص الحضور والانصراف</h1>
+<table>
+    <thead>
+        <tr>
+            <th>الاسم</th>
+            <th>عدد الحضور</th>
+            <th>عدد الانصراف</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in attendance_summary %}
+            <tr>
+                <td>{{ entry.name }}</td>
+                <td>{{ entry.total_attendance }}</td>
+                <td>{{ entry.total_leave }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

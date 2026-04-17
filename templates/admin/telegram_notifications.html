@@ -1,0 +1,143 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}إشعارات Telegram{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-bell me-2"></i>
+                    إشعارات Telegram
+                </h1>
+                <div class="btn-group">
+                    <a href="{% url 'telegram_admin_dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-tachometer-alt me-1"></i>الرئيسية
+                    </a>
+                    <a href="{% url 'telegram_activities' %}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-line me-1"></i>الأنشطة
+                    </a>
+                    <a href="{% url 'telegram_broadcast' %}" class="btn btn-outline-success">
+                        <i class="fas fa-broadcast-tower me-1"></i>رسالة جماعية
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">الحالة</label>
+                    <select name="status" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>تم الإرسال</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>معلق</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">البحث</label>
+                    <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="ابحث عن اسم الطالب أو رقم الحجز...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>بحث
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifications Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>الطالب</th>
+                            <th>المستخدم</th>
+                            <th>رقم الحجز</th>
+                            <th>نوع الرحلة</th>
+                            <th>التاريخ</th>
+                            <th>الحالة</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notification in notifications %}
+                        <tr>
+                            <td>
+                                <strong>{{ notification.student_name }}</strong>
+                            </td>
+                            <td>{{ notification.user.username }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ notification.reservation_id }}</span>
+                            </td>
+                            <td>{{ notification.trip_type }}</td>
+                            <td>{{ notification.trip_date }}</td>
+                            <td>
+                                {% if notification.is_sent %}
+                                    <span class="badge bg-success">تم الإرسال</span>
+                                {% else %}
+                                    <span class="badge bg-warning">معلق</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ notification.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="showNotificationDetails({{ notification.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">
+                                لا توجد إشعارات
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Details Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل الإشعار</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="notificationDetails"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showNotificationDetails(notificationId) {
+    // This would typically make an AJAX call to get full details
+    // For now, showing a placeholder
+    const detailsHtml = `
+        <div class="alert alert-info">
+            <h6>تفاصيل الإشعار رقم ${notificationId}</h6>
+            <p>يمكن إضافة المزيد من التفاصيل هنا...</p>
+        </div>
+    `;
+    document.getElementById('notificationDetails').innerHTML = detailsHtml;
+    const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

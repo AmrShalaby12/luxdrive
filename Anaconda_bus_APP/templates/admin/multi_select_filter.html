@@ -1,0 +1,300 @@
+{% load i18n static %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<div class="multi-filter-container">
+    <h3 class="filter-title">
+        <i class="fas fa-filter"></i>
+        {% blocktrans with filter_title=title %}تصفية حسب: {{ filter_title }}{% endblocktrans %}
+    </h3>
+    
+    <div class="filter-search-box">
+        <input type="text" placeholder="ابحث في الخيارات..." class="filter-search-input">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+    
+    <div class="selected-filters">
+        <span class="selected-count">0 مختار</span>
+    </div>
+    
+    <div class="filter-options-container">
+        <ul class="multi-select-filter">
+        {% for choice in choices %}
+            <li class="multi-select-option{% if choice.selected %} selected{% endif %}" data-value="{{ choice.display }}">
+                <a href="{{ choice.query_string|iriencode }}">{{ choice.display }}</a>
+                <span class="option-count">0</span>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    
+
+</div>
+
+<style>
+.multi-filter-container {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.filter-title {
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-title i {
+    color: #3498db;
+}
+
+.filter-search-box {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.filter-search-input {
+    width: 100%;
+    padding: 10px 15px 10px 35px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.filter-search-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #95a5a6;
+}
+
+.selected-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.selected-count {
+    font-size: 12px;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.clear-all-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.clear-all-btn:hover {
+    background: #ffeaea;
+}
+
+.filter-options-container {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 5px;
+}
+
+.multi-select-filter {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.multi-select-option {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin: 4px 0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.multi-select-option:hover {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+}
+
+.multi-select-option.selected {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.multi-select-option.selected .checkmark {
+    background: #2196f3;
+    color: white;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.multi-select-option a {
+    flex: 1;
+    text-decoration: none;
+    color: #2c3e50;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.multi-select-option:hover a {
+    color: #3498db;
+}
+
+.multi-select-option.selected a {
+    color: #1565c0;
+    font-weight: 500;
+}
+
+.option-count {
+    background: #f0f0f0;
+    color: #7f8c8d;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-right: 5px;
+}
+
+.filter-actions {
+    text-align: center;
+}
+
+.apply-filter-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.apply-filter-btn:hover {
+    background: linear-gradient(135deg, #2980b9, #1c6ea4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+/* Scrollbar styling */
+.filter-options-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-options-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.filter-options-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.filter-options-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .multi-filter-container {
+        padding: 12px;
+    }
+    
+    .filter-options-container {
+        max-height: 200px;
+    }
+    
+    .multi-select-option {
+        padding: 8px 10px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديث عدد الخيارات المختارة
+    function updateSelectedCount() {
+        const selectedCount = document.querySelectorAll('.multi-select-option.selected').length;
+        document.querySelector('.selected-count').textContent = `${selectedCount} مختار`;
+    }
+    
+    // بحث في الخيارات
+    const searchInput = document.querySelector('.filter-search-input');
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const options = document.querySelectorAll('.multi-select-option');
+        
+        options.forEach(option => {
+            const text = option.querySelector('a').textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                option.style.display = 'flex';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    });
+    
+    // مسح كل الخيارات
+    document.querySelector('.clear-all-btn').addEventListener('click', function() {
+        const selectedOptions = document.querySelectorAll('.multi-select-option.selected');
+        selectedOptions.forEach(option => {
+            const link = option.querySelector('a');
+            if (link) {
+                window.location.href = link.href;
+            }
+        });
+    });
+    
+    // زر التطبيق
+    document.querySelector('.apply-filter-btn').addEventListener('click', function() {
+        // إعادة تحميل الصفحة لتطبيق التغييرات
+        window.location.reload();
+    });
+    
+    // تحديث العدد عند التحميل
+    updateSelectedCount();
+});
+</script>

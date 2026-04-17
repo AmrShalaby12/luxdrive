@@ -1,0 +1,37 @@
+/* تغيير لون خلفية الصفحة */
+body {
+    background-color: #ff0000; /* اختر اللون الذي تريده */
+}
+
+/* تغيير لون شريط التنقل (navigation bar) */
+.navbar {
+    background-color: #333333; /* اختر اللون المناسب */
+    color: #ffffff;
+}
+
+/* تغيير لون الأزرار */
+.button {
+    background-color: #4CAF50; /* اللون الأخضر */
+    color: white;
+}
+
+/* تغيير لون الروابط */
+a {
+    color: #1E90FF; /* لون الروابط */
+}
+
+/* تغيير ألوان الجداول */
+.module table {
+    background-color: #ffffff;
+    border-color: #dddddd;
+}
+#header {
+    width: auto;
+    height: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 40px;
+    background: #ba2121 !important;
+    color: var(--header-color);
+}

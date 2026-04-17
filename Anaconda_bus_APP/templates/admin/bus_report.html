@@ -1,0 +1,261 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f7f6; }
+        .dashboard-container { padding: 2rem; }
+        .stat-card {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05 );
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #0d6efd;
+        }
+        .stat-card h3 { font-size: 2rem; font-weight: 700; color: #343a40; }
+        .stat-card p { color: #6c757d; }
+        .chart-container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .filter-form { background-color: #fff; padding: 20px; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .table thead th { background-color: #343a40; color: #ffffff; }
+        .accordion-button:not(.collapsed) { color: #fff; background-color: #343a40; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- بطاقات الإحصائيات العامة -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-route"></i></div>
+                <h3>{{ total_trips }}</h3>
+                <p>إجمالي الرحلات (حسب الفلتر)</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-users"></i></div>
+                <h3>{{ total_passengers }}</h3>
+                <p>إجمالي الركاب</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-user-check"></i></div>
+                <h3>{{ total_attended }}</h3>
+                <p>إجمالي الحضور</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-chart-pie"></i></div>
+                <h3>{{ attendance_percentage }}%</h3>
+                <p>نسبة الحضور الإجمالية</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسوم البيانية (الجرافات) -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-8">
+            <div class="chart-container">
+                <h4>الحضور حسب الجامعة</h4>
+                <canvas id="categoryAttendanceChart"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="chart-container">
+                <h4>نسبة الحضور العامة</h4>
+                <canvas id="overallAttendanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج الفلترة والبحث -->
+    <div class="filter-form">
+        <form method="GET" action="">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="trip_date" class="form-label">فلترة حسب التاريخ:</label>
+                    <input type="date" id="trip_date" name="trip_date" class="form-control" value="{{ selected_date|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="category" class="form-label">فلترة حسب الجامعة:</label>
+                    <select id="category" name="category" class="form-select">
+                        <option value="">كل الجامعات</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if selected_category_id == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="passenger_name" class="form-label">بحث عن حضور راكب:</label>
+                    <input type="text" id="passenger_name" name="passenger_name" class="form-control" placeholder="اكتب اسم الراكب..." value="{{ search_passenger_name|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> تطبيق</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- عرض نتائج البحث عن راكب -->
+    {% if search_passenger_name %}
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white"><h4>نتائج البحث عن: "{{ search_passenger_name }}"</h4></div>
+        <div class="card-body">
+            {% if passenger_bookings %}
+            <ul class="list-group">
+                {% for booking in passenger_bookings %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>رحلة <strong>{{ booking.trip_name }}</strong> بتاريخ {{ booking.trip_date }}</span>
+                    {% if booking.attended %}
+                        <span class="badge bg-success rounded-pill">حضر</span>
+                    {% else %}
+                        <span class="badge bg-danger rounded-pill">غائب</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-center text-muted">لم يتم العثور على حجوزات لهذا الراكب.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- عرض تفاصيل الرحلات (داخل Accordion) -->
+    <h2 class="mb-3">تفاصيل الرحلات (حسب الفلتر)</h2>
+    <div class="accordion" id="tripsAccordion">
+        {% for data in report_data %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-{{ data.trip.id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ data.trip.id }}" aria-expanded="false" aria-controls="collapse-{{ data.trip.id }}">
+                    <span class="fw-bold me-3">{{ data.trip.trip_name }} - {{ data.trip.date }}</span>
+                    <span class="badge bg-success me-2">الحضور: {{ data.attended_count }}</span>
+                    <span class="badge bg-primary">الإجمالي: {{ data.total_count }}</span>
+                </button>
+            </h2>
+            <div id="collapse-{{ data.trip.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ data.trip.id }}" data-bs-parent="#tripsAccordion">
+                <div class="accordion-body">
+                    {% if data.passengers %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped table-hover">
+                            <thead>
+                                <tr><th>#</th><th>اسم الراكب</th><th>نوع الحجز</th><th>حالة الحضور</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for passenger in data.passengers %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ passenger.name }}</td>
+                                    <td>{{ passenger.type }}</td>
+                                    <td>
+                                        {% if passenger.attended %}<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> حضر</span>{% else %}<span class="text-danger"><i class="fas fa-times-circle"></i> غائب</span>{% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted p-3">لا توجد حجوزات لهذه الرحلة.</p>
+                    {% endif %}
+                
+            <div class="mt-3 pt-3 border-top">
+    <a href="{% url 'renew_trip' data.trip.id %}" class="button">
+                    <i class="fas fa-history"></i> تجديد هذه الرحلة لتاريخ اليوم
+                </a>
+            </div>
+                </div>
+                 <!-- ✅ --- بداية الإضافة: العمود الأيسر لخطة السير --- ✅ -->
+                        <div class="col-md-5">
+                            <div class="route-plan">
+                                <h5><i class="fas fa-map-signs"></i> خطة السير المقترحة</h5>
+                                {% if data.route_plan %}
+                                    <ul class="list-group">
+                                        {% for city_data in data.route_plan %}
+                                            <li class="list-group-item list-group-item-secondary">
+                                                <strong><i class="fas fa-city"></i> {{ city_data.city }}</strong>
+                                            </li>
+                                            {% for point, count in city_data.points %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ point }}</span>
+                                                    <span class="badge bg-primary rounded-pill">{{ count }} راكب</span>
+                                                </li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-center text-muted p-3">لا توجد نقاط ركوب محددة لهذه الرحلة.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- ✅ --- نهاية الإضافة --- ✅ -->
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-secondary text-center"><h4>لا توجد رحلات تطابق معايير البحث.</h4></div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const overallCtx = document.getElementById('overallAttendanceChart').getContext('2d');
+    const overallData = JSON.parse('{{ overall_attendance_json|safe }}');
+    new Chart(overallCtx, {
+        type: 'doughnut',
+        data: {
+            labels: overallData.labels,
+            datasets: [{
+                label: 'حالة الحضور',
+                data: overallData.data,
+                backgroundColor: ['#198754', '#dc3545'],
+                hoverOffset: 4
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: false } } }
+    });
+
+    const categoryCtx = document.getElementById('categoryAttendanceChart').getContext('2d');
+    const categoryData = JSON.parse('{{ category_attendance_json|safe }}');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: categoryData.labels,
+            datasets: [{
+                label: 'عدد الحاضرين',
+                data: categoryData.data,
+                backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true } }, responsive: true, plugins: { legend: { display: false }, title: { display: false } } }
+    });
+});
+</script>
+
+<!-- ✅ --- بداية الإضافة: السطر المفقود لتشغيل الـ Accordion --- ✅ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<!-- ✅ --- نهاية الإضافة --- ✅ -->
+
+{% endblock %}

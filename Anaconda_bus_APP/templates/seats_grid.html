@@ -1,0 +1,52 @@
+<div class="bus-layout-container" style="direction: rtl;">
+    <div class="bus-layout" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0;">
+        {% for seat in seats %}
+            <div class="seat" 
+                 style="grid-row: {{ seat.row|add:1 }}; 
+                        grid-column: {{ seat.column|add:1 }};
+                        position: relative;">
+                <label class="seat-label" style="cursor: pointer;">
+                    <input type="checkbox" 
+                           name="{% if seat_type == 'departure' %}selected_departure_seats{% elif seat_type == 'return' %}selected_return_seats{% else %}selected_seats{% endif %}" 
+                           value="{{ seat.id }}" 
+                           class="seat-checkbox" 
+                           style="display: none;"
+                           {% if seat.id in reserved_seats %}disabled{% endif %}
+                           data-price="{% if seat_type == 'departure' %}{{ departure_seat_price }}{% elif seat_type == 'return' %}{{ return_seat_price }}{% else %}{{ trip.one_way_price|default:0 }}{% endif %}">
+                    
+                    <div class="seat-icon {% if seat.id in reserved_seats %}reserved{% else %}available{% endif %}"
+                         style="width: 50px; 
+                                height: 50px;
+                                border: 2px solid {% if seat.id in reserved_seats %}#ff0000{% else %}#4CAF50{% endif %};
+                                border-radius: 5px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                padding-top: 5px;
+                                transition: all 0.3s;">
+                        <i class="fas fa-chair" style="font-size: 18px;"></i>
+                        <span class="seat-number" style="font-weight: bold; margin-top: 3px;">{{ seat.seat_number }}</span>
+                    </div>
+
+                    {% if seat.additional_price > 0 %}
+                        <span class="seat-price" 
+                              style="position: absolute;
+                                     top: -8px;
+                                     right: -5px;
+                                     background: #ffc107;
+                                     color: #000;
+                                     padding: 2px 5px;
+                                     border-radius: 10px;
+                                     font-size: 12px;
+                                     font-weight: bold;">
+                            +{{ seat.additional_price }} ج
+                        </span>
+                    {% endif %}
+                </label>
+            </div>
+        {% empty %}
+            <p style="grid-column: 1 / -1; text-align: center;">لا توجد مقاعد متاحة</p>
+        {% endfor %}
+    </div>
+</div>

@@ -1,0 +1,1269 @@
+
+{% extends 'base.html' %}
+
+
+
+
+
+
+{% block content %}
+
+<head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بحث عن رحلة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body>
+    <div id="preloader">
+        <div class="spinner"></div>
+
+    </div>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-warning">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+<div class="welcome-container">
+  <h2>مرحبًا, <span class="username">{{ user.username }}</span> </h2>
+  <p class="welcome-message">نتمنالك رحله سعيده</p>
+</div>
+
+<style>
+  .welcome-container {
+      text-align: center;
+      background: #f4f4f4;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px auto;
+      width: 80%;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .username {
+      color: #9b4391;
+      font-weight: bold;
+  }
+
+  .welcome-message {
+      font-size: 1.2em;
+      color: #333;
+  }
+  .chat-icon {
+    position: fixed;
+    bottom: 100px !important;
+    right: 20px;
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    z-index: 100;
+}
+.chat-box {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 320px;
+  background: white;
+  border-radius: 10px;
+  display: none;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+.chat-header {
+  background: #007bff;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-weight: bold;
+}
+.chat-content {
+  padding: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.message {
+  background: #f1f1f1;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 10px;
+  width: fit-content;
+  max-width: 80%;
+  animation: fadeIn 0.5s ease-in-out;
+}
+.bot-message {
+  align-self: flex-start;
+  background: #d9edf7;
+}
+.user-message {
+  align-self: flex-end;
+  background: #007bff;
+  color: white;
+}
+.question-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  text-align: right;
+  font-size: 14px;
+}
+.question-btn:hover {
+  background: #0056b3;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+<!-- <p>نوع المستخدم: {{ user_type }}</p>
+<p>الجامعة المختارة: {{ selected_category }}</p> -->
+
+    <div class="container my-4 search-section">
+        <form method="GET" action="{% url 'index' %}" class="row g-3 p-4 shadow-sm rounded bg-light">
+            <h3 class="text-center mb-4 ">البحث عن الرحلات</h3>
+{% if user_type == "student" %}
+            <div class="col-md-4">
+                <label for="university" class="form-label">الجامعة</label>
+                <select name="Category" id="university" class="form-select" required>
+                  <option value="">كل الجامعات</option>
+                  {% for university in all_universities %}
+                      <option value="{{ university.id }}" {% if selected_category|default:'' == university.id|stringformat:"s" %}selected{% endif %}>
+                          {{ university.name }}
+                      </option>
+                  {% endfor %}
+              </select>
+              
+            </div>
+{% endif %}  
+{% if user_type != "student" %}   
+<label for="trip_name"> الرحلة:</label>
+<select name="trip_name" id="trip_name" class="form-control">
+    <option value=""> اختر  الرحلة</option>
+    {% for trip_name in all_trip_names %}
+        <option value="{{ trip_name }}" {% if trip_name == selected_trip_name %}selected{% endif %}>
+            {{ trip_name }}
+        </option>
+    {% endfor %}
+</select>
+ 
+            <div class="col-md-4">
+                <label for="date" class="form-label">تاريخ الرحلة</label>
+                <input 
+                    type="date" 
+                    name="date" 
+                    id="date" 
+                    class="form-control" 
+                    value="{{ selected_date }}" 
+                    min="">
+            </div>
+            
+
+            
+            <script>
+                // JavaScript to set today's date as the minimum
+                const dateInput = document.getElementById('date');
+                const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+                dateInput.min = today;
+            </script>
+            {% if user_type == "student" %}
+           
+            <div class="col-md-4">
+                <label for="start_time" class="form-label">وقت الوصول للواجهه</label>
+                <select name="start_time" id="start_time" class="form-select">
+                    <option value="">كل الأوقات</option>
+                    {% for time in all_start_times %}
+                        <option value="{{ time }}" {% if start_time == time %}selected{% endif %}>
+                            {{ time }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %} 
+            {% if user_type != "student" %}
+            
+            <div class="col-md-4">
+              <label for="start_time" class="form-label">وقت الانطلاق</label>
+              <select name="start_time" id="start_time" class="form-select">
+                  <option value="">كل الأوقات</option>
+                  {% for time in all_start_times %}
+                      <option value="{{ time }}" {% if start_time == time %}selected{% endif %}>
+                          {{ time }}
+                      </option>
+                  {% endfor %}
+              </select>
+          </div>   
+          {% endif %} 
+
+            <div class="col-md-4">
+                <label for="trip_type" class="form-label">نوع الرحلة</label>
+                <select name="trip_type" id="trip_type" class="form-select">
+                    <option value="">كل الأنواع</option>
+                    {% for trip_type, display in all_trip_types %}
+                        <option value="{{ trip_type }}" {% if selected_trip_type == trip_type %}selected{% endif %}>
+                            {{ display }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="route" class="form-label">المحطة</label>
+                <select name="route" id="route" class="form-select">
+                    <option value="">كل المسارات</option>
+                    {% for route in all_routes %}
+                        <option value="{{ route }}" {% if selected_route == route %}selected{% endif %}>
+                            {{ route }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}          
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-primary px-5">بحث</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="container my-4">
+        {% if schedules %}
+            <h4 class="text-center" style="color: #fff;"> 
+              Available Trips </h4>
+            <div class="row">
+                {% for schedule in schedules %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card trip-card shadow-sm">
+                        <div class="card trip-card">
+                          {% if schedule.bus.bus_image %}
+                          <img src="{{ schedule.bus.bus_image.url }}" class="card-img-top" alt="صورة الباص" style="height: 200px; object-fit: cover;">
+                          {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title text-center">{{ schedule.trip_name }}</h5>
+                                <p><strong>الطريق:</strong> {{ schedule.route }}</p>
+                                <p><strong>التاريخ:</strong> {{ schedule.date }}</p>
+                                <p><strong>وقت التحرك :</strong> {{ schedule.end_time }}</p>
+
+                                {% if user_type == "student" %}
+                                <p><strong>وقت الوصول للواجهة:</strong> {{ schedule.start_time }}</p>
+                                <p><strong>السائق:</strong> {{ schedule.bus.name }}</p>
+                                <p><strong>نوع الرحلة:</strong> {{ schedule.get_trip_type_display }}</p>
+
+                                {% endif %} 
+
+                                <p><strong>السعر:</strong>
+                                  {% if schedule.trip_type == "one_way" %}
+                                      {{ schedule.one_way_price }}
+                                  {% elif schedule.trip_type == "return" %}
+                                      {{ schedule.return_price }}
+                                  {% else %}
+                                      {{ schedule.round_trip_price }}
+                                  {% endif %}
+                                  جنيه
+                              </p>
+                                                              <!-- <p><strong>المقاعد المتاحة:</strong> {{ schedule.seats_available }}</p> -->
+                                                              <p>دعم اليوم: {{ schedule.bus.category.Day_support }}
+</p>
+
+                                {% if schedule.bus.location_url %}
+                                <p>
+                                    <strong>موقع الباص:</strong>
+                                    <p>يتم تحديث الموقع كل 20 ثانية</p>
+                                    <a href="{% url 'show_bus_location' schedule.bus.id %}" target="_blank" class="location-link">عرض الموقع</a>
+                                </p>
+                                {% else %}
+                                <p>لا يوجد موقع متاح لهذه الحافلة.</p>
+                                {% endif %}
+                        
+                                {% if schedule.bus.category and schedule.bus.category.Day_support %}
+                                <!-- عرض زر الحجز بشكل طبيعي -->
+                                <a href="{% url 'book_seat' schedule.id %}" class="btn btn-primary book-btn" style="width: 100%;">حجز</a>
+                            {% else %}
+                                {% with remaining_rides|default:"0"|add:"0" as rides %}
+                                    {% if rides > 0 %}
+                                        <!-- إذا كان لديه رحلات متاحة، يمكنه الحجز -->
+                                        <a href="{% url 'book_seat' schedule.id %}" class="btn btn-primary book-btn" style="width: 100%;">حجز</a>
+                                    {% else %}
+                                        <!-- إذا لم يكن لديه رحلات متاحة، يظهر زر إعادة الشحن -->
+                                        <a href="{% url 'subscriptions' %}" class="btn btn-danger" style="width: 100%;">إعادة الشحن للحجز</a>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endif %}
+                            
+                            
+
+
+                                
+                              
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center text-danger">لا توجد رحلات متوفرة بناءً على معايير البحث.</p>
+        {% endif %}
+    </div>
+    <section class="custom-services">
+        <h2 class="custom-section-title">OUR SERVICES</h2>
+        <h3 class="custom-section-subtitle" style="color: #fff;">WHAT WE PROVIDE</h3>
+        <div class="custom-cards-container">
+            <div class="custom-card">
+                <div class="custom-card-content">
+                    <h4>TRANSPORTING STUDENTS OF PRIVATE UNIVERSITIES</h4>
+                    <p>(Badr university in Cairo BUC – Egyptian Russian university ERU – Misr International university MIU – Galala University)</p>
+                </div>
+            </div>
+            <div class="custom-card">
+                <div class="custom-card-content">
+                    <h4>EXTERNAL TRANSPORTATION AND PRIVATE SCHOOLS</h4>
+                    <p>(Nozha Language School – Manaret Al Farouk Islamic Language School – Capital Gate School – The Continental School of...)</p>
+                </div>
+            </div>
+            <div class="custom-card">
+                <div class="custom-card-content">
+                    <h4>ORGANIZING INTERNAL TRIPS</h4>
+                    <p>SECURE AND SAFE AIR trips lorem absum lorem absum lorem Overview Full Truck Loads by road solutions. We are...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="about-us-section"   style="text-align: center;">
+        <div class="about-us-content">
+          <div class="about-us-text">
+            <h3>ABOUT US</h3>
+            <h1>WE ARE ALLEN TRAVEL</h1>
+            <p>
+              Allen Travel is considered one of the first companies in students' transportation
+              to universities and schools, with the company’s modern methods in the world of transportation.
+              Since 2015, the company went through years of experience through which it was able to contract
+              with major educational institutions that have witnessed by featured, excellence professionalism
+              in management, continuously modernization transportation methods, maintaining provision of top
+              class transporting service at the best price.
+            </p>
+          </div>
+        </div>
+        <div class="features-section">
+          <div class="feature">
+            <div class="icon"><i class="fas fa-check-circle"></i></div>
+            <div class="feature-text">
+              
+              <p>More than 8 years of experience in the field of transportation.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="icon"><i class="fas fa-lightbulb"></i></div>
+            <div class="feature-text">
+              
+              <p>Interest of company in everything new in the field of transport services and keeping up with developments.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="icon"><i class="fas fa-bus-alt"></i></div>
+            <div class="feature-text">
+              
+              <p>Working on more than 78 lines per day.<br>A team with strong experience.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="icon"><i class="fas fa-chart-line"></i></div>
+            <div class="feature-text">
+              
+              <p>
+                Following up of the company's management of itineraries daily.<br>
+                The latest bus models.<br>
+                The best service at the best price.
+              </p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="icon"><i class="fas fa-calendar-alt"></i></div>
+            <div class="feature-text">
+              
+              <p>
+                Providing departure and return dates suitable for any student, which arrives in some lines
+                for more than 9 departure and return dates.
+              </p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="icon"><i class="fas fa-shield-alt"></i></div>
+            <div class="feature-text">
+              
+              <p>
+                Follow and apply precautionary and preventive methods.<br>
+                Dealing and solving all obstacles, emergency matters and work in variables cases in a simple and fast way.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="counters-section">
+        <div class="counter-container">
+          <div class="counter-box">
+            <p class="counter-label">Passengers</p>
+            <span class="counter-number" data-target="2500
+             ">0</span>
+          </div>
+          <div class="counter-box">
+            <p class="counter-label">Daily Routes</p>
+            <span class="counter-number" data-target="78">0</span>
+          </div>
+          <div class="counter-box">
+            <p class="counter-label">Satisfied Clients</p>
+            <span class="counter-number" data-target="5000">0</span>
+          </div>
+
+        </div>
+      </section>
+    <!-- الكرة الثابتة -->
+<div class="floating-menu">
+    <div class="menu-button">
+      <i class="fas fa-bars"></i>
+    </div>
+    <div class="menu-items">
+      <ul>
+        <li>
+          <a class="nav-link" href="{% url 'index' %}">الرئيسية</a>
+        </li>
+        {% load passenger_tags %}
+        {% get_passenger as passenger %}
+        <li>
+          {% if passenger %}
+            <a class="nav-link" href="{% url 'subscriptions' passenger.id %}">الاشتراكات</a>
+          {% else %}
+            <a class="nav-link" href="#">الاشتراكات</a>
+          {% endif %}
+        </li>
+        <li>
+          <a class="nav-link" href="{% url 'user_bookings' %}">حجوزاتي</a>
+        </li>
+        <li>
+          <a class="nav-link" href="{% url 'user_data' %}">معلومات الحساب</a>
+        </li>
+        {% if not user.is_authenticated %}
+        <li>
+          <a class="nav-link" href="{% url 'login' %}">تسجيل الدخول</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+  
+  <!-- CSS -->
+  <style>
+    .floating-menu {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+  
+    .menu-button {
+      width: 60px;
+      height: 60px;
+      background-color: #4b2354;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+  
+    .menu-button:hover {
+      transform: scale(1.1);
+    }
+  
+    .menu-items {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      position: absolute;
+      bottom: 80px; /* المسافة من الكرة */
+      right: 0;
+    }
+  
+    .menu-items ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+  
+    .menu-items li {
+      text-align: center;
+      margin: 5px 0;
+    }
+  
+    .menu-items a {
+      text-decoration: none;
+      padding: 10px 20px;
+      background-color: #fff;
+      color: #4b2354;
+      border-radius: 25px;
+      display: inline-block;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  
+    .menu-items a:hover {
+      background-color: #4b2354;
+      color: #fff;
+    }
+  
+    .menu-open .menu-items {
+      display: flex;
+      animation: fadeIn 0.5s ease forwards;
+    }
+  
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const menuButton = document.querySelector(".menu-button");
+      const menuItems = document.querySelector(".menu-items");
+      const menu = document.querySelector(".floating-menu");
+  
+      menuButton.addEventListener("click", () => {
+        menu.classList.toggle("menu-open");
+      });
+    });
+  </script>
+  
+      <style>
+        .counters-section {
+          width: 100%;
+          background-color: #4b2354; 
+          color: #fff; 
+          padding: 40px 20px;
+          text-align: center;
+          margin-bottom: 30px
+        }
+      
+        .counter-container {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 30px; 
+        }
+      
+        .counter-box {
+          flex: 1 1 calc(25% - 40px);
+          max-width: 300px;
+          text-align: center;
+          background: #fff; 
+          color: #4b2354; 
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+          transition: transform 0.3s ease;
+        }
+      
+        .counter-box:hover {
+          transform: translateY(-10px);
+        }
+      
+        .counter-label {
+          font-size: 18px;
+          margin-bottom: 10px;
+          font-weight: bold;
+        }
+      
+        .counter-number {
+          font-size: 36px;
+          font-weight: bold;
+          color: #4b2354
+        }
+      
+        @media (max-width: 768px) {
+          .counter-box {
+            flex: 1 1 100%; 
+          }
+        }
+      </style>
+      
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const counters = document.querySelectorAll(".counter-number");
+          const options = { threshold: 0.5 };
+      
+          const startCounter = (entry) => {
+            if (entry.isIntersecting) {
+              const target = +entry.target.getAttribute("data-target");
+              const speed = 50;
+              let count = 0;
+      
+              const updateCounter = () => {
+                count += Math.ceil(target / speed);
+                if (count >= target) {
+                  count = target;
+                  entry.target.textContent = target;
+                } else {
+                  entry.target.textContent = count;
+                  requestAnimationFrame(updateCounter);
+                }
+              };
+      
+              updateCounter();
+              observer.unobserve(entry.target); 
+            }
+          };
+      
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach(startCounter);
+          }, options);
+      
+          counters.forEach((counter) => observer.observe(counter));
+        });
+      </script>
+      
+<style>
+
+  
+  .about-us-section {
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 100vh;
+    background-image: url('/allen/media/items/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    margin-bottom: 30px;
+}
+  
+  /* Overlay */
+  .about-us-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1;
+  }
+  
+  .about-us-content,
+  .features-section {
+    z-index: 2;
+  }
+  
+  /* Left Section */
+  .about-us-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  
+  .about-us-text {
+    max-width: 600px;
+    text-align: center;
+  }
+  
+  .about-us-text h3 {
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #ffcc00;
+  }
+  
+  .about-us-text h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 20px 0;
+    line-height: 1.2;
+  }
+  
+  .about-us-text p {
+    line-height: 1.8;
+    font-size: 1rem;
+    color: #ddd;
+  }
+  
+  /* Right Section */
+  .features-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px;
+    background-color: rgba(61, 0, 82, 0.8);
+  }
+  
+  .feature {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  
+  .feature .icon {
+    font-size: 2rem;
+    color: #ffcc00;
+    margin: 15px;
+
+  }
+  
+
+  
+  .feature p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #ddd;
+    margin-bottom: 40px;
+    
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .about-us-section {
+      flex-direction: column;
+    }
+  
+    .about-us-content,
+    .features-section {
+      flex: unset;
+      width: 100%;
+      padding: 20px;
+    }
+  
+    .about-us-text h1 {
+      font-size: 2.5rem;
+    }
+  
+    .feature {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  
+    .feature .icon {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .about-us-text h1 {
+      font-size: 2rem;
+    }
+  
+    .about-us-text p {
+      font-size: 0.9rem;
+    }
+  
+    .feature p {
+      font-size: 0.85rem;
+    }
+  }
+  
+.custom-services {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.custom-section-title {
+    color: #8e8e8e;
+    text-transform: uppercase;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.custom-section-subtitle {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.custom-section-subtitle::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background: #8e8e8e;
+    margin: 10px auto 0;
+}
+
+.custom-cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.custom-card {
+    background-color: #fff;
+    width: 300px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.custom-card-content {
+    position: relative;
+    z-index: 2;
+}
+
+.custom-card h4 {
+    color: #3e3e3e;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.custom-card p {
+    color: #666;
+    font-size: 14px;
+}
+
+.custom-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 150%;
+    height: 100%;
+    background-color: #4a2c5d;
+    transform: skewX(-45deg);
+    z-index: 1;
+    transition: left 0.3s;
+}
+
+.custom-card:hover::before {
+    left: 0;
+}
+
+.custom-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.custom-card-content h4 {
+    color: #fff;
+}
+    .search-section {
+        position: relative;
+        background: url('/allen/media/items/background.jpg') no-repeat center center;
+        background-size: cover; /* يجعل الصورة تغطي كامل الخلفية */
+        padding: 50px 20px; /* لإضافة مساحة داخلية حول المحتوى */
+        border-radius: 15px; /* لجعل الحواف ناعمة */
+        box-shadow: 0 4px 15px #290c38; /* تحسين تأثير الظل */
+        overflow: hidden; /* لمنع أي تجاوز */
+    }
+    
+    /* إضافة تأثير الحد المتحرك */
+    .search-section::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border-radius: 15px;
+        border: 3px solid transparent;
+        background-size: 200% 200%;
+        animation: borderAnimation 3s infinite linear;
+        z-index: -1;
+    }
+    
+    /* إضافة تأثير عند تمرير الماوس */
+    .search-section:hover {
+        transform: scale(1.02); /* تكبير بسيط عند التحريك */
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    /* حركة الحد المتحرك */
+    @keyframes borderAnimation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+
+button{
+    background-color: #290c38 !important;
+    border: none !important;
+}
+/* تصميم الفوتر */
+.footer {
+    background-color: #575454; /* لون خلفية الفوتر */
+    color: #fff; /* لون النص */
+    padding: 40px 20px;
+    font-family: 'Arial', sans-serif;
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* الشعار واسم الشركة */
+.footer-brand {
+    flex: 1;
+    min-width: 250px;
+}
+
+.footer-logo {
+    width: 200px;
+    margin-bottom: 10px;
+}
+
+.footer-brand h3 {
+    font-size: 20px;
+    margin: 10px 0;
+}
+
+.footer-brand p {
+    font-size: 14px;
+    color: #aaa;
+}
+
+/* روابط التنقل */
+.footer-links {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-links h4 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.footer-links ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links ul li {
+    margin-bottom: 8px;
+}
+
+.footer-links ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer-links ul li a:hover {
+    color: #00bcd4;
+    text-decoration: underline;
+}
+
+/* وسائل التواصل الاجتماعي */
+.footer-social {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-social h4 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.social-icons a {
+    color: #fff;
+    font-size: 20px;
+    margin-right: 10px;
+    text-decoration: none;
+}
+
+.social-icons a:hover {
+    color: #00bcd4;
+}
+
+/* حقوق الطبع والنشر */
+.footer-bottom {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #aaa;
+    border-top: 1px solid #444;
+    padding-top: 10px;
+}
+
+
+</style>
+<style>
+    /* تحسين تصميم الكارد */
+    .trip-card {
+        border-radius: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+        position: relative;
+        text-align:right !important;
+    }
+    
+    .trip-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* تصميم عنوان الكارد */
+    .trip-card .card-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #290c38;
+        margin-bottom: 1rem;
+    }
+    
+    /* زر الحجز */
+    .book-btn {
+        background-color: #290c38 !important;
+        border: none;
+        color: #fff;
+        transition: background-color 0.3s ease;
+    }
+    
+    .book-btn:hover {
+        background-color: #501e5b !important    ;
+        color: #fff;
+    }
+    
+    /* أنيميشن للظهور التدريجي */
+    .trip-card {
+        animation: fadeInUp 0.5s ease forwards;
+        opacity: 0;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    /* تغطية الصفحة بالكامل */
+/* تغطية الصفحة بالكامل */
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff; /* لون الخلفية */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* تصميم الدائرة الدوارة */
+.spinner {
+    width: 100px;
+    height: 100px;
+    border: 5px solid #f3f3f3; /* لون الخلفية للدائرة */
+    border-top: 5px solid #9b4391; /* لون الجزء المتحرك */
+    border-radius: 50%;
+    animation: spin 1s linear infinite; /* تأثير الدوران */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* تصميم الشعار */
+.spinner .logo {
+    width: 50px; /* حجم الشعار */
+    height: auto;
+    position: absolute; /* ثابت داخل الدائرة */
+    z-index: 2;
+    animation: none; /* الشعار لا يدور */
+}
+
+/* تأثير الدوران */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+/* تصميم الكارد */
+.trip-card {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    padding: 20px;
+    background-color: #290c38;
+    color: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+    cursor: pointer;
+    border: 3px solid #fff;
+    text-align: right !important;
+}
+
+/* تأثير التحريك عند المرور */
+.trip-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* تأثير الزوايا */
+.trip-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(135deg, #501e5b 50%, transparent 50%);
+    transform: rotate(45deg);
+    transition: transform 0.5s ease;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.trip-card:hover::before {
+    transform: rotate(0deg) scale(1.5);
+}
+
+/* النصوص */
+.trip-card .card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 1rem;
+    z-index: 2;
+    position: relative;
+}
+
+.trip-card p, .trip-card .location-link {
+    z-index: 2;
+    position: relative;
+    margin: 0.5rem 0;
+}
+
+/* رابط موقع الباص */
+.trip-card .location-link {
+    color: #00c4ff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.trip-card .location-link:hover {
+    color: #50eaff;
+}
+
+/* زر الحجز */
+.book-btn {
+    background-color: #501e5b !important;
+    border: none;
+    color: #fff !important;
+    padding: 10px;
+    border-radius: 10px;
+    transition: background-color 0.5s ease;
+    z-index: 2;
+    position: relative;
+    text-align: center;
+}
+
+.book-btn:hover {
+    background-color: #290c38 !important;
+    color: #fff !important;
+}
+
+/* أنيميشن الظهور التدريجي */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+body {
+  font-family: 'Tajawal', sans-serif;
+  background-color: #121212;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+}
+
+    </style>
+    <script>
+        window.onload = function () {
+            const preloader = document.getElementById('preloader');
+            preloader.style.opacity = '0';
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 500);
+        };
+    </script>
+    
+<script>
+    // تحديث واجهة المستخدم للرحلات
+function updateTrips() {
+    fetch('/get-trips/') // API للحصول على الرحلات
+        .then(response => response.json())
+        .then(data => {
+            // تحديث واجهة المستخدم بالبيانات الجديدة
+            const tripsContainer = document.querySelector('.trips-container');
+            tripsContainer.innerHTML = ''; // مسح البيانات القديمة
+
+            data.trips.forEach(trip => {
+                tripsContainer.innerHTML += `
+                    <div class="trip-item">
+                        <p><strong>الطريق:</strong> ${trip.route}</p>
+                        <p><strong>من:</strong> ${trip.start_destination.name}</p>
+                        <p><strong>إلى:</strong> ${trip.end_destination.name}</p>
+                        <p><strong>التاريخ:</strong> ${trip.date}</p>
+                        <p><strong>وقت الذهاب:</strong> ${trip.start_time}</p>
+                        <p><strong>الموقع الحالي:</strong> ${trip.latitude}, ${trip.longitude}</p>
+                    </div>`;
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+    
+</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+{% endblock %}

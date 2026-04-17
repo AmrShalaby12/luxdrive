@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live ESP Viewer</title>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            margin: 0;
+            padding: 40px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #38bdf8;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+
+        .camera {
+            background: #020617;
+            border-radius: 14px;
+            padding: 15px;
+            border: 2px solid #1e293b;
+        }
+
+        .camera h3 {
+            margin: 0 0 10px;
+            text-align: center;
+            color: #22c55e;
+        }
+
+        .camera img {
+            width: 100%;
+            border-radius: 10px;
+            border: 3px solid #334155;
+            background: black;
+        }
+
+        .status {
+            margin-top: 8px;
+            font-size: 12px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            margin-right: 5px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>🎥 ESP Live Cameras</h1>
+
+<div class="grid">
+
+    <!-- Camera 1 -->
+    <div class="camera">
+        <h3><span class="live-indicator"></span>ESP Camera 1</h3>
+        <img id="cam1" alt="No Signal">
+        <div class="status" id="status1">Waiting for frames...</div>
+    </div>
+
+    <!-- Camera 2 -->
+    <div class="camera">
+        <h3><span class="live-indicator"></span>ESP Camera 2</h3>
+        <img id="cam2" alt="No Signal">
+        <div class="status" id="status2">Waiting for frames...</div>
+    </div>
+
+</div>
+
+<script>
+    function updateCamera(camId, espId, statusId) {
+        const img = document.getElementById(camId);
+        const status = document.getElementById(statusId);
+
+        const url = `/allen/latest-frame/${espId}/?t=` + Date.now();
+
+        fetch(url, { cache: "no-store" })
+            .then(res => {
+                if (res.status === 204) {
+                    status.innerText = "No signal";
+                    return;
+                }
+                if (!res.ok) throw new Error();
+                return res.blob();
+            })
+            .then(blob => {
+                if (!blob) return;
+                img.src = URL.createObjectURL(blob);
+                status.innerText = "Live";
+            })
+            .catch(() => {
+                status.innerText = "Disconnected";
+            });
+    }
+
+    function refreshAll() {
+        updateCamera("cam1", "ESP_1", "status1");
+        updateCamera("cam2", "ESP_2", "status2");
+    }
+
+    // ✅ 5 FPS (آمن جدًا)
+    setInterval(refreshAll, 200);
+</script>
+
+</body>
+</html>

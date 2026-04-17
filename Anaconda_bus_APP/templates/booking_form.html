@@ -1,0 +1,946 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجز مقاعد الحافلة</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://checkout.kashier.io/kashier-checkout.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #5e35b1;
+            --secondary-color: #4527a0;
+            --accent-color: #7c4dff;
+            --light-color: #f5f5f5;
+            --dark-color: #263238;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1 );
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: #000000;
+            color: var(--light-color);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 50%;
+            transform: translateX(50%);
+            width: 100px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 3px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .form-control, .dropdown-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--border-radius);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus, .dropdown-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(124, 77, 255, 0.3);
+            background-color: #1a1a1a;
+        }
+
+        .dropdown-option {
+            color: var(--dark-color);
+        }
+
+        .bus-seats-image {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .bus-seats-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .bus-layout {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .seat-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .seat-checkbox {
+            display: none;
+        }
+
+        .seat-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(76, 175, 80, 0.2);
+            border-radius: 8px;
+            color: var(--light-color);
+            font-size: 20px;
+            transition: var(--transition);
+            border: 2px solid var(--success-color);
+        }
+
+        .seat-icon.available:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .seat-icon.reserved {
+            background-color: rgba(244, 67, 54, 0.2);
+            border-color: var(--danger-color);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .seat-checkbox:checked + .seat-icon {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
+
+        .seat-number {
+            margin-top: 5px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .trip-price-section {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+        }
+
+        .trip-price-section h3 {
+            color: var(--light-color);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .trip-price-section ul {
+            list-style: none;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .trip-price-section li {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .trip-price-section strong {
+            color: var(--accent-color);
+            font-size: 18px;
+        }
+
+        .payment-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+        }
+
+        .total-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            text-decoration: none;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .alert-container {
+            margin: 20px 0;
+        }
+
+        .custom-alert {
+            padding: 15px;
+            background-color: rgba(255, 152, 0, 0.2);
+            border-left: 4px solid var(--warning-color);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .custom-alert i {
+            color: var(--warning-color);
+            font-size: 20px;
+        }
+
+        .floating-menu {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 1000;
+        }
+
+        .menu-button {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .menu-button i {
+            color: white;
+            font-size: 24px;
+        }
+
+        .menu-button:hover {
+            transform: scale(1.1);
+            background-color: var(--secondary-color);
+        }
+
+        .menu-items {
+            position: absolute;
+            bottom: 70px;
+            left: 0;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transform: scale(0);
+            transform-origin: bottom left;
+            transition: var(--transition);
+            opacity: 0;
+        }
+
+        .menu-open .menu-items {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .menu-items ul {
+            list-style: none;
+        }
+
+        .menu-items li {
+            padding: 15px 20px;
+            transition: var(--transition);
+        }
+
+        .menu-items li:hover {
+            background-color: #f5f5f5;
+        }
+
+        .menu-items a {
+            color: var(--dark-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .bus-layout {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .trip-price-section ul {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .bus-layout {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+        }
+             .messages {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .alert {
+            background: rgba(255, 152, 0, 0.2);
+            border-left: 4px solid var(--warning-color);
+            color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .alert i {
+            font-size: 20px;
+        }
+
+    </style>
+</head>
+<body>
+        <div class=" alert-info text-center shadow-lg border-3 border-warning" role="alert"
+         style="max-width:600px;margin:auto;margin-top:30px;font-size:1.3rem;font-weight:bold; margin-bottom:20px;
+         background:linear-gradient(135deg,#fffbe6,#ffe9b3);color:#a15c00;border-radius:18px;
+         box-shadow:0 8px 32px rgba(161,92,0,0.13);padding:26px 20px;position:relative;">
+        <i class="fas fa-exclamation-triangle fa-2x" style="color:#ff9800;vertical-align:middle;margin-left:10px;"></i>
+        <span style="font-size:1.15em; display: inline-block;">تنبيه مهم جداً</span>  
+
+        <hr style="border-top:2px dashed #ff9800;margin:16px 0;">
+        <div style="font-size:1.08em;">
+            <strong>بعد إتمام عملية الدفع الاونلاين، يرجى الانتظار في الموقع لمدة 5 ثواني حتى يتم التأكيد وإضافة الحجز إلى حسابك تلقائياً.</strong>
+        </div>
+    </div>
+        {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+     <div class="container">
+        <h2 class="title">حجز المقاعد</h2>
+        
+        <form method="post" id="bookingForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- اختيار نوع الرحلة -->        
+            <div class="form-group">
+                <label for="trip_type">نوع الرحلة:</label>
+                <select name="trip_type" id="trip_type" class="form-control" disabled>
+                    <option value="one_way" {% if trip.trip_type == "one_way" %}selected{% endif %}>ذهاب فقط</option>
+                    <option value="return" {% if trip.trip_type == "return" %}selected{% endif %}>عودة فقط</option>
+                    <option value="round_differentdays" {% if trip.trip_type == "round_differentdays" %}selected{% endif %}> ذهاب و عوده</option>
+                    {% if user_type == "student" %}   
+                    <option value="round_trip" {% if trip.trip_type == "round_trip" %}selected{% endif %}>ذهاب وعودة</option>
+                    {% endif %} 
+
+                </select>
+                    <input type="hidden" name="trip_type" value="{{ trip.trip_type }}">
+            </div>
+            
+            <!-- أسعار الرحلة -->
+            <div class="trip-price-section">
+                <h3>أسعار الرحلة</h3>
+                <ul>
+                    <li>سعر الذهاب فقط: <strong>{{ trip.one_way_price }} جنيه</strong></li>
+                    <li>سعر العودة فقط: <strong>{{ trip.return_price }} جنيه</strong></li>
+                    {% if category_id == 1 %}
+                      
+<li> في حاله الدفع الاونلاين يوجد خصم 10 جنيه </strong>
+                    </li>
+                    {% endif %}
+                    {% if trip.trip_type == "round_differentdays" %}
+                        <li>سعر الذهاب: <strong>{{ trip.departure_seat_price }} جنيه</strong></li>
+                        <li>سعر العودة: <strong>{{ trip.return_seat_price }} جنيه</strong></li>
+                    {% endif %}
+                    {% if trip.trip_type == "round_trip" %}
+                        <li>سعر الذهاب والعودة: <strong>{{ trip.round_trip_price }} جنيه</strong></li>
+                    {% endif %}
+                    {% if user_type == "student" %}   
+                        <li>سعر الذهاب والعودة: <strong>{{ trip.round_trip_price }} جنيه</strong></li>
+                    {% endif %} 
+                </ul>
+            </div>
+            
+            <!-- اختيار المسار -->
+            <div class="form-group">
+                <label for="selected_route">اختر مكان الركوب و التوقيت:</label>
+                <select name="selected_route" id="selected_route" class="form-control" required>
+                    <option value="" disabled>اختر خط ومعاد الركوب</option>
+                    {% for route in routes %}
+                        <option value="{{ route }}" {% if route == last_selected_route %}selected{% endif %}>{{ route }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if trip.trip_type == "round_differentdays" %}
+<div class="form-group">
+    <label for="return_selected_route">اختر نقطة النزول في العودة:</label>
+    <select name="return_selected_route" id="return_selected_route" class="form-control" required>
+        <option value="" disabled selected>اختر نقطة النزول</option>
+        {% for route in return_routes %}
+            <option value="{{ route }}">{{ route }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endif %}
+
+            <!-- اختيار الكراسي -->
+            <h3 style="text-align: center; margin-top: 20px;">اختر الكراسي</h3>
+<!-- داخل قسم اختيار الكراسي -->
+{% if trip.trip_type == 'round_differentdays' %}
+<h3>اختر كراسي الذهاب</h3>
+<div class="bus-layout-container" style="direction: rtl;">
+    <div class="bus-layout" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0;">
+        {% for seat in departure_seats %}
+            <div class="seat" 
+                 style="grid-row: {{ seat.row|add:1 }}; 
+                        grid-column: {{ seat.column|add:1 }};
+                        position: relative;">
+                <label class="seat-label" style="cursor: pointer;">
+<input type="checkbox" 
+       name="selected_departure_seats" 
+       value="{{ seat.id }}" 
+       class="seat-checkbox" 
+       style="display: none;"
+       {% if seat.id in reserved_departure_seats %}disabled{% endif %}
+       data-price="{{ departure_trip.departure_seat_price|default:0 }}">
+
+                    <div class="seat-icon {% if seat.id in reserved_departure_seats %}reserved{% else %}available{% endif %}"
+                         style="width: 50px; 
+                                height: 50px;
+                                border: 2px solid {% if seat.id in reserved_departure_seats %}#ff0000{% else %}#4CAF50{% endif %};
+                                border-radius: 5px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                padding-top: 5px;
+                                transition: all 0.3s;">
+                        <i class="fas fa-chair" style="font-size: 18px;"></i>
+                        <span class="seat-number" style="font-weight: bold; margin-top: 3px;">{{ seat.seat_number }}</span>
+                    </div>
+                </label>
+            </div>
+        {% empty %}
+            <p style="grid-column: 1 / -1; text-align: center;">لا توجد مقاعد متاحة</p>
+        {% endfor %}
+    </div>
+</div>
+
+<h3>اختر كراسي العودة</h3>
+<div class="bus-layout-container" style="direction: rtl;">
+    <div class="bus-layout" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0;">
+        {% for seat in return_seats %}
+            <div class="seat" 
+                 style="grid-row: {{ seat.row|add:1 }}; 
+                        grid-column: {{ seat.column|add:1 }};
+                        position: relative;">
+                <label class="seat-label" style="cursor: pointer;">
+<input type="checkbox" 
+       name="selected_return_seats" 
+       value="{{ seat.id }}" 
+       class="seat-checkbox" 
+       style="display: none;"
+       {% if seat.id in reserved_return_seats %}disabled{% endif %}
+       data-price="{{ return_trip.return_seat_price|default:0 }}">
+                    
+                    <div class="seat-icon {% if seat.id in reserved_return_seats %}reserved{% else %}available{% endif %}"
+                         style="width: 50px; 
+                                height: 50px;
+                                border: 2px solid {% if seat.id in reserved_return_seats %}#ff0000{% else %}#4CAF50{% endif %};
+                                border-radius: 5px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                padding-top: 5px;
+                                transition: all 0.3s;">
+                        <i class="fas fa-chair" style="font-size: 18px;"></i>
+                        <span class="seat-number" style="font-weight: bold; margin-top: 3px;">{{ seat.seat_number }}</span>
+                    </div>
+                </label>
+            </div>
+        {% empty %}
+            <p style="grid-column: 1 / -1; text-align: center;">لا توجد مقاعد متاحة</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endif %}
+{% if  trip.trip_type != 'round_differentdays' %}
+
+<div class="bus-layout-container" style="direction: rtl;">
+    <h2>تخطيط مقاعد الحافلة</h2>
+    
+    <div class="bus-layout" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0;">
+        {% for seat in seats %}
+            <div class="seat" 
+                 style="grid-row: {{ seat.row|add:1 }}; 
+                        grid-column: {{ seat.column|add:1 }};
+                        position: relative;">
+                <label class="seat-label" style="cursor: pointer;">
+                    <input type="checkbox" 
+                           name="selected_seats" 
+                           value="{{ seat.id }}" 
+                           class="seat-checkbox" 
+                           style="display: none;"
+                           {% if seat.id in reserved_seats %}disabled{% endif %}
+                           data-price="{{ seat.additional_price|default:0 }}">
+                    
+                    <div class="seat-icon {% if seat.id in reserved_seats %}reserved{% else %}available{% endif %}"
+                         style="width: 50px; 
+                                height: 50px;
+                                border: 2px solid {% if seat.id in reserved_seats %}#ff0000{% else %}#4CAF50{% endif %};
+                                border-radius: 5px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                padding-top: 5px;
+                                transition: all 0.3s;">
+                        <i class="fas fa-chair" style="font-size: 18px;"></i>
+                        <span class="seat-number" style="font-weight: bold; margin-top: 3px;">{{ seat.seat_number }}</span>
+                    </div>
+                    
+                    {% if seat.additional_price > 0 %}
+                        <span class="seat-price" 
+                              style="position: absolute;
+                                     top: -8px;
+                                     right: -5px;
+                                     background: #ffc107;
+                                     color: #000;
+                                     padding: 2px 5px;
+                                     border-radius: 10px;
+                                     font-size: 12px;
+                                     font-weight: bold;">
+                            +{{ seat.additional_price }} ج
+                        </span>
+                    {% endif %}
+                </label>
+            </div>
+        {% empty %}
+            <p style="grid-column: 1 / -1; text-align: center;">لا توجد مقاعد متاحة</p>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .seat-checkbox:checked + .seat-icon {
+        background-color: #4CAF50 !important;
+        color: white;
+        border-color: #2E7D32 !important;
+        transform: scale(1.05);
+    }
+    
+    .seat-icon:hover:not(.reserved) {
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    
+    .reserved {
+        opacity: 0.6;
+        cursor: not-allowed !important;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.seat-checkbox:not(:disabled)');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const seatIcon = this.nextElementSibling;
+            if (this.checked) {
+                seatIcon.classList.add('selected');
+            } else {
+                seatIcon.classList.remove('selected');
+            }
+        });
+    });
+});
+</script>
+
+            <!-- طريقة الدفع -->
+            {% if has_subscription %}
+                <input type="hidden" name="payment_method" value="subscription">
+                <div class="alert-container">
+                    <div class="custom-alert success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>تم الدفع عبر الاشتراك. لا حاجة لاختيار طريقة دفع.</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="completeBookingBtn" style="background-color: #290c38;">إتمام الحجز</button>
+            {% else %}
+                <div class="form-group payment-section">
+                    <label for="payment_method">طريقة الدفع</label>
+                    <select name="payment_method" id="payment_method" class="form-control" required>
+                        {% if category_id == 1 %}
+                            <option value="cash">الدفع نقداً</option>
+                        {% endif %}  
+                        <option value="online">الدفع أونلاين</option>
+                    </select>
+                    
+                    <div id="total-amount-section" style="margin-top: 20px; text-align: center;">
+                        <h4>المبلغ المطلوب: <span id="total-amount" class="total-amount">0</span> جنيه</h4>
+                        {% if discount > 0 %}
+
+{% endif %}
+
+<button type="submit" class="btn btn-primary"style="background-color: #290c38;">إتمام الحجز</button>
+
+                    </div>
+                </div>
+            {% endif %}
+            
+
+        </form>
+    </div>
+    <!-- القائمة العائمة -->
+    <div class="floating-menu">
+        <div class="menu-button">
+            <i class="fas fa-bars"></i>
+        </div>
+        <div class="menu-items">
+            <ul>
+                <li>
+                    <a class="nav-link" href="{% url 'index' %}"><i class="fas fa-home"></i> الرئيسية</a>
+                </li>
+                {% load passenger_tags %}
+                {% get_passenger as passenger %}
+                <li>
+                    {% if passenger %}
+                        <a class="nav-link" href="{% url 'subscriptions' passenger.id %}"><i class="fas fa-calendar-alt"></i> الاشتراكات</a>
+                    {% else %}
+                        <a class="nav-link" href="#"><i class="fas fa-calendar-alt"></i> الاشتراكات</a>
+                    {% endif %}
+                </li>
+                <li>
+                    <a class="nav-link" href="{% url 'user_bookings' %}"><i class="fas fa-ticket-alt"></i> حجوزاتي</a>
+                </li>
+                <li>
+                    <a class="nav-link" href="{% url 'user_data' %}"><i class="fas fa-user"></i> معلومات الحساب</a>
+                </li>
+                {% if not user.is_authenticated %}
+                <li>
+                    <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+<script>
+    const categoryId = {{ category_id }};
+</script>
+
+<script>
+function calculateTotalAmount() {
+    const tripType = document.getElementById('trip_type').value;
+    const paymentMethodSelect = document.getElementById('payment_method');
+    let paymentMethod = 'subscription'; // Default to subscription if payment method select is not visible
+    if (paymentMethodSelect) {
+        paymentMethod = paymentMethodSelect.value;
+    }
+    
+    let totalAmount = 0;
+
+    // ✅ Apply 30 EGP discount only for category 1 and online payment
+    const discount = (paymentMethod === 'online' && categoryId === 1) ? 10 : 0;
+
+    if (tripType === 'round_differentdays') {
+        const departurePrice = parseFloat("{{ trip.departure_seat_price|default:'0' }}");
+        const returnPrice = parseFloat("{{ trip.return_seat_price|default:'0' }}");
+        const departureSeats = document.querySelectorAll('input[name="selected_departure_seats"]:checked');
+        const returnSeats = document.querySelectorAll('input[name="selected_return_seats"]:checked');
+
+        totalAmount += departureSeats.length * (departurePrice - discount);
+        totalAmount += returnSeats.length * (returnPrice - discount);
+
+    } else {
+        let basePrice = 0;
+
+        if (tripType === 'one_way') {
+            basePrice = parseFloat("{{ trip.one_way_price|default:0 }}");
+        } else if (tripType === 'return') {
+            basePrice = parseFloat("{{ trip.return_price|default:0 }}");
+        } else if (tripType === 'round_trip') {
+            basePrice = parseFloat("{{ trip.round_trip_price|default:0 }}");
+        }
+
+        const selectedSeats = document.querySelectorAll('.seat-checkbox:checked');
+        totalAmount = selectedSeats.length * (basePrice - discount);
+    }
+
+    const totalAmountSpan = document.getElementById('total-amount');
+    if (totalAmountSpan) {
+        totalAmountSpan.textContent = totalAmount.toFixed(2);
+    }
+    return totalAmount.toFixed(2);
+}
+
+function validateSeatsSelection() {
+    const selected = document.querySelectorAll('.seat-checkbox:checked');
+    if (selected.length === 0) {
+        return false;
+    }
+    return true;
+}
+
+function prepareAndSubmitPayment() {
+    if (!validateSeatsSelection()) return;
+
+    const form = document.getElementById('bookingForm');
+    const formData = new FormData(form);
+
+    const selectedSeats = Array.from(document.querySelectorAll('.seat-checkbox:checked')).map(seat => seat.value);
+    const amount = calculateTotalAmount();
+
+    formData.append('total_amount', amount);
+    formData.append('selected_seats', JSON.stringify(selectedSeats));
+    formData.append('trip_id', "{{ trip.id }}");
+
+    fetch("{% url 'trip_paymentgateway' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': "{{ csrf_token }}"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.checkout_url) {
+            sessionStorage.setItem('booking_data', JSON.stringify({
+                trip_id: "{{ trip.id }}",
+                selected_seats: selectedSeats,
+                amount: amount,
+                order_id: data.order_id
+            }));
+            // الانتقال لبوابة الدفع Kashier
+            window.location.href = data.checkout_url;
+        } else {
+            alert("فشل تجهيز الدفع: " + (data.error || 'خطأ غير معروف'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("حدث خطأ في الاتصال بالخادم");
+    });
+    fetch("{% url 'store_booking_session' %}", {
+    method: 'POST',
+    body: formData,
+    headers: {
+        'X-CSRFToken': "{{ csrf_token }}"
+    }
+});
+
+}
+
+document.querySelectorAll('.seat-checkbox, #trip_type').forEach(element => {
+    element.addEventListener('change', function () {
+        // Only recalculate if payment method is visible
+        const paymentMethodSelect = document.getElementById('payment_method');
+        if (paymentMethodSelect && paymentMethodSelect.value === 'online') {
+            calculateTotalAmount();
+        }
+    });
+});
+
+const paymentMethodSelect = document.getElementById('payment_method');
+if (paymentMethodSelect) {
+    paymentMethodSelect.addEventListener('change', function () {
+        if (this.value === 'online') {
+            calculateTotalAmount();
+        }
+    });
+}
+
+document.getElementById('bookingForm').addEventListener('submit', function (e) {
+    const paymentMethodSelect = document.getElementById('payment_method');
+    const hasSubscription = {{ has_subscription|yesno:'true,false' }}; // Get has_subscription from Django context
+
+    if (hasSubscription) {
+        // If subscription is active, prevent default and submit directly
+        e.preventDefault();
+        if (validateSeatsSelection()) {
+            // Create a new FormData object to send the form data
+            const form = document.getElementById('bookingForm');
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': "{{ csrf_token }}"
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "{% url 'success_page' %}"; // Redirect to success page
+                } else {
+                    alert('فشل إتمام الحجز عبر الاشتراك. يرجى المحاولة مرة أخرى.');
+                }
+            })
+            .catch(error => {
+                console.error('Error during subscription booking:', error);
+                alert('حدث خطأ أثناء إتمام الحجز عبر الاشتراك.');
+            });
+        }
+    } else if (paymentMethodSelect && paymentMethodSelect.value === 'online') {
+        e.preventDefault();
+        prepareAndSubmitPayment();
+    } else if (!paymentMethodSelect) { // This case should ideally not be reached if hasSubscription is false
+        if (!validateSeatsSelection()) {
+            e.preventDefault(); // Prevent submission if no seats selected
+        }
+    }
+});
+
+// Initial calculation if payment method is online by default or if subscription is active
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethodSelect = document.getElementById('payment_method');
+    const hasSubscription = {{ has_subscription|yesno:'true,false' }};
+
+    if (hasSubscription) {
+        // If subscription is active, trigger form submission automatically after a short delay
+        // This ensures the page loads and seats are selected before submission
+        // You might want to add a confirmation dialog here for the user
+        // For now, it will submit directly if seats are selected
+        if (validateSeatsSelection()) {
+            // Optionally, you can add a small delay or a user confirmation here
+            // setTimeout(() => {
+            //     document.getElementById('bookingForm').submit();
+            // }, 500);
+        }
+    } else if (paymentMethodSelect && paymentMethodSelect.value === 'online') {
+        calculateTotalAmount();
+    } else if (!paymentMethodSelect) { // If paymentMethodSelect is not present, it's subscription-based
+        calculateTotalAmount(); // Still call to ensure total is 0 or handled correctly
+    }
+});
+
+
+if (tripType === 'round_differentdays') {
+    let departureCount = document.querySelectorAll('[name="selected_departure_seats"]:checked').length;
+    let returnCount = document.querySelectorAll('[name="selected_return_seats"]:checked').length;
+    totalAmount = (departureCount + returnCount) * basePrice;
+}
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("bookingForm");
+    const seatCheckboxes = document.querySelectorAll('input[name="selected_seats"]');
+    const paymentSelect = document.getElementById("payment_method");
+    const isStudent = {{ student|yesno:"true,false" }};  // من الباكند
+
+    form.addEventListener("submit", function (e) {
+        const selectedSeats = Array.from(seatCheckboxes).filter(seat => seat.checked);
+        
+        // Only apply this validation if payment method is cash and not subscription
+        if (paymentSelect && paymentSelect.value === "cash" && isStudent && selectedSeats.length > 1) {
+            e.preventDefault();
+            alert("❌ كطالب، لا يمكنك حجز أكثر من مقعد عند الدفع نقدًا. الرجاء اختيار طريقة دفع أونلاين.");
+            return false;
+        }
+    });
+});
+</script>
+</body>

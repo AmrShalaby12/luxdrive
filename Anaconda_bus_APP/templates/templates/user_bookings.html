@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}حجوزاتي{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- عنوان الصفحة -->
+    <div class="row">
+        <div class="col text-center">
+            <h2 class="mb-4 text-primary fw-bold" style="color: #9b4391;">حجوزاتي</h2>
+        </div>
+    </div>
+    <div class="floating-menu">
+        <div class="menu-button">
+          <i class="fas fa-bars"></i>
+        </div>
+        <div class="menu-items">
+          <ul>
+            <li>
+              <a class="nav-link" href="{% url 'index' %}">الرئيسية</a>
+            </li>
+            {% load passenger_tags %}
+            {% get_passenger as passenger %}
+            <li>
+              {% if passenger %}
+                <a class="nav-link" href="{% url 'subscriptions' passenger.id %}">الاشتراكات</a>
+              {% else %}
+                <a class="nav-link" href="#">الاشتراكات</a>
+              {% endif %}
+            </li>
+            <li>
+              <a class="nav-link" href="{% url 'user_bookings' %}">حجوزاتي</a>
+            </li>
+            <li>
+              <a class="nav-link" href="{% url 'user_data' %}">معلومات الحساب</a>
+            </li>
+            {% if not user.is_authenticated %}
+            <li>
+              <a class="nav-link" href="{% url 'login' %}">تسجيل الدخول</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+      <style>
+        .floating-menu {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          z-index: 1000;
+        }
+      
+        .menu-button {
+          width: 60px;
+          height: 60px;
+          background-color: #4b2354;
+          color: #fff;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          cursor: pointer;
+          transition: transform 0.3s ease;
+        }
+      
+        .menu-button:hover {
+          transform: scale(1.1);
+        }
+      
+        .menu-items {
+          display: none;
+          flex-direction: column;
+          gap: 10px;
+          position: absolute;
+          bottom: 80px; /* المسافة من الكرة */
+          right: 0;
+        }
+      
+        .menu-items ul {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+      
+        .menu-items li {
+          text-align: center;
+          margin: 5px 0;
+        }
+      
+        .menu-items a {
+          text-decoration: none;
+          padding: 10px 20px;
+          background-color: #fff;
+          color: #4b2354;
+          border-radius: 25px;
+          display: inline-block;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+      
+        .menu-items a:hover {
+          background-color: #4b2354;
+          color: #fff;
+        }
+      
+        .menu-open .menu-items {
+          display: flex;
+          animation: fadeIn 0.5s ease forwards;
+        }
+      
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      </style>
+      
+      <!-- JavaScript -->
+      <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const menuButton = document.querySelector(".menu-button");
+          const menuItems = document.querySelector(".menu-items");
+          const menu = document.querySelector(".floating-menu");
+      
+          menuButton.addEventListener("click", () => {
+            menu.classList.toggle("menu-open");
+          });
+        });
+      </script>
+    <!-- الحجوزات النشطة -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="mb-0">الحجوزات النشطة</h3>
+        </div>
+        <div class="card-body">
+            {% if active_bookings %}
+                <p class="text-muted">لديك {{ active_bookings|length }} حجوزات نشطة.</p>
+                <div class="row gy-4">
+                    {% for booking in active_bookings %}
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card h-100 shadow">
+                            <div class="card-body" style="text-align: end;">
+                                <h5 class="card-title text-primary mb-3">{{ booking.Trip }}</h5>
+                                {% if booking.Trip.bus.bus_image %}
+    <div class="text-center mb-3">
+        <img src="{{ booking.Trip.bus.bus_image.url }}" alt="صورة الباص" class="img-fluid rounded" style="max-height: 200px;">
+    </div>
+{% endif %}
+                                <p class="mb-2"><strong>تاريخ الحجز:</strong> {{ booking.booking_date }}</p>
+                                <p class="mb-2"><strong>تاريخ الرحلة:</strong> {{ booking.Trip.date }}</p>
+                                <p class="mb-2"><strong>نوع الرحلة:</strong> {{ booking.get_trip_type_display }}</p>
+                                <p class="mb-2"><strong>عدد المقاعد:</strong> {{ booking.seats_reserved.count }}</p>
+                                <p class="mb-2"><strong>أرقام المقاعد المحجوزة:</strong></p>
+                                <ul class="list-unstyled">
+                                    {% for seat in booking.seats_reserved.all %}
+                                    <li>{{ seat.seat_number }}</li>
+                                    {% endfor %}
+                                </ul>
+                                <p class="mb-2"><strong>مكان الركوب:</strong> {{ booking.selected_route }}</p>
+                                <p class="mb-2"><strong>رقم السائق:</strong> {{ booking.Trip.bus.driver_number }}</p>
+                                <p class="mb-2"><strong>رقم اللوحات:</strong> {{ booking.Trip.bus.plate_number }}</p>
+                                <p class="mb-2"><strong>نوع الباص:</strong> {{ booking.Trip.bus.bus_type }}</p>
+                                <p class="mb-2">
+                                    <strong>كود الحجز: </strong> 
+                                    <span id="serial-code-{{ booking.id }}" onclick="copyToClipboard('serial-code-{{ booking.id }}')" style="cursor: pointer; color: blue; text-decoration: underline;">
+                                        {{ booking.serial_code }}
+                                    </span>
+                                    <small style="font-size: 10px; color: grey;">(اضغط للنسخ)</small>
+                                    <p id="copy-message-{{ booking.id }}" style="color: green; display: none;">تم النسخ!</p>
+                                </p>
+                                <div class="card-footer text-center">
+                                    <a href="{% url 'scan_qr' %}?trip_code={{ booking.Trip.id }}&university_code={{ booking.serial_code }}" class="btn btn-primary">📷 اسكان الآن</a>
+                                </div>
+                                
+                                <script>
+                                    function copyToClipboard(elementId) {
+                                        var text = document.getElementById(elementId).innerText;
+                                        navigator.clipboard.writeText(text).then(function() {
+                                            var message = document.getElementById('copy-message-' + elementId.split('-').pop());
+                                            message.style.display = 'inline';
+                                            setTimeout(function() {
+                                                message.style.display = 'none';
+                                            }, 3000);
+                                        }).catch(function(err) {
+                                            console.error('حدث خطأ أثناء النسخ:', err);
+                                        });
+                                    }
+                                </script>
+    
+
+{% if booking.Trip.bus.live_location %}
+    {# إذا كان هناك سجل موقع مرتبط بالباص، اعرض الزر #}
+    <a href="{% url 'track_bus_view' bus_id=booking.Trip.bus.id %}" class="btn btn-primary btn-sm w-100 mt-2" target="_blank">
+        <i class="fas fa-map-marker-alt me-2"></i> تتبع الحافلة
+    </a>
+{% else %}
+    {# إذا لم يشارك السائق موقعه بعد، اعرض رسالة توضيحية #}
+    <button class="btn btn-secondary btn-sm w-100 mt-2" disabled>
+        <i class="fas fa-location-slash me-2"></i> الموقع غير متاح
+    </button>
+{% endif %}
+                                <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-danger btn-sm w-100 mt-2">
+                                    <i class="fas fa-times-circle"></i> إلغاء الحجز
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center text-muted">لا توجد حجوزات نشطة حالياً.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+</div>
+
+<!-- روابط Bootstrap و Font Awesome -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<style>
+    .bg-primary {
+        --bs-bg-opacity: 1;
+        background-color: #9b4391 !important;
+    }
+    .text-primary {
+        --bs-text-opacity: 1;
+        color: #9b4391 !important;
+    }
+    .card {
+        border-radius: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background-color: #121212;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+      }
+      .row .gy-4{
+        background-color: #121212;
+        color: #fff;
+      }
+</style>
+{% endblock %}

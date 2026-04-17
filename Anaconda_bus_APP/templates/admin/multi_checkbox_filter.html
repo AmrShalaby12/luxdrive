@@ -1,0 +1,52 @@
+{% load i18n %}
+<div class="filter-multi-select" style="margin-bottom:15px;">
+    <h3 style="margin-bottom:5px;">{{ title }}</h3>
+    
+    <select name="{{ spec.parameter_name }}" multiple size="6"
+            id="filter_{{ spec.parameter_name }}"
+            style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;">
+        {% for choice in choices %}
+            <option value="{{ choice.value }}" {% if choice.selected %}selected{% endif %}>
+                {{ choice.display }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="button" class="button" style="margin-top:8px;" onclick="applyAllFilters()">تطبيق</button>
+</div>
+
+<script>
+    // تأكد من أن هذه الدالة معرفة مرة واحدة فقط في الصفحة
+    if (typeof window.applyAllFilters !== 'function') {
+        window.applyAllFilters = function() {
+            // 1. ابدأ بالبارامترات الموجودة حاليًا في الرابط
+            const params = new URLSearchParams(window.location.search);
+            
+            // 2. احصل على كل عناصر الـ select الخاصة بالفلاتر متعددة الاختيارات
+            const filterSelects = document.querySelectorAll('.filter-multi-select select[name]');
+
+            // 3. لكل فلتر، قم بحذف قيمه القديمة من الرابط
+            filterSelects.forEach(select => {
+                // حذف جميع القيم القديمة لهذا البارامتر
+                params.delete(select.name);
+            });
+
+            // 4. أعد إضافة القيم المحددة فقط
+            filterSelects.forEach(select => {
+                // احصل على كل الخيارات المحددة (selected options) داخل الـ select الحالي
+                const selectedOptions = Array.from(select.selectedOptions);
+
+                // إذا كان هناك خيارات محددة بالفعل
+                if (selectedOptions.length > 0) {
+                    selectedOptions.forEach(option => {
+                        // أضف قيمة الخيار المحدد إلى البارامترات
+                        params.append(select.name, option.value);
+                    });
+                }
+            });
+
+            // 5. قم بتحديث رابط الصفحة
+            window.location.search = params.toString();
+        }
+    }
+</script>

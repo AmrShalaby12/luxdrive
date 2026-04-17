@@ -1,0 +1,582 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير الرحلة - {{ trip.trip_name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            direction: rtl;
+            background: #ffffff;
+            color: #1a1f2e;
+            line-height: 1.5;
+            font-size: 11pt;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        /* Header Section */
+        .header {
+            background: #130435;
+            padding: 25px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .company-logo {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
+        }
+
+        .trip-title {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .trip-info-grid {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+            position: relative;
+            z-index: 2;
+        }
+
+        .trip-info-row {
+            display: table-row;
+        }
+
+        .info-card {
+            display: table-cell;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            text-align: center;
+            vertical-align: middle;
+            width: 25%;
+        }
+
+        .info-card + .info-card {
+            border-right: none;
+        }
+
+        .info-label {
+            font-size: 10pt;
+            opacity: 0.95;
+            margin-bottom: 5px;
+            font-weight: normal;
+        }
+
+        .info-value {
+            font-size: 14pt;
+            font-weight: bold;
+            letter-spacing: 0.3px;
+        }
+
+        /* Content Section */
+        .content {
+            padding: 0;
+        }
+
+        .section-title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #667eea;
+            margin: 25px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        /* Bookings Table */
+        .bookings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .bookings-table thead {
+            background: #9e71ff;
+            color: white;
+        }
+
+        .bookings-table th {
+            padding: 10px 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 10pt;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .bookings-table tbody tr {
+            background: #f8f9fa;
+            page-break-inside: avoid;
+        }
+
+        .bookings-table tbody tr:nth-child(even) {
+            background: #e9ecef;
+        }
+
+        .bookings-table td {
+            padding: 8px 6px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            font-size: 9pt;
+            color: #1a1f2e;
+        }
+
+        /* Row Number */
+        .row-number {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* Passenger Name */
+        .passenger-name {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #1a1f2e;
+        }
+
+        /* Source Badge */
+        .source-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 8pt;
+            white-space: nowrap;
+        }
+
+        .source-form {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .source-booking {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        /* Payment Method Badge */
+        .payment-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 8pt;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .payment-paid {
+            background: #10b981;
+            color: white;
+        }
+
+        .payment-pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .payment-seat {
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* Seat Number */
+        .seat-number {
+            color: #667eea;
+            font-size: 10pt;
+            font-weight: bold;
+            background: rgba(102, 126, 234, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 2px;
+        }
+
+        .seat-not-assigned {
+            color: #ef4444;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        /* Summary Section */
+        .summary-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 25px;
+            border: 3px solid #667eea;
+            page-break-inside: avoid;
+        }
+
+        .summary-title {
+            color: #1a1f2e;
+            font-size: 16pt;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .summary-grid {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-row {
+            display: table-row;
+        }
+
+        .summary-card {
+            display: table-cell;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            width: 25%;
+            vertical-align: middle;
+        }
+
+        .summary-card + .summary-card {
+            border-right: 3px solid white;
+        }
+
+        .summary-number {
+            font-size: 32pt;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .summary-label {
+            font-size: 10pt;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #1a1f2e 0%, #2a3142 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-top: 25px;
+            page-break-inside: avoid;
+        }
+
+        .footer-text {
+            font-size: 11pt;
+            margin-bottom: 8px;
+            font-weight: normal;
+        }
+
+        .footer-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer-time {
+            margin-top: 12px;
+            font-size: 9pt;
+            opacity: 0.8;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #94a3b8;
+            page-break-inside: avoid;
+        }
+
+        .empty-state-icon {
+            font-size: 48pt;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 14pt;
+            font-weight: bold;
+        }
+
+        /* Prevent page breaks */
+        .bookings-table thead {
+            display: table-header-group;
+        }
+
+        .bookings-table tbody tr {
+            page-break-inside: avoid;
+        }
+
+        /* QR Code or Logo */
+        .qr-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #667eea;
+        }
+
+        .qr-section img {
+            max-width: 150px;
+            height: auto;
+        }
+
+        .qr-text {
+            margin-top: 10px;
+            font-size: 9pt;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Contact Info */
+        .contact-info {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-right: 4px solid #667eea;
+        }
+
+        .contact-info h4 {
+            color: #667eea;
+            font-size: 12pt;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .contact-info p {
+            font-size: 10pt;
+            margin: 5px 0;
+            color: #1a1f2e;
+        }
+
+        .contact-info strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="company-logo">🚌 ALLEN TRAVELS</div>
+            <div class="trip-title">تقرير الرحلة: {{ trip.trip_name }}</div>
+            
+            <div class="trip-info-grid">
+                <div class="trip-info-row">
+                    <div class="info-card">
+                        <div class="info-label">📅 التاريخ</div>
+                        <div class="info-value">{{ trip.date|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">🕐 وقت المغادرة</div>
+                        <div class="info-value">{{ trip.start_time|time:"H:i" }}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">🛣️ المسار</div>
+                        <div class="info-value">{{ trip.route|truncatewords:2 }}</div>
+                    </div>
+                    {% if trip.bus %}
+                    <div class="info-card">
+                        <div class="info-label">🚐 الحافلة</div>
+                        <div class="info-value">{{ trip.bus.name|truncatewords:2 }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="contact-info">
+            <h4>📞 معلومات التواصل</h4>
+            <p><strong>الموقع الإلكتروني:</strong> https://allen.allentravels.com</p>
+            <p><strong>الدعم الفني:</strong> متاح 24/7</p>
+            {% if trip.bus.driver_number %}
+            <p><strong>السائق:</strong> {{ trip.bus.driver_number }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h2 class="section-title">📋 قائمة الحجوزات</h2>
+
+            {% if form_reservations or bookings %}
+            <table class="bookings-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 18%;">اسم الراكب</th>
+                        <th style="width: 12%;">التاريخ</th>
+                        <th style="width: 15%;">مكان الصعود</th>
+                        <th style="width: 10%;">المقعد</th>
+                        <th style="width: 12%;">الدفع</th>
+                        <th style="width: 13%;">المصدر</th>
+                        <th style="width: 15%;">الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in form_reservations %}
+                    <tr>
+                        <td><span class="row-number">{{ forloop.counter }}</span></td>
+                        <td><span class="passenger-name">{{ booking.student_name|truncatewords:3 }}</span></td>
+                        <td>{{ booking.created_at|date:"d/m/Y" }}</td>
+                        <td>{{ booking.pickup_location|default:"غير محدد"|truncatewords:2 }}</td>
+                        <td>
+                            {% if booking.seat %}
+                                <span class="seat-number">{{ booking.seat.seat_number }}</span>
+                            {% else %}
+                                <span class="seat-not-assigned">لم يحدد</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if booking.status == 'paid' %}
+                                <span class="payment-badge payment-paid">✓ مدفوع</span>
+                            {% elif booking.status == 'pending' %}
+                                <span class="payment-badge payment-pending">⏳ معلق</span>
+                            {% else %}
+                                <span class="payment-badge">{{ booking.get_status_display|truncatewords:1 }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="source-badge source-form">📝 نموذج</span>
+                        </td>
+                        <td style="font-weight: bold; color: #10b981;">✓ مؤكد</td>
+                    </tr>
+                    {% endfor %}
+
+                    {% for booking in bookings %}
+                    <tr>
+                        <td><span class="row-number">{{ forloop.counter|add:form_reservations.count }}</span></td>
+                        <td><span class="passenger-name">{{ booking.passenger.name|truncatewords:3 }}</span></td>
+                        <td>{{ booking.booking_date|date:"d/m/Y" }}</td>
+                        <td>{{ booking.selected_route|default:"غير محدد"|truncatewords:2 }}</td>
+                        <td>
+                            {% for seat in booking.seats_reserved.all %}
+                                <span class="seat-number">{{ seat.seat_number }}</span>
+                            {% empty %}
+                                <span class="seat-not-assigned">لم يحدد</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <span class="payment-badge payment-seat">🪑 مقعد</span>
+                        </td>
+                        <td>
+                            <span class="source-badge source-booking">💼 منصة</span>
+                        </td>
+                        <td style="font-weight: bold; color: #10b981;">✓ مؤكد</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Summary Section -->
+            <div class="summary-section">
+                <h3 class="summary-title">📊 ملخص الحجوزات</h3>
+                <div class="summary-grid">
+                    <div class="summary-row">
+                        <div class="summary-card">
+                            <div class="summary-number">{{ form_reservations.count|add:bookings.count }}</div>
+                            <div class="summary-label">إجمالي الحجوزات</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-number">{{ form_reservations.count }}</div>
+                            <div class="summary-label">حجوزات النموذج</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-number">{{ bookings.count }}</div>
+                            <div class="summary-label">حجوزات المنصة</div>
+                        </div>
+                        {% if trip.bus %}
+                        <div class="summary-card">
+                            <div class="summary-number">{{ trip.bus.capacity|default:"--" }}</div>
+                            <div class="summary-label">سعة الحافلة</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code Section (Optional) -->
+            <div class="qr-section">
+                <p class="qr-text">🔗 لعرض التفاصيل الكاملة: https://allen.allentravels.com/allen/my-buses/</p>
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-text">لا توجد حجوزات لهذه الرحلة حتى الآن</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                <strong>ALLEN TRAVELS</strong> - نظام إدارة الرحلات الاحترافي
+            </div>
+            <div class="footer-text">
+                للمزيد من المعلومات: 
+                <span class="footer-link">allen.allentravels.com</span>
+            </div>
+            <div class="footer-text">
+                📞 الدعم الفني متاح 24/7 | 📧 ceo@noxusaia.online
+            </div>
+            <div class="footer-time">
+                ⏰ تم إنشاء التقرير في: {{ now|date:"d/m/Y - H:i" }}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

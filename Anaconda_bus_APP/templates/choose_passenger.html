@@ -1,0 +1,13 @@
+<h2>اختر الحساب الخاص بك</h2>
+<p>تم العثور على أكثر من حساب مرتبط بهذا الرقم. اختر الحساب الصحيح:</p>
+
+<form method="POST" action="{% url 'send_otp_whatsapp' %}">
+    {% csrf_token %}
+    {% for p in passengers %}
+        <div style="margin-bottom:10px; padding:5px; border:1px solid #ccc;">
+            <input type="radio" name="passenger_id" value="{{ p.id }}" required>
+            <strong>{{ p.name }}</strong> - عدد الرحلات المتبقية: {{ p.remaining_rides }}
+        </div>
+    {% endfor %}
+    <button type="submit">إرسال كود التحقق</button>
+</form>

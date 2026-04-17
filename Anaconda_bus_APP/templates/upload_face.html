@@ -1,0 +1,692 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap' );
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        min-height: 100vh;
+        direction: rtl;
+        text-align: right;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+        color: white;
+    }
+    
+    .header h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    .main-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin-bottom: 60px;
+    }
+    
+    .upload-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .security-info {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 40px;
+        color: white;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .messages {
+        margin-bottom: 20px;
+    }
+    
+    .alert {
+        background: #ff6b6b;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .maintenance-notice {
+        background: linear-gradient(45deg, #ff9a56, #ff6b6b);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 10px 20px rgba(255,107,107,0.3);
+    }
+    
+    .upload-form {
+        text-align: center;
+    }
+    
+    .upload-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    
+    .security-badge {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        display: inline-block;
+        margin-bottom: 20px;
+        font-weight: 600;
+        box-shadow: 0 5px 15px rgba(76,175,80,0.3);
+    }
+    
+    .face-preview {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 4px solid #667eea;
+        margin: 20px auto;
+        background: url('/home/ubuntu/upload/search_images/C57zkHytLQ1h.jpg') center/cover;
+        box-shadow: 0 10px 30px rgba(102,126,234,0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .face-preview::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(102,126,234,0.1) 50%, transparent 70%);
+        animation: scan 2s infinite;
+    }
+    
+    @keyframes scan {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 20px 0;
+    }
+    
+    .file-input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .file-input-label {
+        display: inline-block;
+        padding: 15px 30px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(102,126,234,0.3);
+    }
+    
+    .file-input-label:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+    }
+    
+    .submit-btn {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(76,175,80,0.3);
+        margin-top: 20px;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(76,175,80,0.4);
+    }
+
+    /* Loading Spinner Styles */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        color: white;
+        font-size: 1.5rem;
+        flex-direction: column;
+        gap: 20px;
+        display: none; /* Hidden by default */
+    }
+
+    .spinner {
+        border: 8px solid #f3f3f3; /* Light grey */
+        border-top: 8px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .error-message {
+        color: #ff6b6b;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .security-features {
+        margin-top: 20px;
+    }
+    
+    .feature {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+        padding: 10px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+    }
+    
+    .feature-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .project-section {
+        background: rgba(255, 255, 255, 1);
+        border-radius: 20px;
+        padding: 5px;
+        margin-top: 40px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .project-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .project-content {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+        align-items: center;
+    }
+    
+    .project-image {
+        width: 100%;
+        height: 300px;
+    background: url('/allen/media/items/image.png') center/cover;
+        border-radius: 15px;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+    
+    .project-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #444;
+    }
+    
+    .project-text h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #667eea;
+    }
+    
+    .company-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 30px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    @media (max-width: 768px) {
+        .main-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .project-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .company-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="header">
+        <h1>نظام الأمان المتطور</h1>
+        <p>تقنية التعرف على الوجه من فريق ألين</p>
+    </div>
+    
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="main-content">
+        <div class="upload-section">
+            <div class="maintenance-notice">
+                الصوره لا يمكن تغيرها في المستقبل , يجب وضع صوره وجه الراكب واضح بها , تنويه: الصوره لن تظهر في اي مكان لأي مستخدم اخر حسب سياستنا في الخصوصيه
+            </div>
+            
+            <div class="upload-form">
+                <h2 class="upload-title">رفع صورة الوجه</h2>
+                <div class="security-badge">
+                    <i class="fas fa-shield-alt"></i> آمان متقدم
+                </div>
+                
+                <div class="face-preview"></div>
+                
+                <p style="margin-bottom: 20px; color: #666;">
+                    صورتك محمية بأعلى معايير الأمان والخصوصية
+                </p>
+                
+                <form id="uploadForm" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="file-input-wrapper">
+                        <input type="file" name="face_image" accept="image/*" required class="file-input" id="face_image">
+                        <label for="face_image" class="file-input-label">
+                            <i class="fas fa-camera"></i> اختر صورة واضحة
+                        </label>
+                    </div>
+                      
+
+                    <button type="submit" class="submit-btn" id="uploadButton">
+                        <i class="fas fa-upload"></i> رفع الصورة
+                    </button>
+                    <div id="errorMessage" class="error-message" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="security-info">
+            <h3 style="font-size: 1.8rem; margin-bottom: 20px;">
+                <i class="fas fa-lock"></i> لماذا نحتاج صورتك؟
+            </h3>
+            
+            <div class="security-features">
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <strong>الحماية الشخصية:</strong> صورتك تُستخدم كمفتاح أمان شخصي لحمايتك
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div>
+                        <strong>التعرف الدقيق:</strong> تقنية متطورة للتعرف على الوجه بدقة عالية
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                        <strong>التشفير المتقدم:</strong> جميع البيانات محمية بتشفير عسكري
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <strong>المعالجة السريعة:</strong> تحليل فوري وآمن للصورة
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="project-section">
+        <h2 class="project-title">مشروع أناكوندا AI كام</h2>
+        
+        <div class="project-content">
+            <div class="project-image">
+
+            </div>
+            
+            <div class="project-text">
+                <h3>الجيل الجديد من أنظمة الأمان</h3>
+                <p>
+                    تُعد كاميرا المراقبة بالذكاء الاصطناعي من ألين ثورة في مجال سلامة النقل، حيث تركز بشكل أساسي على تعزيز أمان السائق والركاب على حد سواء. يتجاوز دور هذه الكاميرا مجرد المراقبة التقليدية، لتصبح نظامًا ذكيًا متكاملًا يضمن أعلى مستويات اليقظة والتحكم على الطريق.
+                </p>
+                
+                <h3>مراقبة السائق في الوقت الفعلي واكتشاف المخاطر:</h3>
+                <p>
+                    تعمل تقنيات الذكاء الاصطناعي المتقدمة المدمجة في كاميرا ألين على مراقبة السائق بشكل مستمر في الوقت الفعلي. هذا النظام المتطور لا يكتفي برصد السلوكيات فحسب، بل يقوم بتحليلها للكشف الفوري عن أي مخاطر محتملة على الطريق. سواء كانت هذه المخاطر ناتجة عن ظروف الطريق المتغيرة أو سلوكيات القيادة غير الآمنة، فإن الكاميرا توفر تنبيهات فورية لمساعدة السائق على اتخاذ الإجراءات التصحيحية اللازمة، مما يقلل بشكل كبير من احتمالية وقوع الحوادث.
+                </p>
+                
+                <h3>اكتشاف إرهاق السائق وتشتت الانتباه:</h3>
+                <p>
+                    تعتبر سلامة السائق حجر الزاوية في منظومة أمان ألين. لذا، تم تزويد الكاميرا بقدرات فائقة على اكتشاف علامات إرهاق السائق أو النعاس. من خلال تحليل دقيق لحركات العين والرأس وتعبيرات الوجه، يمكن للنظام تحديد متى يكون السائق في حالة لا تسمح له بالقيادة الآمنة، ويقوم بإصدار تنبيهات صوتية ومرئية لضمان استعادته لتركيزه. بالإضافة إلى ذلك، ترصد الكاميرا استخدام الهاتف المحمول أو أي سلوكيات أخرى تشتت انتباه السائق، وتصدر تحذيرات فورية لضمان بقاء السائق متيقظًا تمامًا للطريق.
+                </p>
+                
+                <h3>ضمان التزام السائق والطلاب بأحزمة الأمان:</h3>
+                <p>
+                    تؤكد ألين على أهمية الالتزام بقواعد السلامة، ولذلك، تم تصميم الكاميرا لضمان التزام جميع الأفراد داخل المركبة بارتداء أحزمة الأمان. يقوم النظام بالتحقق من ارتداء السائق والطلاب لأحزمة الأمان بشكل صحيح، ويصدر تنبيهات في حال عدم الالتزام، مما يعزز من ثقافة السلامة ويقلل من مخاطر الإصابات في حال وقوع أي طارئ.
+                </p>
+                
+                <h3>تنبيهات الطوارئ التلقائية والمركزية:</h3>
+                <p>
+                    في الحالات الحرجة، كل ثانية تحدث فرقًا. لذلك، تم تجهيز نظام ألين بقدرة على إرسال تنبيهات طوارئ تلقائية وفورية إلى مركز التحكم المركزي. هذه التنبيهات لا تقتصر على الإبلاغ عن الحوادث فحسب، بل تشمل أيضًا أي أحداث غير متوقعة أو خطيرة قد تحدث داخل المركبة أو على الطريق. يضمن هذا الاتصال المستمر استجابة سريعة وفعالة من فرق الدعم، مما يوفر طبقة إضافية من الأمان والحماية.
+                </p>
+                
+                <h3>مراقبة على مدار الساعة لسلامة الحافلات:</h3>
+                <p>
+                    تلتزم ألين بتوفير بيئة نقل آمنة وموثوقة على مدار الساعة. لذا، فإن نظام المراقبة بالكاميرا يعمل دون توقف، 24 ساعة في اليوم، 7 أيام في الأسبوع، لضمان سلامة الحافلات وجميع ركابها. هذه المراقبة المستمرة توفر راحة البال للسائقين والركاب وأولياء الأمور على حد سواء، وتؤكد على التزام ألين الراسخ بالتميز في مجال نقل الركاب.
+                </p>
+                
+                <h3>ألين: الريادة والابتكار في نقل الركاب:</h3>
+                <p>
+                    تعتبر شركة ألين رائدة في مجال نقل الركاب، وتتميز بالتزامها الدائم بالابتكار وتبني أحدث التقنيات لتقديم حلول نقل آمنة وفعالة. إن قوتنا لا تكمن فقط في أسطولنا المتطور، بل في قدرتنا على دمج الذكاء الاصطناعي والتقنيات المتقدمة لضمان تجربة نقل لا مثيل لها. نحن نفخر بكوننا في طليعة الشركات التي تستثمر في مستقبل النقل الذكي، ونعمل بلا كلل لتعزيز معايير السلامة والراحة لجميع عملائنا. مع ألين، أنت لا تختار مجرد خدمة نقل، بل تختار شريكًا موثوقًا يضع سلامتك وراحتك على رأس أولوياته.
+                </p>
+            </div>
+        </div>
+        
+        <div class="company-stats">
+            <div class="stat-card">
+                <div class="stat-number">99.8%</div>
+                <div class="stat-label">دقة التعرف</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">مراقبة مستمرة</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">3000+</div>
+                <div class="stat-label">عميل راضٍ</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>جاري معالجة الصورة ورفعها، يرجى الانتظار...</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+<script>
+    // Function to display error messages
+    function showErrorMessage(message ) {
+        const errorMessageDiv = document.getElementById('errorMessage');
+        errorMessageDiv.textContent = message;
+        errorMessageDiv.style.display = 'block';
+    }
+
+    // Function to hide error messages
+    function hideErrorMessage() {
+        const errorMessageDiv = document.getElementById('errorMessage');
+        errorMessageDiv.style.display = 'none';
+        errorMessageDiv.textContent = '';
+    }
+
+    // Function to show loading overlay
+    function showLoadingOverlay() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    // Function to hide loading overlay
+    function hideLoadingOverlay() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    async function compressImage(file) {
+        const imageFile = file;
+        console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+
+        const options = {
+            maxSizeMB: 1,          // (max file size in MB) - default 1MB
+            maxWidthOrHeight: 1024, // compressed image max width or height
+            useWebWorker: true,
+            fileType: 'image/jpeg', // output file type
+        }
+        try {
+            const compressedFile = await imageCompression(imageFile, options);
+            console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+
+            return compressedFile;
+        } catch (error) {
+            console.error('Error during image compression:', error);
+            showErrorMessage('حدث خطأ أثناء ضغط الصورة. يرجى المحاولة مرة أخرى.');
+            return file; // Return original file if compression fails
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('face_image');
+        const facePreview = document.querySelector('.face-preview');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadButton = document.getElementById('uploadButton');
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    facePreview.style.backgroundImage = `url(${e.target.result})`;
+                };
+                reader.readAsDataURL(file);
+                hideErrorMessage(); // Hide error message when a new file is selected
+            }
+        });
+
+        uploadForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+            hideErrorMessage(); // Clear previous errors
+            showLoadingOverlay(); // Show loading indicator
+            uploadButton.disabled = true; // Disable button during upload
+
+            const originalFile = fileInput.files[0];
+
+            if (originalFile) {
+                try {
+                    const compressedFile = await compressImage(originalFile);
+
+                    const formData = new FormData();
+                    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                    formData.append('face_image', compressedFile, compressedFile.name);
+
+                    const response = await fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (response.ok) {
+                        // Assuming Django returns a success message or redirects
+                        // You might want to parse JSON response if your Django view returns JSON
+                        window.location.href = "{% url 'index' %}"; // Redirect to index page
+                    } else {
+                        const errorData = await response.text();
+                        let errorMessage = 'فشل رفع الصورة. يرجى المحاولة مرة أخرى.';
+                        try {
+                            const jsonError = JSON.parse(errorData);
+                            if (jsonError.message) {
+                                errorMessage = jsonError.message;
+                            } else if (jsonError.detail) { // For Django REST Framework errors
+                                errorMessage = jsonError.detail;
+                            }
+                        } catch (e) {
+                            // If not JSON, use the raw text response
+                            errorMessage = errorData;
+                        }
+                        showErrorMessage(`خطأ: ${errorMessage}`);
+                    }
+                } catch (error) {
+                    console.error('Error during upload process:', error);
+                    showErrorMessage('حدث خطأ غير متوقع أثناء الرفع. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.');
+                } finally {
+                    hideLoadingOverlay(); // Hide loading indicator
+                    uploadButton.disabled = false; // Re-enable button
+                }
+            } else {
+                showErrorMessage('الرجاء اختيار صورة لرفعها.');
+                hideLoadingOverlay(); // Hide loading indicator
+                uploadButton.disabled = false; // Re-enable button
+            }
+        });
+
+        // Add smooth animations and interactions
+        const cards = document.querySelectorAll('.upload-section, .security-info, .project-section');
+        cards.forEach((card, index) => {
+            card.style.animation = `fadeInUp 0.6s ease-out ${index * 0.2}s both`;
+        });
+        
+        // Add hover effects to feature cards
+        const features = document.querySelectorAll('.feature');
+        features.forEach(feature => {
+            feature.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateX(-10px)';
+                this.style.background = 'rgba(255,255,255,0.2)';
+            });
+            
+            feature.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateX(0)';
+                this.style.background = 'rgba(255,255,255,0.1)';
+            });
+        });
+    });
+    
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .feature {
+            transition: all 0.3s ease;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+
+{% endblock %}

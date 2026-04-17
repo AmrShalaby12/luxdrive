@@ -1,0 +1,69 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+<h2 style="direction: rtl;">رسم كراسي الباص - {{ bus.name }}</h2>
+
+<form method="POST" style="direction: rtl;">
+  {% csrf_token %}
+  
+  <div id="seat-grid" style="display: grid; grid-template-columns: repeat(5, 60px); gap: 10px; margin-bottom: 20px;">
+    {% for i in rows_range %}
+      {% for j in columns_range %}
+        <div class="seat" data-row="{{ i }}" data-col="{{ j }}" style="width: 60px; height: 60px; border: 1px solid #aaa; text-align: center; line-height: 60px; cursor: pointer;">
+          +
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  <input type="hidden" name="seats[]" id="seat-data" />
+  <div id="seat-container"></div>
+
+  <button type="submit" class="default">💾 حفظ المقاعد</button>
+</form>
+
+<style>
+  .seat.selected {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+  }
+  .seat:hover {
+    background-color: #ddd;
+  }
+</style>
+
+<script>
+  const seatContainer = document.getElementById("seat-container");
+  let seatCounter = 1;
+
+  document.querySelectorAll('.seat').forEach(div => {
+    div.addEventListener('click', () => {
+      const row = div.dataset.row;
+      const col = div.dataset.col;
+
+      if (!div.classList.contains('selected')) {
+        div.textContent = seatCounter;
+        div.classList.add('selected');
+
+        // Create input
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'seats[]';
+        input.value = `${seatCounter},${row},${col}`;
+        input.dataset.row = row;
+        input.dataset.col = col;
+        seatContainer.appendChild(input);
+
+        seatCounter++;
+      } else {
+        div.classList.remove('selected');
+        div.textContent = '+';
+
+        const inputToRemove = seatContainer.querySelector(`input[data-row="${row}"][data-col="${col}"]`);
+        if (inputToRemove) inputToRemove.remove();
+      }
+    });
+  });
+</script>
+{% endblock %}

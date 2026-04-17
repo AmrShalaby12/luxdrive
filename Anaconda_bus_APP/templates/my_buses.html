@@ -1,0 +1,950 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم السائق - نظام إدارة النقل</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #290c38;
+            --secondary-color: #4a1d6e;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --border-color: #e9ecef;
+            --text-muted: #6c757d;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        /* --- General Styles (Headers, Cards, etc.) --- */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        .bus-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .bus-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 1.5rem;
+        }
+        
+        .bus-header.sharing-active {
+            background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+        }
+
+        .bus-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .bus-body {
+            padding: 1rem;
+        }
+
+        .trip-section {
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .trip-header {
+            background-color: var(--light-bg);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .trip-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .area-button {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            font-weight: 600;
+            border: none;
+            padding: 1rem 1.5rem;
+            width: 100%;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .area-button:hover {
+            background-color: #e9ecef;
+        }
+
+        .area-button.completed {
+            background-color: rgba(25, 135, 84, 0.15);
+            color: var(--success-color);
+        }
+
+        .area-button.in-progress {
+            background-color: rgba(13, 110, 253, 0.15);
+            color: #0d6efd;
+        }
+
+        .passenger-count-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .passenger-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .no-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            background: var(--light-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            border: 2px dashed var(--border-color);
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        .payment-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .payment-status.paid { background: rgba(25, 135, 84, 0.1); color: var(--success-color); }
+        .payment-status.pending { background: rgba(255, 193, 7, 0.1); color: var(--warning-color); }
+        .payment-status.subscription { background: #cce5ff; color: #004085; }
+        .payment-status.online { background: #e2e3e5; color: #383d41; }
+        .payment-status.other { background: #f8d7da; color: #721c24; }
+
+        .btn-attendance {
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            white-space: nowrap;
+        }
+
+        /* --- NEW: Responsive Table Container --- */
+        .table-responsive-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* --- Table Styling --- */
+        .bookings-table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: collapse;
+        }
+
+        .bookings-table th,
+        .bookings-table td {
+            padding: 0.8rem 1rem;
+            text-align: right;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .bookings-table thead th {
+            background-color: var(--light-bg);
+            font-weight: 600;
+            color: var(--primary-color);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .bookings-table tbody tr:last-of-type td {
+            border-bottom: none;
+        }
+
+        .bookings-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .stop-time {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-right: 0.5rem;
+        }
+
+        .stop-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+        }
+
+        .stop-status.completed {
+            background-color: var(--success-color);
+        }
+
+        .stop-status.in-progress {
+            background-color: var(--info-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        .stop-status.pending {
+            background-color: var(--text-muted);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .passenger-details-modal img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .trip-progress {
+            display: flex;
+            justify-content: space-between;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+        }
+
+        .progress-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            padding: 0.5rem;
+        }
+
+        .progress-step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 100%;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 1;
+        }
+
+        .step-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-icon.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .step-icon.completed {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .step-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .step-title.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .step-title.completed {
+            color: var(--success-color);
+        }
+
+        .reorder-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+        }
+
+        .reorder-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .reorder-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .sortable-ghost {
+            opacity: 0.5;
+        }
+
+        .drag-handle {
+            cursor: move;
+            margin-left: 0.5rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container text-center">
+            <h1 class="page-title">
+                <i class="fas fa-tachometer-alt me-3"></i>
+                لوحة تحكم السائق
+            </h1>
+            <p class="page-subtitle">نظام إدارة النقل والمواصلات - مراقبة الرحلات والركاب</p>
+        </div>
+    </div>
+
+    <!-- Weekly Booking Section -->
+    {% if user.is_authenticated %}
+    <div class="container mb-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title mb-1">
+                                    <i class="fas fa-calendar-week text-primary me-2"></i>
+                                    الحجز الأسبوعي
+                                </h5>
+                                <p class="card-text text-muted small mb-0">
+                                    حدد أيام الأسبوع والمواعيد التي تريدها للذهاب والعودة
+                                </p>
+                            </div>
+                            {% if passenger_obj and passenger_obj.category %}
+                                <a href="{% url 'weekly_booking' passenger_obj.category.id %}" 
+                                   class="btn btn-primary">
+                                    <i class="fas fa-plus-circle me-1"></i>
+                                    إعداد حجز أسبوعي
+                                </a>
+                            {% else %}
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    يجب إكمال بياناتك أولاً
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container">
+        <!-- Buses Section -->
+        {% for bus_data in buses_data %}
+        <div class="bus-card">
+            <div class="bus-header {% if bus_data.bus.location_sharing_is_active %}sharing-active{% endif %}" id="header-{{ bus_data.bus.id }}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="bus-title"><i class="fas fa-bus me-2"></i>{{ bus_data.bus.name }}</h3>
+                    <button class="btn btn-sm share-location-btn {% if bus_data.bus.location_sharing_is_active %}btn-danger{% else %}btn-outline-light{% endif %}" data-bus-id="{{ bus_data.bus.id }}">
+                        {% if bus_data.bus.location_sharing_is_active %}
+                            <i class="fas fa-stop-circle me-1"></i>إيقاف المشاركة
+                        {% else %}
+                            <i class="fas fa-satellite-dish me-1"></i>مشاركة الموقع
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+            
+            <div class="bus-body">
+                {% for trip_data in bus_data.trips %}
+                <div class="trip-section">
+                    <div class="trip-header">
+                        <center><h1 class="trip-title"><i class="fas fa-route me-2"></i>الرحلة: {{ trip_data.trip }}</h1></center>
+                        
+                        <!-- Trip Progress Bar -->
+                        <div class="trip-progress">
+                            {% for stop_data, bookings in trip_data.bookings_by_area %}
+                            <div class="progress-step">
+                                <div class="step-icon 
+                                    {% if forloop.counter0 < trip_data.current_stop_index %}completed
+                                    {% elif forloop.counter0 == trip_data.current_stop_index %}active
+                                    {% endif %}">
+                                    {{ forloop.counter }}
+                                </div>
+                                <div class="step-title 
+                                    {% if forloop.counter0 < trip_data.current_stop_index %}completed
+                                    {% elif forloop.counter0 == trip_data.current_stop_index %}active
+                                    {% endif %}">
+                                    {{ stop_data.name|truncatechars:10 }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Reordering Controls -->
+                        <div class="reorder-controls">
+                            <span>ترتيب النقاط:</span>
+                            <button class="reorder-btn" onclick="reorderStops('trip-{{ trip_data.trip.id }}-stops', 'time')">
+                                <i class="fas fa-clock me-1"></i> حسب الوقت
+                            </button>
+                            <button class="reorder-btn" onclick="reorderStops('trip-{{ trip_data.trip.id }}-stops', 'name')">
+                                <i class="fas fa-font me-1"></i> حسب الاسم
+                            </button>
+                            <button class="reorder-btn" onclick="enableManualReorder('trip-{{ trip_data.trip.id }}-stops')">
+                                <i class="fas fa-hand-point-up me-1"></i> ترتيب يدوي
+                            </button>
+                        </div>
+                        
+                        {% if trip_data.trip.bus.category.id == 1 %}
+                        <form method="post" action="{% url 'notify_trip_departure' trip_data.trip.id %}" class="mt-2">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm" style="font-weight: 600; width: 100%;">
+                              <i class="fas fa-paper-plane me-1"></i> إبلاغ الركاب بالتحرك
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <div id="trip-{{ trip_data.trip.id }}-stops" class="stops-container">
+                    {% for stop_data, bookings in trip_data.bookings_by_area %}
+                    {% with stop_index=forloop.counter0 %}
+                    <div class="stop-container" data-stop-index="{{ stop_index }}" data-stop-time="{{ stop_data.time|default:'' }}" data-stop-name="{{ stop_data.name|default:'' }}">
+                        <button class="area-button d-flex justify-content-between align-items-center 
+                            {% if stop_index < trip_data.current_stop_index %}completed
+                            {% elif stop_index == trip_data.current_stop_index %}in-progress
+                            {% endif %}" 
+                            data-bs-toggle="collapse" data-bs-target="#trip-{{ trip_data.trip.id }}-area-{{ forloop.counter }}" 
+                            aria-expanded="{% if stop_index == trip_data.current_stop_index %}true{% else %}false{% endif %}">
+                            <span>
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                <span class="stop-time">{{ stop_data.time|default:"" }}</span>
+                                {{ stop_data.name|default:"منطقة غير محددة" }}
+                                <span class="stop-status 
+                                    {% if stop_index < trip_data.current_stop_index %}completed
+                                    {% elif stop_index == trip_data.current_stop_index %}in-progress
+                                    {% else %}pending{% endif %}">
+                                </span>
+                                <i class="fas fa-grip-lines drag-handle"></i>
+                            </span>
+                            <span class="passenger-count-badge">{{ bookings|length }}</span>
+                        </button>
+
+                        <div id="trip-{{ trip_data.trip.id }}-area-{{ forloop.counter }}" 
+                             class="collapse {% if stop_index == trip_data.current_stop_index %}show{% endif %}">
+                            <div class="table-responsive-container">
+                                <table class="bookings-table">
+                                    <thead>
+                                        <tr>
+                                            <th>الصورة</th>
+                                            <th>الاسم</th>
+                                            <th>الإجراء</th>
+                                            <th>الهاتف</th>
+                                            <th>المقعد</th>
+                                            <th>الدفع</th>
+                                            <th>الحضور</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for booking in bookings %}
+                                        <tr>
+                                            <td>
+                                                {% if booking.face_thumbnail %}
+                                                <img src="{{ booking.face_thumbnail }}" alt="صورة {{ booking.name }}" class="passenger-photo" data-bs-toggle="modal" data-bs-target="#passengerModal" data-img="{{ booking.face_thumbnail }}" data-name="{{ booking.name }}">
+                                                {% else %}
+                                                <div class="no-photo">لا توجد</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ booking.name }}</td>
+                                                                                        <td>
+                                                <button class="btn btn-attendance {% if booking.attendance_status == 'present' %}btn-success{% else %}btn-primary{% endif %}" 
+                                                        onclick="markAttendance('{{ booking.source }}', {{ booking.id }}, {{ trip_data.trip.id }})"
+                                                        id="btn-attendance-{{ booking.source }}-{{ booking.id }}"
+                                                        {% if booking.attendance_status == 'present'  %}disabled{% endif %}>
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    {% if booking.attendance_status == 'present' %}تم الحضور{% else %}تسجيل{% endif %}
+                                                </button>
+                                            </td>
+                                            <td>
+                                                <a href="tel:{{ booking.phone }}">{{ booking.phone }}</a>
+                                            </td>
+                                            <td>
+                                                {% if booking.source == 'form' %}
+                                                    {{ booking.seat_number|default:"-" }}
+                                                {% else %}
+                                                    {{ booking.seats_reserved_list }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if booking.status == 'confirmed' or booking.status == 'prepaid' or booking.status == 'completed' %}
+                                                    <span class="payment-status paid">مدفوع</span>
+                                                {% elif booking.status == 'subscription' %}
+                                                    <span class="payment-status subscription">اشتراك</span>
+                                                {% elif booking.status == 'online' %}
+                                                    <span class="payment-status online">Online</span>
+                                                {% elif booking.status == 'pending' %}
+                                                    <span class="payment-status pending">قيد الانتظار</span>
+                                                {% else %}
+                                                    <span class="payment-status other">{{ booking.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span id="status-{{ booking.source }}-{{ booking.id }}">
+                                                    {% if booking.attendance_status == 'present' %}
+                                                        <span class="badge bg-success">حضر</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">غائب</span>
+                                                    {% endif %}
+                                                </span>
+                                            </td>
+
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Passenger Details Modal -->
+    <div class="modal fade passenger-details-modal" id="passengerModal" tabindex="-1" aria-labelledby="passengerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="passengerModalLabel">صورة الراكب</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalPassengerImage" src="" alt="صورة الراكب" class="img-fluid">
+                    <h4 id="modalPassengerName" class="mt-3"></h4>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Custom Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SortableJS for drag and drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script>
+        // Initialize passenger modal
+        const passengerModal = new bootstrap.Modal(document.getElementById('passengerModal'));
+        document.querySelectorAll('.passenger-photo').forEach(img => {
+            img.addEventListener('click', function() {
+                document.getElementById('modalPassengerImage').src = this.dataset.img;
+                document.getElementById('modalPassengerName').textContent = this.dataset.name;
+                passengerModal.show();
+            });
+        });
+
+        // Payment Status Update Function
+        function updatePaymentStatus(bookingId, status) {
+            const paymentUrl = `/allen/update-payment-status/${bookingId}/`;
+            
+            if (!confirm('هل أنت متأكد من تحديث حالة الدفع؟')) return;
+            
+            // Add loading state
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جاري التحديث...';
+            button.disabled = true;
+            
+            fetch(paymentUrl, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrf-token]').content, 
+                },
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showNotification('تم تحديث حالة الدفع بنجاح!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification('خطأ: ' + (data.error || 'حدث خطأ أثناء التحديث.'), 'error');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error updating payment status:', error);
+                showNotification('فشل الاتصال بالخادم لتحديث الدفع.', 'error');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+
+        function markAttendance(source, bookingId, tripId) {
+            const button = document.getElementById(`btn-attendance-${source}-${bookingId}`);
+            
+            // تعطيل الزر لمنع النقر المتكرر
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
+            
+            // إعداد بيانات الطلب
+            const formData = new FormData();
+            formData.append('source', source);
+            formData.append('id', bookingId);
+            
+            // إرسال طلب AJAX لتسجيل الحضور
+            fetch('/allen/api/mark-attendance/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // تحديث مظهر الزر عند نجاح تسجيل الحضور
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-success');
+                    button.innerHTML = '<i class="fas fa-check-circle"></i> تم الحضور';
+                    button.disabled = true;
+                    
+                    // تحديث حالة الحضور
+                    document.getElementById(`status-${source}-${bookingId}`).innerHTML = '<span class="badge bg-success">حضر</span>';
+                    
+                    // عرض رسالة النجاح
+                    showNotification('success', data.message || 'تم تسجيل الحضور بنجاح');
+                    
+                    // تحديث عرض عدد الرحلات إذا كان متوفراً في واجهة المستخدم
+                    if (data.rides_used !== undefined && data.remaining_rides !== undefined) {
+                        updateRideCountDisplay(source, bookingId, data.rides_used, data.remaining_rides);
+                    }
+                    
+                } else {
+                    // إعادة تفعيل الزر عند الفشل
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-check-circle"></i> تسجيل حضور';
+                    
+                    // عرض رسالة الخطأ
+                    showNotification('error', data.error || 'حدث خطأ في تسجيل الحضور');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // إعادة تفعيل الزر عند حدوث خطأ
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-check-circle"></i> تسجيل حضور';
+                
+                // عرض رسالة خطأ
+                showNotification('error', 'حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.');
+            });
+        }
+
+        // دالة مساعدة للحصول على CSRF token من cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // دالة مساعدة لعرض الإشعارات
+        function showNotification(type, message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // دالة اختيارية لتحديث عرض عدد الرحلات في واجهة المستخدم
+        function updateRideCountDisplay(source, bookingId, ridesUsed, remainingRides) {
+            // تحديث عرض عدد الرحلات إذا كان لديك عنصر لذلك في واجهة المستخدم
+            const rideCountElement = document.getElementById(`ride-count-${source}-${bookingId}`);
+            if (rideCountElement) {
+                rideCountElement.innerHTML = `الرحلات المستخدمة: ${ridesUsed} | الرحلات المتبقية: ${remainingRides}`;
+            }
+        }
+
+        // وظائف إعادة ترتيب النقاط
+        function reorderStops(containerId, method) {
+            const container = document.getElementById(containerId);
+            const stops = Array.from(container.querySelectorAll('.stop-container'));
+            
+            if (method === 'time') {
+                stops.sort((a, b) => {
+                    const timeA = a.dataset.stopTime || '';
+                    const timeB = b.dataset.stopTime || '';
+                    return timeA.localeCompare(timeB);
+                });
+            } else if (method === 'name') {
+                stops.sort((a, b) => {
+                    const nameA = a.dataset.stopName || '';
+                    const nameB = b.dataset.stopName || '';
+                    return nameA.localeCompare(nameB);
+                });
+            }
+            
+            // إعادة ترتيب العناصر في الـ DOM
+            stops.forEach(stop => container.appendChild(stop));
+            
+            showNotification('success', 'تم إعادة ترتيب النقاط بنجاح');
+        }
+        
+        function enableManualReorder(containerId) {
+            const container = document.getElementById(containerId);
+            new Sortable(container, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                handle: '.drag-handle',
+                onEnd: function() {
+                    showNotification('success', 'تم حفظ الترتيب الجديد للنقاط');
+                }
+            });
+            
+            showNotification('info', 'يمكنك الآن سحب النقاط وإفلاتها لإعادة ترتيبها يدوياً');
+        }
+
+        // Location Sharing Management
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize attendance counts
+            document.querySelectorAll('.trip-section').forEach(tripSection => {
+                const tripId = tripSection.dataset.tripId;
+                const attendedButtons = tripSection.querySelectorAll('.btn-attendance.attended');
+                const attendedCountSpan = document.getElementById(`attended-count-${tripId}`);
+                if(attendedCountSpan) {
+                    attendedCountSpan.textContent = attendedButtons.length;
+                }
+            });
+
+            // Location sharing functionality
+            const locationIntervals = {}; 
+            const shareButtons = document.querySelectorAll('.share-location-btn');
+            const startUrlTemplate = "/allen/api/session/start/{bus_id}/";
+            const stopUrlTemplate = "/allen/api/session/stop/{bus_id}/";
+            const updateUrlTemplate = "/allen/api/update-location/{bus_id}/";
+
+            const sendLocationUpdate = (busId) => {
+                if (!navigator.geolocation) {
+                    console.error("Geolocation is not supported.");
+                    stopSharing(busId);
+                    return;
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        fetch(updateUrlTemplate.replace('{bus_id}', busId), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('[name=csrf-token]').content
+                            },
+                            body: JSON.stringify({ latitude, longitude })
+                        })
+                        .then(res => {
+                            if (!res.ok) {
+                                console.warn("Stopping location updates due to server response.");
+                                const button = document.querySelector(`button[data-bus-id='${busId}']`);
+                                if (button && button.classList.contains('btn-danger')) {
+                                    button.click();
+                                }
+                            }
+                        })
+                        .catch(err => console.error('Update failed:', err));
+                    },
+                    (error) => {
+                        console.error('Geolocation error:', error.message);
+                        stopSharing(busId);
+                    }
+                );
+            };
+
+            const startSharing = (busId) => {
+                if (locationIntervals[busId]) return;
+                sendLocationUpdate(busId);
+                locationIntervals[busId] = setInterval(() => sendLocationUpdate(busId), 30000);
+            };
+
+            const stopSharing = (busId) => {
+                if (locationIntervals[busId]) {
+                    clearInterval(locationIntervals[busId]);
+                    delete locationIntervals[busId];
+                }
+            };
+
+            shareButtons.forEach(button => {
+                const busId = button.dataset.busId;
+                if (button.classList.contains('btn-danger')) {
+                    startSharing(busId);
+                }
+                
+                button.addEventListener('click', async () => {
+                    const isSharing = button.classList.contains('btn-danger');
+                    const busHeader = document.getElementById(`header-${busId}`);
+                    
+                    if (isSharing) {
+                        // Stop sharing
+                        stopSharing(busId);
+                        try {
+                            const response = await fetch(stopUrlTemplate.replace('{bus_id}', busId), { 
+                                method: 'POST', 
+                                headers: {'X-CSRFToken': document.querySelector('[name=csrf-token]').content} 
+                            });
+                            
+                            if (response.ok || response.status === 200) {
+                                button.classList.replace('btn-danger', 'btn-outline-light');
+                                button.innerHTML = '<i class="fas fa-satellite-dish me-1"></i>مشاركة الموقع';
+                                busHeader.classList.remove('sharing-active');
+                                showNotification('تم إيقاف مشاركة الموقع بنجاح', 'success');
+                            } else {
+                                throw new Error(`Server responded with status: ${response.status}`);
+                            }
+                        } catch (error) { 
+                            console.error('Failed to stop session:', error);
+                            showNotification('حدث خطأ في إيقاف مشاركة الموقع', 'error');
+                        }
+                    } else {
+                        // Start sharing
+                        try {
+                            const response = await fetch(startUrlTemplate.replace('{bus_id}', busId), { 
+                                method: 'POST', 
+                                headers: {'X-CSRFToken': document.querySelector('[name=csrf-token]').content} 
+                            });
+                            
+                            if (response.ok || response.status === 200) {
+                                button.classList.replace('btn-outline-light', 'btn-danger');
+                                button.innerHTML = '<i class="fas fa-stop-circle me-1"></i>إيقاف المشاركة';
+                                busHeader.classList.add('sharing-active');
+                                startSharing(busId);
+                                showNotification('بدأت مشاركة الموقع. ستتوقف تلقائياً بعد ساعة', 'success');
+                            } else {
+                                throw new Error(`Server responded with status: ${response.status}`);
+                            }
+                        } catch (error) { 
+                            console.error('Failed to start session:', error);
+                            showNotification('حدث خطأ في بدء مشاركة الموقع', 'error');
+                        }
+                    }
+                });
+            });
+        });
+
+        // Smooth scrolling for better UX
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

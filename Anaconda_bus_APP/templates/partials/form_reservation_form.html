@@ -1,0 +1,280 @@
+{% load static %}
+<form id="edit-reservation-form" method="post" action="{% url 'edit_form_reservation' booking_id %}">
+    {% csrf_token %}
+
+    <!-- رسائل الخطأ -->
+    <div class="error-messages mb-4" style="display: none;">
+        <div class="alert alert-danger rounded-3">
+            <h6 class="alert-heading mb-2"><i class="fas fa-exclamation-triangle me-2"></i>يرجى تصحيح الأخطاء التالية:</h6>
+            <ul id="edit-error-list" class="mb-0 ps-3"></ul>
+        </div>
+    </div>
+
+    <!-- معلومات الرحلة الأساسية -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="form-group">
+                <label for="{{ form.trip_date.id_for_label }}" class="form-label fw-bold">
+                    <i class="fas fa-calendar-alt me-1"></i>{{ form.trip_date.label }}
+                </label>
+                {{ form.trip_date }}
+                <div class="invalid-feedback">يرجى تحديد تاريخ الرحلة</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group" style="display: none;">
+                <label for="{{ form.trip_type.id_for_label }}" class="form-label fw-bold">
+                    <i class="fas fa-route me-1"></i>{{ form.trip_type.label }}
+                </label>
+                {{ form.trip_type }}
+            </div>
+        </div>
+    </div>
+
+    <!-- أوقات الرحلة -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0" id="arrival-time-group">
+            <div class="form-group">
+                <label for="{{ form.arrival_time.id_for_label }}" class="form-label fw-bold">
+                    <i class="fas fa-clock me-1"></i>{{ form.arrival_time.label }}
+                </label>
+                {{ form.arrival_time }}
+                <div class="invalid-feedback">يرجى تحديد وقت الذهاب</div>
+            </div>
+        </div>
+        <div class="col-md-6" id="back-time-group">
+            <div class="form-group">
+                <label for="{{ form.back_time.id_for_label }}" class="form-label fw-bold">
+                    <i class="fas fa-clock me-1"></i>{{ form.back_time.label }}
+                </label>
+                {{ form.back_time }}
+                <div class="invalid-feedback">يرجى تحديد وقت العودة</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات الذهاب -->
+    <div id="going-fields" class="mb-4">
+        <div class="section-header mb-3">
+            <h5 class="text-primary mb-0"><i class="fas fa-arrow-right me-2"></i>معلومات الذهاب</h5>
+            <div class="divider" style="height:2px; background:linear-gradient(90deg, #290C38, transparent); border-radius:2px; margin-top:8px;"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-group">
+                    <label for="id_going_city" class="form-label fw-bold">مدينة الذهاب</label>
+                    <select id="id_going_city" name="going_city" class="form-select">
+                        <option value="">اختر مدينة الذهاب</option>
+                        {% for city in cities %}
+                            <option value="{{ city.id }}" {% if form.instance.going_city_id == city.id %}selected{% endif %}>
+                                {{ city.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">يرجى اختيار مدينة الذهاب</div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-group">
+                    <label for="id_going_pickup_location" class="form-label fw-bold">مكان الركوب في الذهاب</label>
+                    <select id="id_going_pickup_location" name="going_pickup_location" class="form-select">
+                        <option value="">اختر مدينة الذهاب أولاً</option>
+                    </select>
+                    <div class="invalid-feedback">يرجى اختيار مكان ركوب الذهاب</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات العودة -->
+    <div id="return-fields" class="mb-4">
+        <div class="section-header mb-3">
+            <h5 class="text-success mb-0"><i class="fas fa-arrow-left me-2"></i>معلومات العودة</h5>
+            <div class="divider" style="height:2px; background:linear-gradient(90deg, #28a745, transparent); border-radius:2px; margin-top:8px;"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-group">
+                    <label for="id_return_city" class="form-label fw-bold">مدينة العودة</label>
+                    <select id="id_return_city" name="return_city" class="form-select">
+                        <option value="">اختر مدينة العودة</option>
+                        {% for city in cities %}
+                            <option value="{{ city.id }}" {% if form.instance.return_city_id == city.id %}selected{% endif %}>
+                                {{ city.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">يرجى اختيار مدينة العودة</div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-group">
+                    <label for="id_return_pickup_location" class="form-label fw-bold">مكان الركوب في العودة</label>
+                    <select id="id_return_pickup_location" name="return_pickup_location" class="form-select">
+                        <option value="">اختر مدينة العودة أولاً</option>
+                    </select>
+                    <div class="invalid-feedback">يرجى اختيار مكان الركوب في العودة</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار الحفظ -->
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+        <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+    </div>
+</form>
+<script>
+// نضع الكود داخل دالة لضمان عدم تضارب المتغيرات عند إعادة تحميل الفورم
+(function() {
+    // --- تهيئة المتغيرات ---
+    const tripTypeSelect = document.getElementById('id_trip_type');
+    const arrivalTimeSelect = document.getElementById('id_arrival_time'); // وقت الذهاب
+    const backTimeSelect = document.getElementById('id_back_time');     // وقت العودة
+
+    const arrivalTimeGroup = document.getElementById('arrival-time-group');
+    const backTimeGroup = document.getElementById('back-time-group');
+    const goingFields = document.getElementById('going-fields');
+    const returnFields = document.getElementById('return-fields');
+
+    const goingCitySelect = document.getElementById('id_going_city');
+    const goingPickupSelect = document.getElementById('id_going_pickup_location');
+    const returnCitySelect = document.getElementById('id_return_city');
+    const returnPickupSelect = document.getElementById('id_return_pickup_location');
+
+    // --- البيانات الأولية من Django ---
+    const categoryId = "{{ form.instance.category.id }}"; // ID الجامعة
+    const initialGoingCityId = "{{ form.instance.going_city_id|default:'' }}";
+    const initialGoingPickup = "{{ form.instance.going_pickup_location|escapejs|default:'' }}";
+    const initialReturnCityId = "{{ form.instance.return_city_id|default:'' }}";
+    const initialReturnPickup = "{{ form.instance.return_pickup_location|escapejs|default:'' }}";
+
+    // --- دوال مساعدة ---
+
+    // دالة لإظهار/إخفاء الحقول بناءً على نوع الرحلة
+    function toggleTripSections(tripType) {
+        const showGoing = tripType === 'ذهاب' || tripType === 'ذهاب وعودة';
+        const showReturn = tripType === 'عودة' || tripType === 'ذهاب وعودة';
+
+        arrivalTimeGroup.style.display = showGoing ? 'block' : 'none';
+        goingFields.style.display = showGoing ? 'block' : 'none';
+        
+        backTimeGroup.style.display = showReturn ? 'block' : 'none';
+        returnFields.style.display = showReturn ? 'block' : 'none';
+    }
+
+    // ✅ --- دالة AJAX جديدة لتحميل المدن --- ✅
+    function loadCitiesByRound(time, tripType, citySelect, selectedCityId) {
+        if (!time) {
+            citySelect.innerHTML = '<option value="" selected disabled>اختر الوقت أولاً</option>';
+            citySelect.disabled = true;
+            return;
+        }
+
+        citySelect.innerHTML = '<option value="" selected disabled>جاري تحميل المدن...</option>';
+        
+        $.ajax({
+            url: "{% url 'ajax_load_cities_by_round' %}",
+            data: {
+                'time': time,
+                'trip_type': tripType,
+                'category_id': categoryId
+            },
+            success: function(data) {
+                citySelect.innerHTML = '<option value="" selected disabled>اختر المدينة</option>';
+                data.forEach(function(item) {
+                    const option = new Option(item.name, item.id);
+                    if (item.id.toString() === selectedCityId) {
+                        option.selected = true;
+                    }
+                    citySelect.add(option);
+                });
+                citySelect.disabled = false;
+                // بعد تحميل المدن، نقوم بتشغيل حدث "change" يدويًا لتحميل نقاط الركوب
+                $(citySelect).trigger('change');
+            },
+            error: function() {
+                citySelect.innerHTML = '<option value="" disabled>خطأ في تحميل المدن</option>';
+            }
+        });
+    }
+
+    // دالة AJAX لتحميل نقاط الركوب
+    function loadPickupLocations(cityId, pickupSelect, selectedPickup) {
+        if (!cityId) {
+            pickupSelect.innerHTML = '<option value="" selected disabled>اختر المدينة أولاً</option>';
+            pickupSelect.disabled = true;
+            return;
+        }
+
+        pickupSelect.innerHTML = '<option value="" selected disabled>جاري التحميل...</option>';
+        
+        $.ajax({
+            url: "{% url 'ajax_load_pickup_locations_filtered' %}",
+            data: { city_id: cityId },
+            success: function(data) {
+                pickupSelect.innerHTML = '<option value="" selected disabled>اختر مكان الركوب</option>';
+                data.forEach(function(item) {
+                    const option = new Option(item.text, item.text);
+                    if (item.text === selectedPickup) {
+                        option.selected = true;
+                    }
+                    pickupSelect.add(option);
+                });
+                pickupSelect.disabled = false;
+            },
+            error: function() {
+                pickupSelect.innerHTML = '<option value="" disabled>خطأ في التحميل</option>';
+            }
+        });
+    }
+
+    // --- ربط الأحداث والتهيئة الأولية ---
+
+    // عند تغيير نوع الرحلة
+    tripTypeSelect.addEventListener('change', function() {
+        toggleTripSections(this.value);
+    });
+
+    // ✅ --- ربط الأحداث الجديدة لحقول الوقت --- ✅
+    arrivalTimeSelect.addEventListener('change', function() {
+        loadCitiesByRound(this.value, 'ذهاب', goingCitySelect, null);
+        // تفريغ قائمة نقاط الركوب عند تغيير الوقت
+        goingPickupSelect.innerHTML = '<option value="">اختر المدينة أولاً</option>';
+    });
+
+    backTimeSelect.addEventListener('change', function() {
+        loadCitiesByRound(this.value, 'عودة', returnCitySelect, null);
+        // تفريغ قائمة نقاط الركوب عند تغيير الوقت
+        returnPickupSelect.innerHTML = '<option value="">اختر المدينة أولاً</option>';
+    });
+
+    // عند تغيير مدينة الذهاب
+    goingCitySelect.addEventListener('change', function() {
+        // إذا كانت هذه أول مرة يتم فيها تحميل الصفحة، استخدم القيمة الأولية
+        const pickupToSelect = (this.value === initialGoingCityId) ? initialGoingPickup : null;
+        loadPickupLocations(this.value, goingPickupSelect, pickupToSelect);
+    });
+
+    // عند تغيير مدينة العودة
+    returnCitySelect.addEventListener('change', function() {
+        const pickupToSelect = (this.value === initialReturnCityId) ? initialReturnPickup : null;
+        loadPickupLocations(this.value, returnPickupSelect, pickupToSelect);
+    });
+
+    // --- التشغيل عند تحميل الفورم ---
+
+    // 1. إظهار/إخفاء الأقسام الصحيحة
+    toggleTripSections(tripTypeSelect.value);
+
+    // 2. تحميل المدن ونقاط الركوب للبيانات الموجودة مسبقاً
+    if (arrivalTimeSelect.value) {
+        loadCitiesByRound(arrivalTimeSelect.value, 'ذهاب', goingCitySelect, initialGoingCityId);
+    }
+    if (backTimeSelect.value) {
+        loadCitiesByRound(backTimeSelect.value, 'عودة', returnCitySelect, initialReturnCityId);
+    }
+
+})();
+</script>

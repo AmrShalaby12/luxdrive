@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحديث حالة السائق</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">تحديث حالة السائق</h1>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="driver_status" class="form-label">حالة السائق</label>
+                <select name="driver_status" id="driver_status" class="form-select">
+                    {% for key, value in schedule.DRIVER_STATUS_CHOICES %}
+                        <option value="{{ key }}" {% if schedule.driver_status == key %}selected{% endif %}>
+                            {{ value }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">تحديث</button>
+        </form>
+
+        <a href="{% url 'bus_status' %}" class="btn btn-secondary mt-3">العودة إلى الحالة</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

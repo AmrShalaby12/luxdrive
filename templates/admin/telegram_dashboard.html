@@ -1,0 +1,214 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}لوحة تحكم Telegram{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fab fa-telegram me-2"></i>
+                    لوحة تحكم Telegram
+                </h1>
+                <div class="btn-group">
+                    <a href="{% url 'telegram_notifications' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-bell me-1"></i>الإشعارات
+                    </a>
+                    <a href="{% url 'telegram_activities' %}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-line me-1"></i>الأنشطة
+                    </a>
+                    <a href="{% url 'telegram_broadcast' %}" class="btn btn-outline-success">
+                        <i class="fas fa-broadcast-tower me-1"></i>رسالة جماعية
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_notifications }}</h4>
+                            <p class="card-text">إجمالي الإشعارات</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bell fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ sent_notifications }}</h4>
+                            <p class="card-text">الإشعارات المرسلة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ pending_notifications }}</h4>
+                            <p class="card-text">الإشعارات المعلقة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_activities }}</h4>
+                            <p class="card-text">إجمالي الأنشطة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Stats -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-day me-2"></i>
+                        إحصائيات اليوم
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h3 class="text-primary">{{ today_activities }}</h3>
+                            <p class="text-muted">نشاط اليوم</p>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-info">{{ week_activities }}</h3>
+                            <p class="text-muted">نشاط أسبوعي</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        توزيع الأنشطة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for activity in activity_breakdown %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ activity.action }}</span>
+                        <span class="badge bg-primary">{{ activity.count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        آخر الأنشطة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>المستخدم</th>
+                                    <th>الإجراء</th>
+                                    <th>الوقت</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td>{{ activity.user.username|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ activity.action }}</span>
+                                    </td>
+                                    <td>{{ activity.created_at|date:"H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>
+                        آخر الإشعارات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>الطالب</th>
+                                    <th>الحجز</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notification in recent_notifications %}
+                                <tr>
+                                    <td>{{ notification.student_name }}</td>
+                                    <td>{{ notification.reservation_id }}</td>
+                                    <td>
+                                        {% if notification.is_sent %}
+                                            <span class="badge bg-success">تم الإرسال</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">معلق</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

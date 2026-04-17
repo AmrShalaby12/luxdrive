@@ -1,0 +1,142 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        .suggestion-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            background-color: #fdfdfd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08 );
+            overflow: hidden;
+        }
+        .suggestion-header {
+            background-color: #417690; /* لون أدمن جانجو الأزرق */
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .suggestion-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        .suggestion-body {
+            padding: 20px;
+        }
+        .passenger-list {
+            list-style-type: none;
+            padding: 0;
+            max-height: 160px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #fff;
+            margin-bottom: 15px;
+        }
+        .passenger-list li {
+            padding: 6px 2px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95rem;
+        }
+        .passenger-list li:last-child {
+            border-bottom: none;
+        }
+        .route-points {
+            margin-top: 15px;
+        }
+        .route-points h4 {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .route-points span {
+            display: inline-block;
+            background-color: #e8f0fe;
+            color: #4272d7;
+            padding: 5px 12px;
+            border-radius: 15px;
+            margin: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .assign-form {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .assign-form select {
+            flex-grow: 1;
+            min-width: 250px;
+        }
+        .assign-form .button {
+            background-color: #198754; /* أخضر */
+            border-color: #198754;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1><i class="fas fa-brain"></i> {{ title }}</h1>
+    <p>يقوم هذا المساعد الذكي بتحليل الحجوزات غير المسكنة ويقترح رحلات بناءً على بيانات الركاب التاريخية. راجع الاقتراحات، اختر حافلة، وقم بالتسكين بنقرة واحدة.</p>
+
+    {% if suggestions %}
+        {% for suggestion in suggestions %}
+            <div class="suggestion-card">
+                <div class="suggestion-header">
+                    <h2><i class="fas fa-lightbulb"></i> {{ suggestion.title }}</h2>
+                    <span class="badge bg-light text-dark fs-6">{{ suggestion.passenger_count }} ركاب</span>
+                </div>
+                <div class="suggestion-body">
+                    <h4>الركاب المقترحون:</h4>
+                    <ul class="passenger-list">
+                        {% for passenger_res in suggestion.passengers %}
+                            <li><i class="fas fa-user" style="color: #777; margin-left: 5px;"></i> {{ passenger_res.passenger.name }} (نقطة الركوب: {{ passenger_res.pickup_location|default:"-" }})</li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="route-points">
+                        <h4><i class="fas fa-route" style="color: #777;"></i> خط السير المقترح (نقاط الركوب):</h4>
+                        {% for point in suggestion.route_points %}
+                            <span>{{ point }}</span>
+                        {% empty %}
+                            <p>لم يتم تحديد نقاط ركوب.</p>
+                        {% endfor %}
+                    </div>
+
+                    <form method="post" class="assign-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="suggestion_key" value="{{ suggestion.key }}">
+                        
+                        <label for="bus-select-{{ suggestion.key }}"><strong>اختر حافلة:</strong></label>
+                        <select name="bus" id="bus-select-{{ suggestion.key }}" required>
+                            <option value="">--- اختر حافلة متاحة ---</option>
+                            {% for bus in available_buses %}
+                                <option value="{{ bus.id }}">{{ bus.name }} (السعة: {{ bus.capacity }})</option>
+                            {% endfor %}
+                        </select>
+                        
+                        <button type="submit" class="button"><i class="fas fa-check-circle"></i> تأكيد وتسكين المجموعة</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-success" role="alert" style="background-color: #d4edda; border-color: #c3e6cb; color: #155724; padding: 20px; border-radius: 8px;">
+            <h4 style="margin-top: 0;"><i class="fas fa-check-circle"></i> لا توجد اقتراحات حاليًا!</h4>
+            <p>جميع الحجوزات المؤكدة تم تسكينها بالفعل، أو لا توجد أنماط تاريخية واضحة لإنشاء اقتراحات.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+<form method="POST" action="">
+    {% csrf_token %}
+    <label for="user_code">الكود الجامعي:</label>
+    <input type="text" id="user_code" name="user_code" required>
+    <button type="submit">تسجيل الحضور</button>
+  </form>
+  
+  <!-- عرض الرسائل -->
+  {% if messages %}
+    <ul>
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  

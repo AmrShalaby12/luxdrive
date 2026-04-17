@@ -1,0 +1,113 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    body {
+        font-family: 'Cairo', sans-serif;
+    }
+    .whatsapp-container {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        padding: 30px;
+        max-width: 700px;
+        margin: 40px auto;
+        direction: rtl;
+    }
+    .whatsapp-container h1 {
+        text-align: center;
+        color: #128C7E;
+        margin-bottom: 20px;
+        font-size: 26px;
+    }
+    label {
+        font-weight: bold;
+        color: #333;
+        margin-top: 10px;
+        display: block;
+    }
+    textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+        resize: vertical;
+    }
+    select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+        height: 200px;
+    }
+    .file-input {
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        background-color: #fafafa;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+    .file-input:hover {
+        border-color: #128C7E;
+        background-color: #f1fdf8;
+    }
+    .file-input input {
+        display: none;
+    }
+    .send-btn {
+        display: block;
+        width: 100%;
+        background-color: #25D366;
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .send-btn:hover {
+        background-color: #128C7E;
+    }
+    .passenger-list {
+        margin-top: 15px;
+    }
+</style>
+
+<div class="whatsapp-container">
+    <h1>📩 إرسال رسالة واتساب مخصصة</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <label for="id_message">✏️ نص الرسالة:</label>
+        {{ form.message }}
+
+        <label for="id_file">📎 أرفق صورة أو ملف (اختياري):</label>
+        <div class="file-input" onclick="document.getElementById('id_file').click();">
+            <input type="file" name="attachment" id="id_file" accept="image/*, .pdf, .doc, .docx, .zip">
+            <p id="file-name">اضغط هنا لاختيار ملف...</p>
+        </div>
+        <button type="submit" class="send-btn">🚀 إرسال الآن</button>
+
+        <div class="passenger-list">
+            <label>👥 الركاب المختارين:</label>
+            {{ form.passenger_ids }}
+        </div>
+
+    </form>
+</div>
+
+<script>
+document.getElementById('id_file').addEventListener('change', function() {
+    const fileName = this.files.length ? this.files[0].name : 'اضغط هنا لاختيار ملف...';
+    document.getElementById('file-name').innerText = fileName;
+});
+</script>
+{% endblock %}

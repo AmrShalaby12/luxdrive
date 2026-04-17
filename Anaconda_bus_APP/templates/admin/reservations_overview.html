@@ -1,0 +1,87 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="module">
+    <h2>{{ title }}</h2>
+    
+    <!-- فلترات -->
+    <div class="filters">
+        <form method="get">
+            <label for="category">الجامعة:</label>
+            <select name="category" id="category">
+                <option value="">جميع الجامعات</option>
+                {% for category in categories %}
+                    <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>
+                        {{ category }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <label for="round">الراوند:</label>
+            <select name="round" id="round">
+                <option value="">جميع الراوندات</option>
+                {% for round in rounds %}
+                    <option value="{{ round.id }}" {% if round.id|stringformat:"s" == selected_round %}selected{% endif %}>
+                        {{ round.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <label for="status">الحالة:</label>
+            <select name="status" id="status">
+                <option value="">جميع الحالات</option>
+                {% for status_value, status_label in status_choices %}
+                    <option value="{{ status_value }}" {% if status_value == selected_status %}selected{% endif %}>
+                        {{ status_label }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <input type="submit" value="تصفية" class="default">
+            <a href="?" class="button">إعادة تعيين</a>
+        </form>
+    </div>
+    
+    <!-- إحصائيات سريعة -->
+    <div class="results">
+        <table>
+            <thead>
+                <tr>
+                    <th>الجامعة</th>
+                    <th>الراوند</th>
+                    <th>عدد الحجوزات</th>
+                    <th>الحالات</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in overview_data %}
+                <tr>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.round.name }}</td>
+                    <td>{{ item.count }}</td>
+                    <td>
+                        {% for status in item.status_counts %}
+                            {{ status.status }}: {{ status.count }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="{% url 'admin:app_formreservation_changelist' %}?category__name={{ item.category|urlencode }}&trip__round__id={{ item.round.id }}" 
+                           class="button">عرض الحجوزات</a>
+                        {% if item.count > 0 %}
+                            <a href="{{ quick_assign_url }}?category={{ item.category|urlencode }}&round={{ item.round.id }}" 
+                               class="button">تعيين رحلة</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">لا توجد حجوزات مطابقة للفلتر</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

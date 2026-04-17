@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - سائقين الباصات</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #ffffff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            cursor: pointer;
+            padding: 10px 20px;
+            background: #290c38;
+            color: #fff;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .tab:hover {
+            background: #290c38;
+        }
+
+        .form {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .form.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        form input, form button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        form button {
+            background: #290c38;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        form button:hover {
+            background: #290c38;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+        .general-errors {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: left;
+        }
+    
+        .general-errors .message {
+            margin: 0;
+            padding: 5px 0;
+        }
+    
+        /* تصميم رسائل أخطاء الحقول */
+        .field-errors {
+            margin-top: 10px;
+            background-color: #fce4ec;
+            color: #c62828;
+            padding: 10px;
+            border: 1px solid #f8bbd0;
+            border-radius: 5px;
+            font-size: 13px;
+            text-align: left;
+        }
+    
+        .field-errors strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    
+        .field-errors ul {
+            margin: 0;
+            padding-left: 20px;
+            list-style-type: disc;
+        }
+    
+        .field-errors li {
+            margin: 5px 0;
+        }
+    
+        /* تحسين أزرار النماذج */
+        form button {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const loginTab = document.getElementById("login-tab");
+            const signupTab = document.getElementById("signup-tab");
+            const loginForm = document.getElementById("login-form");
+            const signupForm = document.getElementById("signup-form");
+
+            loginTab.addEventListener("click", function() {
+                loginForm.classList.add("active");
+                signupForm.classList.remove("active");
+            });
+
+            signupTab.addEventListener("click", function() {
+                signupForm.classList.add("active");
+                loginForm.classList.remove("active");
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- رسائل عامة -->
+        {% if messages %}
+            <div class="general-errors">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+                    <div class="errors">
+                    {% for field in signup_form %}
+                        {% if field.errors %}
+                            <div class="field-errors">
+                                <strong>{{ field.label }}:</strong>
+                                <ul>
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+        <div class="tabs">
+            <div class="tab" id="login-tab">تسجيل الدخول</div>
+            <div class="tab" id="signup-tab">إنشاء حساب</div>
+        </div>
+    
+        <!-- نموذج تسجيل الدخول -->
+        <div id="login-form" class="form active">
+            <h2>تسجيل الدخول - سائقين الباصات</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ login_form.as_p }}
+                <div class="errors">
+                    {% for field in login_form %}
+                        {% if field.errors %}
+                            <div class="field-errors">
+                                <strong>{{ field.label }}:</strong>
+                                <ul>
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <button type="submit" name="login_submit">تسجيل الدخول</button>
+            </form>
+        </div>
+    
+        <!-- نموذج إنشاء حساب -->
+        <div id="signup-form" class="form">
+            <h2>إنشاء حساب جديد كسائق باص</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ signup_form.as_p }}
+
+                <button type="submit" name="signup_submit">إنشاء حساب</button>
+            </form>
+        </div>
+    
+        <div class="footer">
+            &copy; 2025 شركة إدارة noxus. جميع الحقوق محفوظة.
+        </div>
+    </div>
+    
+</body>
+</html>

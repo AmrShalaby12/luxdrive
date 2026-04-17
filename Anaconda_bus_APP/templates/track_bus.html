@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تتبع مباشر للحافلة: {{ bus_name }}</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+    <style>
+        #map { height: 60vh; width: 100%; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1 ); }
+        .info-panel { padding: 1.5rem; background-color: #f8f9fa; text-align: center; }
+        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 1rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container my-4">
+        <div class="info-panel rounded mb-4">
+            <h1 class="h3">تتبع حافلة: {{ bus_name }}</h1>
+            <p id="status-message" class="text-muted">جاري الحصول على موقعك وموقع الحافلة...</p>
+            <div id="loader" class="loader"></div>
+            <div id="eta-info" class="d-none">
+                <p class="lead mb-1">المسافة: <strong id="distance">-- كم</strong></p>
+                <p class="lead mb-0">الوقت المقدر للوصول: <strong id="time">-- دقيقة</strong></p>
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google Maps API for Directions -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=geometry"></script>
+    <!-- Leaflet Routing Machine JS -->
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<script>
+    const busId = {{ bus_id }};
+    const map = L.map('map').setView([24.7136, 46.6753], 5); // Default view (Riyadh)
+
+    // استخدام خرائط Google
+    L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3']
+    } ).addTo(map);
+
+    // ======================================================
+    //                  ✨ الأيقونات الجديدة ✨
+    // ======================================================
+    // أيقونة احترافية للحافلة (Bus)
+    const busIcon = L.icon({ 
+        iconUrl: 'https://img.icons8.com/plasticine/100/bus.png', // رابط أيقونة جديد وموثوق
+        iconSize: [50, 50], // حجم الأيقونة
+        iconAnchor: [25, 50],   // نقطة ارتكاز الأيقونة (أسفل المنتصف )
+        popupAnchor: [0, -50]   // مكان ظهور الـ popup بالنسبة للأيقونة
+    });
+
+    // أيقونة للطالب (User/Student)
+    const userIcon = L.icon({ 
+        iconUrl: 'https://img.icons8.com/office/80/user-location.png', // رابط أيقونة جديد وموثوق
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40]
+    } );
+    // ======================================================
+
+    let busMarker = L.marker([0, 0], { icon: busIcon }).addTo(map).bindPopup("موقع الحافلة");
+    let userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map).bindPopup("موقعك الحالي");
+    let routingControl = null;
+
+    const statusMessage = document.getElementById('status-message');
+    const loader = document.getElementById('loader');
+    const etaInfo = document.getElementById('eta-info');
+    const distanceEl = document.getElementById('distance');
+    const timeEl = document.getElementById('time');
+
+    function updateTracking() {
+        // 1. الحصول على موقع الطالب
+        navigator.geolocation.getCurrentPosition(userPosition => {
+            const userLat = userPosition.coords.latitude;
+            const userLng = userPosition.coords.longitude;
+            userMarker.setLatLng([userLat, userLng]);
+
+            // 2. الحصول على موقع الحافلة من الخادم
+            // تأكد من أن هذا المسار صحيح ويتضمن البادئة /allen/ إذا كنت تستخدمها
+            const getLocationUrl = `/allen/api/get-location/${busId}/`;
+
+            fetch(getLocationUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        const busLat = parseFloat(data.latitude);
+                        const busLng = parseFloat(data.longitude);
+                        busMarker.setLatLng([busLat, busLng]);
+
+                        // تحديث عرض الخريطة لتشمل النقطتين
+                        map.fitBounds([
+                            [userLat, userLng],
+                            [busLat, busLng]
+                        ], { padding: [50, 50] });
+
+                        // إزالة المسار القديم ورسم الجديد
+                        if (routingControl) {
+                            map.removeControl(routingControl);
+                        }
+                        
+                        routingControl = L.Routing.control({
+                            waypoints: [
+                                L.latLng(userLat, userLng),
+                                L.latLng(busLat, busLng)
+                            ],
+                            routeWhileDragging: false,
+                            show: false, // إخفاء التعليمات النصية
+                            createMarker: () => null, // عدم إنشاء أيقونات إضافية
+                            lineOptions: { styles: [{color: '#4A90E2', opacity: 0.8, weight: 5}] }
+                        }).addTo(map);
+                        
+                        // حساب المسافة والوقت
+                        routingControl.on('routesfound', function(e) {
+                            const route = e.routes[0];
+                            const distance = (route.summary.totalDistance / 1000).toFixed(1); // بالكيلومتر
+                            const time = Math.round(route.summary.totalTime / 60); // بالدقائق
+                            
+                            distanceEl.textContent = `${distance} كم`;
+                            timeEl.textContent = `${time} دقيقة`;
+
+                            statusMessage.classList.add('d-none');
+                            loader.classList.add('d-none');
+                            etaInfo.classList.remove('d-none');
+                        });
+
+                    } else {
+                        statusMessage.textContent = 'خطأ: ' + data.message;
+                        loader.classList.add('d-none');
+                    }
+                })
+                .catch((err) => {
+                    console.error("Fetch error:", err);
+                    statusMessage.textContent = 'خطأ في الاتصال بالخادم.';
+                    loader.classList.add('d-none');
+                });
+
+        }, () => {
+            statusMessage.textContent = 'يرجى السماح بالوصول إلى موقعك لعرض المسار.';
+            loader.classList.add('d-none');
+        });
+    }
+
+    // التحديث كل 10 ثواني
+    updateTracking();
+    setInterval(updateTracking, 10000);
+</script>
+
+</body>
+</html>
+{% endblock %}

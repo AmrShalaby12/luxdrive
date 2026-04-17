@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>السيارات المتاحة</title>
+</head>
+<body>
+    <h1>السيارات المتاحة</h1>
+    <p>المسافة: {{ distance_km }} كم</p>
+    
+    <div class="cars-list">
+        {% for car in cars %}
+        <div class="car-card">
+            <img src="{{ car.image.url }}" alt="{{ car.name }}" width="200">
+            <h3>{{ car.brand }} {{ car.name }}</h3>
+            <p>السعر لكل كم: {{ car.price_per_km }} جنيه</p>
+            <p>التكلفة التقديرية: {{ car.estimated_price|floatformat:2 }} جنيه</p>
+            <a href="{% url 'book_car' car.id %}?pickup={{ pickup|urlencode }}&dropoff={{ dropoff|urlencode }}">احجز الآن</a>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

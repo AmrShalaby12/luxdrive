@@ -1,0 +1,3204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>حجز {{ car.brand }} {{ car.name }}</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #07070b;
+            --bg-soft: #111019;
+            --sheet: rgba(12, 11, 19, 0.92);
+            --sheet-solid: #111019;
+            --card: rgba(28, 25, 39, 0.92);
+            --card-2: rgba(37, 33, 52, 0.88);
+            --line: rgba(255, 255, 255, 0.08);
+            --text: #f6f4fb;
+            --muted: #9f9aad;
+            --muted-strong: #cbc7d8;
+            --purple: #93148f;
+            --purple-soft: rgba(147, 20, 143, 0.22);
+            --purple-glow: rgba(166, 73, 214, 0.42);
+            --lime: #d8ff48;
+            --lime-soft: rgba(216, 255, 72, 0.16);
+            --green: #a8ff6f;
+            --pink: #ff78cb;
+            --danger: #ff7b90;
+            --warning: #ffd36b;
+            --shadow-xl: 0 30px 90px rgba(0, 0, 0, 0.55);
+            --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.34);
+            --radius-xl: 34px;
+            --radius-lg: 26px;
+            --radius-md: 20px;
+            --radius-sm: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(147, 20, 143, 0.18), transparent 28%),
+                radial-gradient(circle at top left, rgba(216, 255, 72, 0.08), transparent 18%),
+                var(--bg);
+            color: var(--text);
+            font-family: "Tajawal", sans-serif;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .ride-shell {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--warning);
+        }
+
+        .map-shell {
+            position: absolute;
+            inset: 0;
+            background: #09080f;
+        }
+strong {
+    color: #fff !important;
+}
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #0e0d15;
+        }
+
+        .map-shell .leaflet-control-zoom {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.28);
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .map-shell .leaflet-control-zoom a {
+            width: 42px;
+            height: 42px;
+            line-height: 42px;
+            border: none;
+            background: rgba(11, 10, 18, 0.82);
+            color: #fff;
+        }
+
+        .map-shell .leaflet-control-zoom a:hover {
+            background: rgba(24, 22, 34, 0.96);
+        }
+
+        .map-shell .maplibregl-canvas {
+            filter: brightness(0.8) saturate(0.92) contrast(1.02);
+        }
+
+        .map-fade-top,
+        .map-fade-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            z-index: 390;
+        }
+
+        .map-fade-top {
+            top: 0;
+            height: 170px;
+            background: linear-gradient(180deg, rgba(7, 7, 11, 0.86), rgba(7, 7, 11, 0));
+        }
+
+        .map-fade-bottom {
+            bottom: 0;
+            height: 260px;
+            background: linear-gradient(180deg, rgba(7, 7, 11, 0), rgba(7, 7, 11, 0.72));
+        }
+
+        .map-topbar {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            left: 16px;
+            z-index: 450;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .topbar-left,
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 48px;
+            height: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            background: rgba(12, 11, 19, 0.76);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+        }
+
+        .icon-btn:hover {
+            background: rgba(21, 19, 31, 0.96);
+        }
+
+        .vehicle-flyout {
+            min-width: 0;
+            max-width: min(78vw, 360px);
+            padding: 10px 14px 10px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 13, 22, 0.84);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .vehicle-thumb {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            overflow: hidden;
+            flex: 0 0 58px;
+            background: linear-gradient(135deg, rgba(147, 20, 143, 0.9), rgba(216, 255, 72, 0.46));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .vehicle-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .vehicle-meta {
+            min-width: 0;
+        }
+
+        .vehicle-meta strong {
+            display: block;
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .vehicle-meta span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted-strong);
+            font-size: 12px;
+        }
+
+        .map-status-pills {
+            position: absolute;
+            top: 88px;
+            right: 16px;
+            left: 16px;
+            z-index: 440;
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-pill {
+            min-width: 118px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            background: rgba(15, 13, 22, 0.72);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .status-pill span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .status-pill strong {
+            display: block;
+            margin-top: 2px;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .map-attribution-note {
+            position: absolute;
+            right: 16px;
+            bottom: 18px;
+            z-index: 430;
+            padding: 8px 12px;
+            border-radius: 14px;
+            background: rgba(12, 11, 19, 0.74);
+            color: rgba(255, 255, 255, 0.74);
+            font-size: 11px;
+            backdrop-filter: blur(16px);
+        }
+
+        .map-attribution-note a {
+            color: #fff;
+        }
+
+        .map-pick-banner {
+            position: absolute;
+            right: 16px;
+            bottom: 112px;
+            left: 16px;
+            z-index: 440;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            background: rgba(11, 10, 18, 0.82);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .map-pick-banner.is-visible {
+            display: flex;
+        }
+
+        .map-pick-banner strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .map-pick-banner span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .map-pick-confirm {
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #bbff2d, #d8ff48);
+            color: #151515;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .map-center-pin {
+            position: absolute;
+            inset: 50% auto auto 50%;
+            transform: translate(-50%, calc(-50% - 26px));
+            width: 92px;
+            height: 92px;
+            z-index: 420;
+            pointer-events: none;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-center-pin.is-visible {
+            display: flex;
+        }
+
+        .center-pin-core {
+            position: relative;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #79b6ff;
+            border: 10px solid rgba(121, 182, 255, 0.22);
+            box-shadow: 0 18px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .center-pin-core::before {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            background: #111019;
+        }
+
+        .center-pin-shadow {
+            position: absolute;
+            bottom: -18px;
+            width: 18px;
+            height: 26px;
+            border-radius: 10px 10px 12px 12px;
+            background: linear-gradient(180deg, rgba(121, 182, 255, 1), rgba(46, 115, 224, 1));
+            box-shadow: 0 16px 28px rgba(46, 115, 224, 0.25);
+        }
+
+        .sheet {
+            --sheet-translate: 0px;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 500;
+            border-radius: 34px 34px 0 0;
+            background: linear-gradient(180deg, rgba(18, 16, 27, 0.9), rgba(10, 9, 16, 0.96));
+            backdrop-filter: blur(22px);
+            box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.45);
+            max-height: 73vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sheet.is-dragging {
+            transition: none;
+        }
+
+        .sheet-grabber {
+            position: relative;
+            isolation: isolate;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 16px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 34%),
+                radial-gradient(circle at top right, rgba(147, 20, 143, 0.2), transparent 32%),
+                linear-gradient(180deg, rgba(36, 34, 50, 0.46), rgba(17, 16, 26, 0.3));
+            backdrop-filter: blur(28px) saturate(165%);
+            user-select: none;
+            flex: 0 0 auto;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .sheet-grabber::before,
+        .sheet-grabber::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .sheet-grabber::before {
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 28%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 40%);
+            opacity: 0.95;
+        }
+
+        .sheet-grabber::after {
+            inset: auto 12px 8px 12px;
+            height: 28px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(216, 255, 72, 0.12), rgba(147, 20, 143, 0.18));
+            filter: blur(18px);
+            opacity: 0.86;
+        }
+
+        .sheet-grabber-copy {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .sheet-grabber-copy strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .sheet-grabber-copy span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .sheet-handle-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .sheet-handle {
+            width: 56px;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .sheet-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px 24px;
+            scrollbar-width: thin;
+            overscroll-behavior: contain;
+        }
+
+        .sheet-toggle-btn {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .card-surface {
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 28px;
+            background: rgba(26, 23, 37, 0.94);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .route-surface {
+            position: relative;
+            isolation: isolate;
+            overflow: visible;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background:
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 28%),
+                radial-gradient(circle at top left, rgba(147, 20, 143, 0.18), transparent 30%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.02) 36%, rgba(147, 20, 143, 0.08) 76%),
+                linear-gradient(180deg, rgba(34, 31, 47, 0.32), rgba(15, 14, 23, 0.18));
+            -webkit-backdrop-filter: blur(38px) saturate(190%) brightness(1.05);
+            backdrop-filter: blur(38px) saturate(190%) brightness(1.05);
+            box-shadow:
+                0 28px 52px rgba(0, 0, 0, 0.24),
+                0 0 0 1px rgba(255, 255, 255, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .route-surface::before,
+        .route-surface::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .route-surface::before {
+            top: 10px;
+            right: 12px;
+            left: 12px;
+            height: 42%;
+            border-radius: 24px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.03) 48%, transparent 100%);
+            opacity: 0.92;
+        }
+
+        .route-surface::after {
+            inset: auto 16px -12px 16px;
+            height: 46px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(216, 255, 72, 0.12), rgba(147, 20, 143, 0.22), rgba(255, 255, 255, 0.1));
+            filter: blur(22px);
+            opacity: 0.94;
+        }
+
+        .route-surface .card-body {
+            position: relative;
+            z-index: 2;
+        }
+
+        .route-surface .section-head h2 {
+            color: #fff;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 24px rgba(0, 0, 0, 0.28);
+        }
+
+        .route-surface .section-head p,
+        .route-surface .route-label {
+            color: rgba(236, 232, 245, 0.74);
+        }
+
+        .route-surface .mini-badge {
+            background: linear-gradient(135deg, rgba(216, 255, 72, 0.22), rgba(216, 255, 72, 0.08));
+            border: 1px solid rgba(216, 255, 72, 0.18);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .route-surface .route-fields {
+            position: relative;
+            z-index: 4;
+        }
+
+        .route-surface .route-field {
+            border-color: rgba(255, 255, 255, 0.1);
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.015)),
+                rgba(16, 14, 24, 0.38);
+            -webkit-backdrop-filter: blur(22px) saturate(170%);
+            backdrop-filter: blur(22px) saturate(170%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .route-surface .route-field.is-active {
+            border-color: rgba(196, 74, 255, 0.72);
+            box-shadow:
+                0 0 0 1px rgba(196, 74, 255, 0.24),
+                0 18px 34px rgba(0, 0, 0, 0.22),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .route-surface .location-input {
+            color: #fff;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 16px rgba(0, 0, 0, 0.22);
+        }
+
+        .route-surface .mini-icon-btn,
+        .route-surface .swap-btn {
+            border-color: rgba(255, 255, 255, 0.1);
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)),
+                rgba(255, 255, 255, 0.02);
+            -webkit-backdrop-filter: blur(18px) saturate(165%);
+            backdrop-filter: blur(18px) saturate(165%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .card-body {
+            padding: 18px;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .section-head h2,
+        .section-head h3 {
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .section-head p {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .mini-badge {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(216, 255, 72, 0.12);
+            color: var(--lime);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .route-alert,
+        .gov-alert {
+            display: none;
+            margin-bottom: 12px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .route-alert {
+            color: var(--warning);
+            background: rgba(255, 211, 107, 0.12);
+            border: 1px solid rgba(255, 211, 107, 0.18);
+        }
+
+        .gov-alert {
+            color: var(--danger);
+            background: rgba(255, 123, 144, 0.12);
+            border: 1px solid rgba(255, 123, 144, 0.18);
+        }
+
+        .route-fields {
+            display: grid;
+            gap: 12px;
+        }
+
+        .route-field {
+            position: relative;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)),
+                rgba(18, 16, 27, 0.68);
+            backdrop-filter: blur(18px) saturate(160%);
+            transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            z-index: 1;
+        }
+
+        .route-field.is-active {
+            border-color: rgba(147, 20, 143, 0.72);
+            box-shadow: 0 0 0 1px rgba(147, 20, 143, 0.32), 0 16px 32px rgba(0, 0, 0, 0.24);
+            transform: translateY(-1px);
+            z-index: 40;
+        }
+
+        .route-field.is-suggesting,
+        .route-field:focus-within {
+            z-index: 70;
+        }
+
+        .route-bullet {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex: 0 0 16px;
+            border: 4px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.02);
+        }
+
+        .route-bullet.from {
+            background: var(--lime);
+        }
+
+        .route-bullet.to {
+            background: var(--pink);
+        }
+
+        .route-input-wrap {
+            min-width: 0;
+            position: relative;
+        }
+
+        .route-label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .location-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .location-input::placeholder {
+            color: #8b8699;
+        }
+
+        .route-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mini-icon-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mini-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .swap-row {
+            display: flex;
+            justify-content: center;
+            margin: -4px 0 -2px;
+        }
+
+        .swap-btn {
+            width: 48px;
+            height: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            background: linear-gradient(180deg, rgba(147, 20, 143, 0.22), rgba(147, 20, 143, 0.08));
+            color: var(--text);
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            left: 0;
+            z-index: 140;
+            display: none;
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            background:
+                #151515;
+            backdrop-filter: blur(28px) saturate(180%);
+            box-shadow:
+                0 28px 50px rgba(0, 0, 0, 0.34),
+                inset 0 1px 0 rgba(255, 255, 255, 0.16);
+        }
+
+        .autocomplete-item {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            line-height: 1.5;
+            font-size: 13px;
+            color: var(--muted-strong);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(147, 20, 143, 0.12);
+            color: #fff;
+        }
+
+        .map-picker-card {
+            margin-top: 14px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(18, 16, 27, 0.95), rgba(26, 23, 37, 0.96));
+        }
+
+        .picker-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .picker-top strong {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .picker-top span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .picker-target {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(121, 182, 255, 0.14);
+            color: #9dd0ff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .picker-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .picker-btn {
+            padding: 13px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .picker-btn.primary {
+            background: linear-gradient(135deg, #bbff2d, #d8ff48);
+            color: #121212;
+            border-color: transparent;
+        }
+
+        .picker-btn.primary:hover {
+            filter: brightness(0.98);
+        }
+
+        .trip-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .trip-chip {
+            position: relative;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            background: rgba(18, 16, 27, 0.9);
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .trip-chip:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .trip-chip.is-active {
+            background: linear-gradient(180deg, rgba(147, 20, 143, 0.32), rgba(147, 20, 143, 0.12));
+            border-color: rgba(147, 20, 143, 0.72);
+            box-shadow: 0 0 0 1px rgba(147, 20, 143, 0.26);
+        }
+
+        .trip-chip strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 800;
+            color : #fff ;
+        }
+
+        .trip-chip span {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .field-block {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            background: rgba(18, 16, 27, 0.9);
+        }
+
+        .field-block label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .field-block input,
+        .field-block select,
+        .booking-field input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            outline: none;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .field-block input::-webkit-calendar-picker-indicator,
+        .field-block input::-webkit-inner-spin-button,
+        .field-block input::-webkit-clear-button {
+            filter: invert(1);
+        }
+
+        .return-fields {
+            display: none;
+        }
+
+        .return-fields.is-visible {
+            display: contents;
+        }
+
+        .payment-toggle {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .payment-choice {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            background: rgba(18, 16, 27, 0.9);
+            cursor: pointer;
+        }
+
+        .payment-choice.is-active {
+            border-color: rgba(216, 255, 72, 0.56);
+            background: linear-gradient(180deg, rgba(216, 255, 72, 0.14), rgba(216, 255, 72, 0.05));
+            box-shadow: 0 0 0 1px rgba(216, 255, 72, 0.18);
+        }
+
+        .payment-choice strong {
+            display: block;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .payment-choice span {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .fare-card {
+            background:
+                radial-gradient(circle at top right, rgba(147, 20, 143, 0.25), transparent 45%),
+                linear-gradient(180deg, rgba(24, 20, 36, 0.98), rgba(13, 12, 20, 0.98));
+        }
+
+        .fare-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .fare-top h3 {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .fare-top p {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .fare-value {
+            text-align: left;
+        }
+
+        .fare-value span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .fare-value strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .fare-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .fare-stat {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .fare-stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .fare-stat strong {
+            display: block;
+            margin-top: 6px;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .fare-note {
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .options-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .options-header h3 {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .options-summary {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .car-options-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .car-option {
+            display: grid;
+            grid-template-columns: 86px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            background: rgba(18, 16, 27, 0.72);
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .car-option:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .car-option.is-active {
+            border-color: rgba(147, 20, 143, 0.72);
+            background: linear-gradient(180deg, rgba(147, 20, 143, 0.24), rgba(147, 20, 143, 0.08));
+            cursor: default;
+        }
+
+        .car-option.is-unavailable {
+            opacity: 0.66;
+        }
+
+        .car-option-thumb {
+            width: 86px;
+            height: 72px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(147, 20, 143, 0.88), rgba(216, 255, 72, 0.42));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 22px;
+        }
+
+        .car-option-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .car-option-meta strong {
+            display: block;
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .car-option-meta span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .car-option-price {
+            text-align: left;
+        }
+
+        .car-option-price strong {
+            display: block;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .car-option-price span {
+            display: inline-flex;
+            margin-top: 8px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--muted-strong);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .car-option-price span.best {
+            background: rgba(216, 255, 72, 0.14);
+            color: var(--lime);
+        }
+
+        .car-media {
+            display: grid;
+            gap: 14px;
+        }
+
+        .media-hero {
+            position: relative;
+            min-height: 180px;
+            border-radius: 26px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at right top, rgba(216, 255, 72, 0.16), transparent 35%),
+                linear-gradient(135deg, rgba(147, 20, 143, 0.32), rgba(18, 16, 27, 0.9));
+        }
+
+        .media-hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-overlay {
+            position: absolute;
+            inset: auto 0 0 0;
+            padding: 16px;
+            background: linear-gradient(180deg, rgba(8, 8, 13, 0), rgba(8, 8, 13, 0.8));
+        }
+
+        .media-overlay strong {
+            display: block;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .media-overlay span {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted-strong);
+            font-size: 13px;
+        }
+
+        .spec-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .spec-tile {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            background: rgba(18, 16, 27, 0.9);
+        }
+
+        .spec-tile i {
+            color: var(--lime);
+            font-size: 15px;
+        }
+
+        .spec-tile span {
+            display: block;
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .spec-tile strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .description-box {
+            color: var(--muted-strong);
+            font-size: 14px;
+            line-height: 1.9;
+        }
+
+        .panorama-card {
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 26px;
+            overflow: hidden;
+            background: rgba(18, 16, 27, 0.9);
+        }
+
+        .panorama-card h4 {
+            padding: 16px 18px;
+            font-size: 16px;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        #pano-viewer {
+            height: 220px;
+            background: #0a0911;
+        }
+
+        .booking-stack {
+            display: grid;
+            gap: 12px;
+        }
+
+        .booking-field {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            background: rgba(18, 16, 27, 0.9);
+        }
+
+        .booking-field label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .payment-hint {
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--muted-strong);
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .checkout-box {
+            position: sticky;
+            bottom: 0;
+            margin-top: 16px;
+            padding: 16px 18px 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background: linear-gradient(180deg, rgba(16, 14, 23, 0), rgba(16, 14, 23, 1) 22%);
+        }
+
+        .checkout-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .checkout-summary span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .checkout-summary strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .checkout-summary p {
+            color: var(--muted-strong);
+            font-size: 13px;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        .submit-btn {
+            width: 100%;
+            border: none;
+            border-radius: 22px;
+            padding: 18px;
+            background: linear-gradient(135deg, #bbff2d, #d8ff48);
+            color: #161616;
+            font-size: 20px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 24px 44px rgba(144, 179, 0, 0.24);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .desktop-only {
+            display: none;
+        }
+
+        @media (min-width: 992px) {
+            .ride-shell {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 460px;
+            }
+
+            .map-shell {
+                position: relative;
+                grid-column: 1 / 2;
+            }
+
+            .sheet {
+                position: relative;
+                grid-column: 2 / 3;
+                max-height: 100vh;
+                border-radius: 0;
+                border-right: 1px solid rgba(255, 255, 255, 0.06);
+                background: linear-gradient(180deg, rgba(13, 12, 20, 0.98), rgba(9, 8, 14, 0.98));
+                transform: none !important;
+            }
+
+            .sheet-grabber {
+                padding: 18px 22px 16px;
+                touch-action: auto;
+                cursor: default;
+            }
+
+            .sheet-toggle-btn {
+                display: none;
+            }
+
+            .sheet-scroll {
+                padding: 18px 22px 26px;
+            }
+
+            .map-topbar {
+                top: 24px;
+                right: 24px;
+                left: 24px;
+            }
+
+            .map-status-pills {
+                top: auto;
+                bottom: 32px;
+                left: 24px;
+                right: auto;
+                width: auto;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .map-attribution-note {
+                right: auto;
+                left: 24px;
+                bottom: 24px;
+            }
+
+            .desktop-only {
+                display: inline-flex;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .sheet {
+                height: min(82vh, calc(100dvh - 18px));
+                max-height: none;
+                transform: translateY(var(--sheet-translate));
+                transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+                will-change: transform;
+            }
+
+            .sheet-grabber {
+                touch-action: none;
+                cursor: grab;
+            }
+
+            .sheet.is-docked {
+                box-shadow: 0 -14px 32px rgba(0, 0, 0, 0.28);
+            }
+
+            .sheet.is-docked .sheet-scroll {
+                pointer-events: none;
+                overflow: hidden;
+            }
+
+            .field-grid,
+            .fare-stats,
+            .trip-selector-grid,
+            .picker-actions,
+            .payment-toggle,
+            .spec-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .car-option {
+                grid-template-columns: 72px 1fr;
+            }
+
+            .car-option-price {
+                grid-column: 1 / -1;
+                text-align: right;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ride-shell">
+        <div class="map-shell">
+            <div id="map"></div>
+            <div class="map-fade-top"></div>
+            <div class="map-fade-bottom"></div>
+
+            <div class="map-topbar">
+                <div class="topbar-right">
+                    <a href="javascript:history.back()" class="icon-btn" aria-label="رجوع">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    <div class="vehicle-flyout">
+                        <div class="vehicle-thumb">
+                            {% if car_image_url %}
+                                <img src="{{ car_image_url }}" alt="{{ car.brand }} {{ car.name }}">
+                            {% else %}
+                                <i class="fa-solid fa-car-side"></i>
+                            {% endif %}
+                        </div>
+                        <div class="vehicle-meta">
+                            <strong>{{ car.brand }} {{ car.name }}</strong>
+                            <span>{{ car.seats }} ركاب • {{ car.transmission }} • {{ car.model }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-left">
+                    <button type="button" class="icon-btn" onclick="locateMe(selectionTarget || 'from')" aria-label="موقعي الحالي">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </button>
+                    <button type="button" class="icon-btn desktop-only" onclick="setSelectionTarget('from', true)" aria-label="تحديد من الخريطة">
+                        <i class="fa-solid fa-crosshairs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="map-status-pills">
+                <div class="status-pill">
+                    <span>المسافة الحالية</span>
+                    <strong id="distance-label">0.0 كم</strong>
+                </div>
+                <div class="status-pill">
+                    <span>المدة التقريبية</span>
+                    <strong id="duration-label">--</strong>
+                </div>
+            </div>
+
+            <div class="map-center-pin" id="map-center-pin" aria-hidden="true">
+                <div class="center-pin-core"></div>
+                <div class="center-pin-shadow"></div>
+            </div>
+
+            <div class="map-pick-banner" id="map-pick-banner">
+                <div>
+                    <strong id="picker-target-chip">اختيار نقطة من الخريطة</strong>
+                    <span id="selection-hint">حرّك الخريطة حتى يصبح المؤشر فوق المكان المطلوب ثم اضغط تثبيت.</span>
+                </div>
+                <button type="button" class="map-pick-confirm" id="confirm-center-btn" onclick="confirmCenterSelection()">تثبيت</button>
+            </div>
+
+            <div class="map-attribution-note">
+                <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> •
+                <a href="https://carto.com/" target="_blank" rel="noreferrer">CARTO</a>
+            </div>
+        </div>
+
+        <aside class="sheet" id="ride-sheet">
+            <div class="sheet-grabber" id="sheet-grabber" aria-label="اسحب لأعلى أو لأسفل لإظهار الخريطة أو التفاصيل">
+                <div class="sheet-handle-wrap">
+                    <div class="sheet-handle"></div>
+                </div>
+                <div class="sheet-grabber-copy">
+                    <strong id="sheet-title">تفاصيل الرحلة</strong>
+                    <span id="sheet-subtitle">اسحب البطاقة لأسفل لرؤية الخريطة بحجم أكبر، أو ارفعها لإكمال الحجز.</span>
+                </div>
+                <button type="button" class="sheet-toggle-btn" id="sheet-toggle-btn">الخريطة</button>
+            </div>
+            <div class="sheet-scroll" id="sheet-scroll">
+                <section class="card-surface route-surface">
+                    <div class="card-body">
+                        <div class="section-head">
+                            <div>
+                                <h2>رايح فين؟ وعايز تدفع كام؟</h2>
+                            </div>
+                            <div class="mini-badge" id="route-status">حدد المسار</div>
+                        </div>
+
+                        <div id="gov-alert" class="gov-alert">يفضل أن تكون نقطة الانطلاق والوصول في محافظات مختلفة.</div>
+                        <div id="route-alert" class="route-alert"></div>
+
+                        <div class="route-fields">
+                            <div class="route-field is-active" id="from-field" data-type="from">
+                                <div class="route-bullet from"></div>
+                                <div class="route-input-wrap">
+                                    <label for="from-input" class="route-label">نقطة الانطلاق</label>
+                                    <input type="text" id="from-input" class="location-input" placeholder="مثال: المعادي أو حدّد من الخريطة" autocomplete="off">
+                                    <div id="from-list" class="autocomplete-list"></div>
+                                </div>
+                                <div class="route-actions">
+                                    <button type="button" class="mini-icon-btn" onclick="locateMe('from')" aria-label="موقعي كنقطة انطلاق">
+                                        <i class="fa-solid fa-location-arrow"></i>
+                                    </button>
+                                    <button type="button" class="mini-icon-btn" onclick="setSelectionTarget('from', true)" aria-label="حدد نقطة الانطلاق من الخريطة">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="swap-row">
+                                <button type="button" class="swap-btn" onclick="swapLocations()" aria-label="تبديل النقطتين">
+                                    <i class="fa-solid fa-right-left"></i>
+                                </button>
+                            </div>
+
+                            <div class="route-field" id="to-field" data-type="to">
+                                <div class="route-bullet to"></div>
+                                <div class="route-input-wrap">
+                                    <label for="to-input" class="route-label">نقطة الوصول</label>
+                                    <input type="text" id="to-input" class="location-input" placeholder="مثال: مدينة نصر أو حدّد من الخريطة" autocomplete="off">
+                                    <div id="to-list" class="autocomplete-list"></div>
+                                </div>
+                                <div class="route-actions">
+                                    <button type="button" class="mini-icon-btn" onclick="locateMe('to')" aria-label="موقعي كنقطة وصول">
+                                        <i class="fa-solid fa-location-arrow"></i>
+                                    </button>
+                                    <button type="button" class="mini-icon-btn" onclick="setSelectionTarget('to', true)" aria-label="حدد نقطة الوصول من الخريطة">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="card-surface">
+                    <div class="card-body">
+                        <div class="section-head">
+                            <div>
+                                <h3>تفاصيل الرحلة</h3>
+                                <p>اختَر نوع المشوار، التوقيت، وطريقة الدفع المناسبة قبل الانتقال للدفع.</p>
+                            </div>
+                        </div>
+
+                        <form id="mainForm">
+                            {% csrf_token %}
+                            <input type="hidden" id="trip_type" name="trip_type" value="">
+                            <input type="hidden" id="payment_percentage" name="payment_percentage" value="100">
+
+                            <div class="trip-selector-grid">
+                                <button type="button" class="trip-chip" data-value="one_way_go">
+                                    <strong>ذهاب فقط</strong>
+                                    <span>الرحلة تسعَّر حسب مسافة القيادة الفعلية.</span>
+                                </button>
+                                <button type="button" class="trip-chip" data-value="round_trip">
+                                    <strong>ذهاب وعودة</strong>
+                                    <span>يتم مضاعفة الرحلة وإظهار تاريخ ووقت العودة.</span>
+                                </button>
+                                <button type="button" class="trip-chip" data-value="day_use">
+                                    <strong>يوم كامل</strong>
+                                    <span>مسافة + تكلفة استخدام يومي حسب العربية المختارة.</span>
+                                </button>
+                                <button type="button" class="trip-chip" data-value="day_use_12">
+                                    <strong>12 ساعة</strong>
+                                    <span>سعر ثابت سريع بدون حساب لكل كيلومتر.</span>
+                                </button>
+                                <button type="button" class="trip-chip" data-value="day_use_10">
+                                    <strong>10 ساعات</strong>
+                                    <span>سعر ثابت لرحلات العمل والمشاوير المتوسطة.</span>
+                                </button>
+                                <button type="button" class="trip-chip" data-value="day_use_8">
+                                    <strong>8 ساعات</strong>
+                                    <span>سعر ثابت لرحلات اليوم القصير.</span>
+                                </button>
+                                <button type="button" class="trip-chip" data-value="airport_pickup">
+                                    <strong>استقبال مطار</strong>
+                                    <span>سعر ثابت لخدمة الاستقبال من المطار.</span>
+                                </button>
+                            </div>
+
+                            <div class="field-grid">
+                                <div class="field-block">
+                                    <label for="go_date">تاريخ الذهاب</label>
+                                    <input type="date" id="go_date" name="go_date">
+                                </div>
+                                <div class="field-block">
+                                    <label for="go_time">وقت التحرك</label>
+                                    <input type="time" id="go_time" name="go_time">
+                                </div>
+
+                                <div class="return-fields" id="return-fields">
+                                    <div class="field-block">
+                                        <label for="return_date">تاريخ العودة</label>
+                                        <input type="date" id="return_date" name="return_date">
+                                    </div>
+                                    <div class="field-block">
+                                        <label for="back_time">وقت العودة</label>
+                                        <input type="time" id="back_time" name="back_time">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="payment-toggle">
+                                <button type="button" class="payment-choice is-active" data-value="100">
+                                    <strong>دفع كامل</strong>
+                                    <span>تأكيد مباشر للمبلغ الكامل عبر بوابة الدفع.</span>
+                                </button>
+                                <button type="button" class="payment-choice" data-value="50">
+                                    <strong>دفع 50%</strong>
+                                    <span>دفعة مقدمة الآن، والباقي لاحقًا مع السائق.</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="card-surface fare-card">
+                    <div class="card-body">
+                        <div class="fare-top">
+                            <div>
+                                <h3>التسعير اللحظي</h3>
+                                <p id="fare-caption">حدّد نوع الرحلة والنقطتين ليظهر السعر الفعلي لهذه العربية.</p>
+                            </div>
+                            <div class="fare-value">
+                                <span>الإجمالي المتوقع</span>
+                                <strong id="final-price">--</strong>
+                            </div>
+                        </div>
+
+                        <div class="fare-stats">
+                            <div class="fare-stat">
+                                <span>من</span>
+                                <strong id="pickup-summary">اختر نقطة الانطلاق</strong>
+                            </div>
+                            <div class="fare-stat">
+                                <span>إلى</span>
+                                <strong id="dropoff-summary">اختر نقطة الوصول</strong>
+                            </div>
+                            <div class="fare-stat">
+                                <span>المسافة</span>
+                                <strong id="distance-summary">0.0 كم</strong>
+                            </div>
+                            <div class="fare-stat">
+                                <span>المدة</span>
+                                <strong id="duration-summary">--</strong>
+                            </div>
+                        </div>
+
+                        <div class="fare-note">
+                            التسعير يعرض نفس منطق الصفحة الحالية مع إضافة 2% كما هو مستخدم الآن في النظام. عند تغيير نوع العربية أسفل الصفحة سيتم نقل تفاصيل المشوار الحالية تلقائيًا.
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card-surface">
+                    <div class="card-body">
+                        <div class="options-header">
+                            <div>
+                                <h3>العربيات المناسبة للمشوار</h3>
+                                <div class="options-summary" id="options-summary">حدّد المسار ونوع الرحلة لتظهر أقل العربيات سعرًا لنفس الطلب.</div>
+                            </div>
+                            <div class="mini-badge">مقارنة لحظية</div>
+                        </div>
+                        <div class="car-options-list" id="car-options"></div>
+                    </div>
+                </section>
+
+                <section class="card-surface">
+                    <div class="card-body">
+                        <div class="section-head">
+                            <div>
+                                <h3>العربية الحالية</h3>
+                                <p>تصميم الصفحة قريب من تطبيقات الركوب، لكن مع الحفاظ على بيانات ومميزات السيارة الموجودة أصلًا.</p>
+                            </div>
+                        </div>
+
+                        <div class="car-media">
+                            <div class="media-hero">
+                                {% if car_image_url %}
+                                    <img src="{{ car_image_url }}" alt="{{ car.brand }} {{ car.name }}">
+                                {% endif %}
+                                <div class="media-overlay">
+                                    <strong>{{ car.brand }} {{ car.name }}</strong>
+                                    <span>{{ car.model }} • {{ car.seats }} ركاب • {{ car_fuel_type }}</span>
+                                </div>
+                            </div>
+
+                            <div class="spec-grid">
+                                <div class="spec-tile">
+                                    <i class="fa-solid fa-users"></i>
+                                    <span>السعة</span>
+                                    <strong>{{ car.seats }} ركاب</strong>
+                                </div>
+                                <div class="spec-tile">
+                                    <i class="fa-solid fa-gears"></i>
+                                    <span>ناقل الحركة</span>
+                                    <strong>{{ car.transmission }}</strong>
+                                </div>
+                                <div class="spec-tile">
+                                    <i class="fa-solid fa-gas-pump"></i>
+                                    <span>الوقود</span>
+                                    <strong>{{ car_fuel_type }}</strong>
+                                </div>
+                                <div class="spec-tile">
+                                    <i class="fa-solid fa-road"></i>
+                                    <span>أول شريحة سعر</span>
+                                    <strong>{{ car.price_per_km_0_100 }} جنيه/كم</strong>
+                                </div>
+                            </div>
+
+                            {% if car.description %}
+                                <div class="description-box">{{ car.description }}</div>
+                            {% endif %}
+
+                            {% if car_panorama_url %}
+                                <div class="panorama-card">
+                                    <h4>معاينة 360 داخل السيارة</h4>
+                                    <div id="pano-viewer"></div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card-surface">
+                    <div class="card-body">
+                        <div class="section-head">
+                            <div>
+                                <h3>بيانات الحجز</h3>
+                                <p>هذه البيانات ترسل مع الطلب نفسه وتظل محفوظة لو انتقلت لعربية أخرى من القائمة أعلاه.</p>
+                            </div>
+                        </div>
+
+                        <div class="booking-stack">
+                            <div class="booking-field">
+                                <label for="customer_name">الاسم بالكامل</label>
+                                <input type="text" id="customer_name" name="customer_name" placeholder="اكتب اسمك بالكامل">
+                            </div>
+
+                            <div class="booking-field">
+                                <label for="phone_number">رقم الهاتف</label>
+                                <input type="tel" id="phone_number" name="phone_number" placeholder="01xxxxxxxxx">
+                            </div>
+
+                            <div class="payment-hint">
+                                سيتم نقل المستخدم إلى بوابة الدفع بعد إنشاء الحجز المبدئي، مع تمرير نوع الرحلة، العربية المختارة، نقطتي المشوار، ونسبة الدفع التي اخترتها.
+                            </div>
+                        </div>
+
+                        <div class="checkout-box">
+                            <div class="checkout-summary">
+                                <div>
+                                    <span>المبلغ الحالي</span>
+                                    <strong id="checkout-price">--</strong>
+                                </div>
+                                <p id="checkout-note">أكمل اختيار المسار ثم اضغط متابعة للدفع.</p>
+                            </div>
+                            <button type="button" class="submit-btn" id="submit-btn" onclick="submitBooking()">متابعة إلى الدفع</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+    </div>
+
+    {{ comparison_cars|json_script:"comparison-cars-data" }}
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
+    <script src="https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+
+    <script>
+        const mapConfig = {
+            styleUrl: "{{ map_style_url|default:''|escapejs }}",
+            tileUrl: "{{ map_tile_url|default:''|escapejs }}",
+            tileAttribution: "{{ map_tile_attribution|default:''|escapejs }}"
+        };
+
+        const currentCarId = Number("{{ car.id }}");
+        const comparisonCars = JSON.parse(document.getElementById("comparison-cars-data").textContent);
+        const currentCar = comparisonCars.find((item) => Number(item.id) === currentCarId) || comparisonCars[0] || {
+            id: currentCarId,
+            title: "العربية الحالية",
+            pricing: {}
+        };
+        const rideSheet = document.getElementById("ride-sheet");
+        const sheetScroll = document.getElementById("sheet-scroll");
+        const sheetGrabber = document.getElementById("sheet-grabber");
+        const sheetTitle = document.getElementById("sheet-title");
+        const sheetSubtitle = document.getElementById("sheet-subtitle");
+        const sheetToggleBtn = document.getElementById("sheet-toggle-btn");
+        const mobileSheetQuery = window.matchMedia("(max-width: 991.98px)");
+        const privateDraftKey = "allenCarBookingPrivateDraft";
+        const mapStateKeys = [
+            "from_label", "from_display", "from_lat", "from_lng", "from_governorate",
+            "to_label", "to_display", "to_lat", "to_lng", "to_governorate",
+            "trip_type", "go_date", "return_date", "go_time", "back_time", "payment_percentage"
+        ];
+
+        let map;
+        let fromMarker = null;
+        let toMarker = null;
+        let routeLine = null;
+        let routeGlowLine = null;
+        let fromPoint = null;
+        let toPoint = null;
+        let distance = 0;
+        let durationMin = 0;
+        let currentEstimate = 0;
+        let selectionTarget = "from";
+        let isCenterPicking = window.matchMedia("(max-width: 991px)").matches;
+        let submitInFlight = false;
+        let mobileSheetState = mobileSheetQuery.matches ? "half" : "expanded";
+        let mobileSheetOffsets = { expanded: 0, half: 0, docked: 0 };
+        let sheetDragSession = null;
+        let suppressSheetGrabberClickUntil = 0;
+        const searchTimers = { from: null, to: null };
+
+        function safeNumber(value) {
+            const number = Number(value);
+            return Number.isFinite(number) ? number : 0;
+        }
+
+        function formatCurrency(value) {
+            if (!Number.isFinite(value) || value <= 0) {
+                return "--";
+            }
+            return `${new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 0 }).format(Math.round(value))} EGP`;
+        }
+
+        function formatDuration(value) {
+            if (!Number.isFinite(value) || value <= 0) {
+                return "--";
+            }
+            if (value < 60) {
+                return `${Math.round(value)} دقيقة`;
+            }
+            const hours = Math.floor(value / 60);
+            const mins = Math.round(value % 60);
+            return mins ? `${hours} س ${mins} د` : `${hours} ساعة`;
+        }
+
+        function truncateText(text, maxLength = 34) {
+            if (!text) {
+                return "";
+            }
+            return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function isMobileSheetMode() {
+            return mobileSheetQuery.matches;
+        }
+
+        function getCurrentSheetOffset() {
+            const value = parseFloat(getComputedStyle(rideSheet).getPropertyValue("--sheet-translate"));
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function getVisibleSheetHeight() {
+            if (!isMobileSheetMode()) {
+                return 0;
+            }
+            const sheetHeight = rideSheet.getBoundingClientRect().height;
+            return Math.max(0, sheetHeight - getCurrentSheetOffset());
+        }
+
+        function updateSheetChrome(offset) {
+            const docked = offset >= mobileSheetOffsets.docked - 6;
+            const expanded = offset <= mobileSheetOffsets.expanded + 6;
+
+            rideSheet.classList.toggle("is-docked", docked);
+            rideSheet.classList.toggle("is-expanded", expanded);
+
+            if (!isMobileSheetMode()) {
+                sheetTitle.textContent = "تفاصيل الرحلة";
+                sheetSubtitle.textContent = "كل بيانات الحجز والمقارنة ظاهرة بجانب الخريطة.";
+                return;
+            }
+
+            if (docked) {
+                sheetTitle.textContent = "الخريطة كاملة";
+                sheetSubtitle.textContent = "اسحب لأعلى أو اضغط لفتح البيانات والتفاصيل.";
+                sheetToggleBtn.textContent = "التفاصيل";
+            } else {
+                sheetTitle.textContent = "تفاصيل الرحلة";
+                sheetSubtitle.textContent = "اسحب البطاقة لأسفل لرؤية الخريطة بحجم أكبر، أو ارفعها لإكمال الحجز.";
+                sheetToggleBtn.textContent = "الخريطة";
+            }
+        }
+
+        function fitRouteToVisibleArea() {
+            if (!map || !routeLine || !routeLine.getLatLngs().length) {
+                return;
+            }
+
+            const visibleSheetHeight = getVisibleSheetHeight();
+            map.fitBounds(routeLine.getBounds(), {
+                paddingTopLeft: [32, 110],
+                paddingBottomRight: [32, Math.round((isMobileSheetMode() ? visibleSheetHeight : 36) + 32)]
+            });
+        }
+
+        function applySheetOffset(offset, animate = true) {
+            if (!rideSheet) {
+                return;
+            }
+
+            const clampedOffset = isMobileSheetMode()
+                ? clamp(offset, mobileSheetOffsets.expanded, mobileSheetOffsets.docked)
+                : 0;
+
+            rideSheet.classList.toggle("is-dragging", !animate);
+            rideSheet.style.setProperty("--sheet-translate", `${clampedOffset}px`);
+            updateSheetChrome(clampedOffset);
+        }
+
+        function setSheetState(state, animate = true) {
+            if (!rideSheet) {
+                return;
+            }
+
+            if (!isMobileSheetMode()) {
+                mobileSheetState = "expanded";
+                applySheetOffset(0, animate);
+                requestAnimationFrame(() => map && map.invalidateSize());
+                return;
+            }
+
+            mobileSheetState = state;
+            applySheetOffset(mobileSheetOffsets[state], animate);
+            requestAnimationFrame(() => {
+                if (map) {
+                    map.invalidateSize();
+                }
+                if (routeLine) {
+                    fitRouteToVisibleArea();
+                }
+            });
+        }
+
+        function getNearestSheetState(offset) {
+            return Object.entries(mobileSheetOffsets).reduce((closest, [state, stateOffset]) => {
+                const distance = Math.abs(stateOffset - offset);
+                return distance < closest.distance ? { state, distance } : closest;
+            }, { state: "half", distance: Infinity }).state;
+        }
+
+        function updateMobileSheetMetrics(keepCurrentOffset = false) {
+            if (!rideSheet) {
+                return;
+            }
+
+            if (!isMobileSheetMode()) {
+                setSheetState("expanded", false);
+                return;
+            }
+
+            const sheetHeight = rideSheet.getBoundingClientRect().height;
+            const viewportHeight = window.innerHeight;
+            const dockedVisible = clamp(Math.round(viewportHeight * 0.11), 96, 118);
+            const halfVisible = clamp(Math.round(viewportHeight * 0.46), 320, Math.max(320, Math.round(sheetHeight - 96)));
+
+            mobileSheetOffsets = {
+                expanded: 0,
+                half: Math.max(0, sheetHeight - halfVisible),
+                docked: Math.max(0, sheetHeight - dockedVisible)
+            };
+
+            if (keepCurrentOffset) {
+                applySheetOffset(getCurrentSheetOffset(), false);
+            } else {
+                setSheetState(mobileSheetState, false);
+            }
+        }
+
+        function toggleSheetVisibility() {
+            if (!isMobileSheetMode()) {
+                return;
+            }
+            setSheetState(mobileSheetState === "docked" ? "half" : "docked");
+        }
+
+        function startSheetDrag(clientY) {
+            if (!isMobileSheetMode()) {
+                return;
+            }
+            sheetDragSession = {
+                startY: clientY,
+                startOffset: getCurrentSheetOffset(),
+                moved: false
+            };
+            rideSheet.classList.add("is-dragging");
+        }
+
+        function moveSheetDrag(clientY) {
+            if (!sheetDragSession || !isMobileSheetMode()) {
+                return;
+            }
+            if (Math.abs(clientY - sheetDragSession.startY) > 5) {
+                sheetDragSession.moved = true;
+            }
+            const nextOffset = sheetDragSession.startOffset + (clientY - sheetDragSession.startY);
+            applySheetOffset(nextOffset, false);
+        }
+
+        function endSheetDrag() {
+            if (!sheetDragSession || !isMobileSheetMode()) {
+                return;
+            }
+
+            const targetState = getNearestSheetState(getCurrentSheetOffset());
+            if (sheetDragSession.moved) {
+                suppressSheetGrabberClickUntil = Date.now() + 250;
+            }
+            sheetDragSession = null;
+            rideSheet.classList.remove("is-dragging");
+            setSheetState(targetState, true);
+        }
+
+        function initMobileSheet() {
+            if (!rideSheet || !sheetGrabber) {
+                return;
+            }
+
+            updateMobileSheetMetrics(false);
+
+            sheetGrabber.addEventListener("pointerdown", (event) => {
+                if (!isMobileSheetMode()) {
+                    return;
+                }
+                startSheetDrag(event.clientY);
+                sheetGrabber.setPointerCapture(event.pointerId);
+                event.preventDefault();
+            });
+
+            sheetGrabber.addEventListener("pointermove", (event) => {
+                moveSheetDrag(event.clientY);
+            });
+
+            sheetGrabber.addEventListener("pointerup", () => {
+                endSheetDrag();
+            });
+
+            sheetGrabber.addEventListener("pointercancel", () => {
+                endSheetDrag();
+            });
+
+            sheetGrabber.addEventListener("click", (event) => {
+                if (!isMobileSheetMode() || sheetDragSession) {
+                    return;
+                }
+                if (Date.now() < suppressSheetGrabberClickUntil) {
+                    return;
+                }
+                if (event.target.closest("#sheet-toggle-btn")) {
+                    return;
+                }
+                toggleSheetVisibility();
+            });
+
+            sheetToggleBtn.addEventListener("click", (event) => {
+                event.stopPropagation();
+                toggleSheetVisibility();
+            });
+
+            sheetToggleBtn.addEventListener("pointerdown", (event) => {
+                event.stopPropagation();
+            });
+
+            const handleViewportChange = () => {
+                updateMobileSheetMetrics(true);
+                requestAnimationFrame(() => {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                    fitRouteToVisibleArea();
+                });
+            };
+
+            window.addEventListener("resize", handleViewportChange, { passive: true });
+            if (typeof mobileSheetQuery.addEventListener === "function") {
+                mobileSheetQuery.addEventListener("change", handleViewportChange);
+            } else if (typeof mobileSheetQuery.addListener === "function") {
+                mobileSheetQuery.addListener(handleViewportChange);
+            }
+        }
+
+        function createMarkerIcon(color) {
+            return L.divIcon({
+                className: "",
+                html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:4px solid rgba(255,255,255,0.92);box-shadow:0 12px 24px rgba(0,0,0,0.32);"></div>`,
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+            });
+        }
+
+        function fallbackPointFromLatLng(latLng) {
+            return {
+                lat: safeNumber(latLng.lat),
+                lng: safeNumber(latLng.lng),
+                label: "موقع محدد من الخريطة",
+                display_name: `إحداثيات ${safeNumber(latLng.lat).toFixed(5)}, ${safeNumber(latLng.lng).toFixed(5)}`,
+                governorate: "",
+                source: "fallback"
+            };
+        }
+
+        function currentTripType() {
+            return document.getElementById("trip_type").value;
+        }
+
+        function getPointByType(type) {
+            return type === "from" ? fromPoint : toPoint;
+        }
+
+        function isDistanceBasedTrip(type) {
+            return ["one_way_go", "round_trip", "day_use"].includes(type);
+        }
+
+        function setRouteMessage(message, isError = false) {
+            const alertBox = document.getElementById("route-alert");
+            const statusBox = document.getElementById("route-status");
+            statusBox.textContent = message;
+            statusBox.style.background = isError ? "rgba(255, 123, 144, 0.16)" : "rgba(216, 255, 72, 0.12)";
+            statusBox.style.color = isError ? "var(--danger)" : "var(--lime)";
+            alertBox.style.display = isError ? "block" : "none";
+            alertBox.textContent = isError ? message : "";
+        }
+
+        function updateGovernorateAlert() {
+            const govAlert = document.getElementById("gov-alert");
+            const fromGov = fromPoint?.governorate || "";
+            const toGov = toPoint?.governorate || "";
+            govAlert.style.display = fromGov && toGov && fromGov === toGov ? "block" : "none";
+        }
+
+        function updateSelectionUI() {
+            const fromField = document.getElementById("from-field");
+            const toField = document.getElementById("to-field");
+            const pickerTargetChip = document.getElementById("picker-target-chip");
+            const confirmCenterBtn = document.getElementById("confirm-center-btn");
+            const selectionHint = document.getElementById("selection-hint");
+            const pickBanner = document.getElementById("map-pick-banner");
+            const pin = document.getElementById("map-center-pin");
+
+            fromField.classList.toggle("is-active", selectionTarget === "from");
+            toField.classList.toggle("is-active", selectionTarget === "to");
+            const targetName = selectionTarget === "from" ? "الانطلاق" : "الوصول";
+            pickerTargetChip.textContent = `حدد ${targetName} من الخريطة`;
+            confirmCenterBtn.textContent = `تثبيت ${targetName}`;
+            selectionHint.textContent = `حرّك الخريطة حتى يصبح المؤشر فوق مكان ${targetName} ثم اضغط تثبيت.`;
+            pickBanner.classList.toggle("is-visible", isCenterPicking);
+            pin.classList.toggle("is-visible", isCenterPicking);
+        }
+
+        function setSelectionTarget(type, enableCenterPicking = false) {
+            selectionTarget = type;
+            isCenterPicking = enableCenterPicking;
+            if (isMobileSheetMode()) {
+                setSheetState(enableCenterPicking ? "docked" : "half");
+            }
+            updateSelectionUI();
+        }
+
+        function clearSuggestions(type) {
+            const list = document.getElementById(`${type}-list`);
+            const field = document.getElementById(`${type}-field`);
+            list.innerHTML = "";
+            list.style.display = "none";
+            field.classList.remove("is-suggesting");
+            updateSubmitState();
+        }
+
+        function renderSuggestions(type, results) {
+            const list = document.getElementById(`${type}-list`);
+            const field = document.getElementById(`${type}-field`);
+            list.innerHTML = "";
+
+            if (!results.length) {
+                list.style.display = "none";
+                field.classList.remove("is-suggesting");
+                return;
+            }
+
+            results.forEach((item) => {
+                const element = document.createElement("div");
+                element.className = "autocomplete-item";
+                element.textContent = item.display_name || item.label;
+                element.onclick = () => updatePoint(type, item, true);
+                list.appendChild(element);
+            });
+
+            list.style.display = "block";
+            field.classList.add("is-suggesting");
+            updateSubmitState();
+        }
+
+        function updateMarker(type, point) {
+            const isFrom = type === "from";
+            const color = isFrom ? "#d8ff48" : "#ff78cb";
+            const existingMarker = isFrom ? fromMarker : toMarker;
+            const latLng = L.latLng(point.lat, point.lng);
+
+            if (existingMarker) {
+                existingMarker.setLatLng(latLng);
+            } else {
+                const marker = L.marker(latLng, {
+                    draggable: true,
+                    icon: createMarkerIcon(color)
+                }).addTo(map);
+
+                marker.on("dragend", (event) => {
+                    reverseGeocodePoint(type, event.target.getLatLng(), false);
+                });
+
+                if (isFrom) {
+                    fromMarker = marker;
+                } else {
+                    toMarker = marker;
+                }
+            }
+        }
+
+        function updateInputsSummary() {
+            document.getElementById("pickup-summary").textContent = truncateText(fromPoint?.display_name || fromPoint?.label || "اختر نقطة الانطلاق");
+            document.getElementById("dropoff-summary").textContent = truncateText(toPoint?.display_name || toPoint?.label || "اختر نقطة الوصول");
+            document.getElementById("distance-summary").textContent = `${distance.toFixed(1)} كم`;
+            document.getElementById("duration-summary").textContent = formatDuration(durationMin);
+        }
+
+        function updatePoint(type, point, centerMap = true) {
+            if (!point || !Number.isFinite(Number(point.lat)) || !Number.isFinite(Number(point.lng))) {
+                setRouteMessage("تعذر تحديد الموقع على الخريطة", true);
+                return;
+            }
+
+            const normalizedPoint = {
+                lat: safeNumber(point.lat),
+                lng: safeNumber(point.lng),
+                label: point.label || point.display_name || "موقع",
+                display_name: point.display_name || point.label || "موقع",
+                governorate: point.governorate || "",
+                source: point.source || ""
+            };
+
+            updateMarker(type, normalizedPoint);
+            document.getElementById(`${type}-input`).value = normalizedPoint.display_name;
+
+            if (type === "from") {
+                fromPoint = normalizedPoint;
+                if (!toPoint) {
+                    selectionTarget = "to";
+                }
+            } else {
+                toPoint = normalizedPoint;
+            }
+
+            clearSuggestions(type);
+            updateInputsSummary();
+            updateGovernorateAlert();
+            syncStateToUrl();
+            updateSelectionUI();
+            updateSubmitState();
+
+            if (centerMap) {
+                const latLng = L.latLng(normalizedPoint.lat, normalizedPoint.lng);
+                map.panTo(latLng);
+                if (map.getZoom() < 14) {
+                    map.setZoom(14);
+                }
+            }
+
+            if (fromPoint && toPoint) {
+                isCenterPicking = false;
+                if (isMobileSheetMode()) {
+                    setSheetState("half");
+                }
+                updateSelectionUI();
+            }
+
+            drawRoute();
+        }
+
+        async function fetchJson(url, options) {
+            const response = await fetch(url, options);
+            let payload = {};
+            try {
+                payload = await response.json();
+            } catch (error) {
+                payload = {};
+            }
+            if (!response.ok) {
+                throw new Error(payload.error || "حدث خطأ في خدمة الخرائط");
+            }
+            return payload;
+        }
+
+        async function reverseGeocodePoint(type, latLng, centerMap = false) {
+            try {
+                setRouteMessage("جارٍ تحديد العنوان...");
+                const payload = await fetchJson(`{% url 'map_reverse' %}?lat=${latLng.lat}&lng=${latLng.lng}`);
+                updatePoint(type, payload, centerMap);
+                setRouteMessage("تم تحديث النقطة من الخريطة");
+            } catch (error) {
+                updatePoint(type, fallbackPointFromLatLng(latLng), centerMap);
+                setRouteMessage("خدمة العنوان الداخلي غير متاحة الآن، تم استخدام الإحداثيات بدل العنوان", true);
+            }
+        }
+
+        async function confirmCenterSelection() {
+            setRouteMessage(`جارٍ تثبيت ${selectionTarget === "from" ? "نقطة الانطلاق" : "نقطة الوصول"}...`);
+            await reverseGeocodePoint(selectionTarget, map.getCenter(), false);
+        }
+
+        function removeRouteLayers() {
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
+            if (routeGlowLine) {
+                map.removeLayer(routeGlowLine);
+                routeGlowLine = null;
+            }
+        }
+
+        function clearRoute() {
+            removeRouteLayers();
+            distance = 0;
+            durationMin = 0;
+            document.getElementById("distance-label").textContent = "0.0 كم";
+            document.getElementById("duration-label").textContent = "--";
+            updateInputsSummary();
+            calcPrice();
+            updateSubmitState();
+        }
+
+        async function drawRoute() {
+            if (!fromPoint || !toPoint) {
+                clearRoute();
+                renderCarOptions();
+                return;
+            }
+
+            try {
+                setRouteMessage("جارٍ حساب أفضل مسار قيادة...");
+                const payload = await fetchJson(
+                    `{% url 'map_route' %}?from_lat=${fromPoint.lat}&from_lng=${fromPoint.lng}&to_lat=${toPoint.lat}&to_lng=${toPoint.lng}`
+                );
+
+                removeRouteLayers();
+
+                routeGlowLine = L.polyline(payload.geometry || [], {
+                    color: "#d28cff",
+                    weight: 12,
+                    opacity: 0.22,
+                    lineCap: "round",
+                    lineJoin: "round"
+                }).addTo(map);
+
+                routeLine = L.polyline(payload.geometry || [], {
+                    color: "#a44cff",
+                    weight: 5.5,
+                    opacity: 0.98,
+                    lineCap: "round",
+                    lineJoin: "round"
+                }).addTo(map);
+
+                distance = safeNumber(payload.distance_km);
+                durationMin = safeNumber(payload.duration_min);
+                document.getElementById("distance-label").textContent = `${distance.toFixed(1)} كم`;
+                document.getElementById("duration-label").textContent = formatDuration(durationMin);
+                updateInputsSummary();
+
+                if (routeLine.getLatLngs().length) {
+                    fitRouteToVisibleArea();
+                }
+
+                setRouteMessage("تم حساب مسافة القيادة الفعلية");
+                calcPrice();
+            } catch (error) {
+                clearRoute();
+                setRouteMessage(error.message || "تعذر حساب المسار", true);
+            }
+        }
+
+        function locateMe(type) {
+            if (!navigator.geolocation) {
+                setRouteMessage("هذا المتصفح لا يدعم تحديد الموقع الحالي", true);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const latLng = L.latLng(position.coords.latitude, position.coords.longitude);
+                map.setView(latLng, 15);
+                await reverseGeocodePoint(type, latLng, true);
+            }, () => {
+                setRouteMessage("تعذر الوصول إلى موقعك الحالي", true);
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000
+            });
+        }
+
+        function swapLocations() {
+            if (!fromPoint || !toPoint) {
+                return;
+            }
+
+            const oldFrom = { ...fromPoint };
+            const oldTo = { ...toPoint };
+
+            fromPoint = oldTo;
+            toPoint = oldFrom;
+
+            document.getElementById("from-input").value = fromPoint.display_name || fromPoint.label;
+            document.getElementById("to-input").value = toPoint.display_name || toPoint.label;
+
+            updateMarker("from", fromPoint);
+            updateMarker("to", toPoint);
+            updateGovernorateAlert();
+            updateInputsSummary();
+            syncStateToUrl();
+            drawRoute();
+        }
+
+        function setupAutocomplete(type) {
+            const input = document.getElementById(`${type}-input`);
+
+            input.addEventListener("focus", () => {
+                if (isMobileSheetMode() && mobileSheetState === "docked") {
+                    setSheetState("half");
+                }
+                setSelectionTarget(type, false);
+            });
+            input.addEventListener("input", () => {
+                const value = input.value.trim();
+                clearTimeout(searchTimers[type]);
+                setSelectionTarget(type, false);
+
+                if (value.length < 2) {
+                    clearSuggestions(type);
+                    return;
+                }
+
+                updateSubmitState();
+
+                searchTimers[type] = setTimeout(async () => {
+                    try {
+                        const center = map.getCenter();
+                        const payload = await fetchJson(
+                            `{% url 'map_search' %}?q=${encodeURIComponent(value)}&lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}`
+                        );
+                        renderSuggestions(type, payload.results || []);
+                    } catch (error) {
+                        clearSuggestions(type);
+                        setRouteMessage("البحث النصي غير متاح الآن، اختر النقطة من الخريطة أو GPS", true);
+                    }
+                }, 280);
+            });
+
+            input.addEventListener("blur", () => {
+                window.setTimeout(() => {
+                    document.getElementById(`${type}-field`).classList.remove("is-suggesting");
+                }, 150);
+            });
+        }
+
+        function initMap() {
+            map = L.map("map", {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([30.0444, 31.2357], 11);
+
+            L.control.zoom({ position: "bottomleft" }).addTo(map);
+
+            try {
+                if (window.maplibregl && typeof maplibregl.setRTLTextPlugin === "function") {
+                    maplibregl.setRTLTextPlugin("https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js", true);
+                }
+            } catch (error) {
+                console.warn("RTL plugin could not be initialized", error);
+            }
+
+            if (mapConfig.styleUrl) {
+                L.maplibreGL({
+                    style: mapConfig.styleUrl
+                }).addTo(map);
+            } else if (mapConfig.tileUrl) {
+                L.tileLayer(mapConfig.tileUrl, {
+                    attribution: mapConfig.tileAttribution,
+                    maxZoom: 19
+                }).addTo(map);
+            }
+
+            map.on("click", async (event) => {
+                if (isCenterPicking) {
+                    return;
+                }
+                isCenterPicking = false;
+                updateSelectionUI();
+                const target = selectionTarget || (!fromPoint ? "from" : "to");
+                await reverseGeocodePoint(target, event.latlng, false);
+            });
+
+            document.addEventListener("click", (event) => {
+                if (!event.target.closest(".route-input-wrap")) {
+                    clearSuggestions("from");
+                    clearSuggestions("to");
+                }
+            });
+
+            setupAutocomplete("from");
+            setupAutocomplete("to");
+            updateSelectionUI();
+            updateInputsSummary();
+            setRouteMessage("اختر نقطتي الانطلاق والوصول داخل مصر");
+            updateSubmitState();
+        }
+
+        function calculateEstimateForCar(carData, selectedType = currentTripType(), tripDistance = distance) {
+            const pricing = carData?.pricing || {};
+            const fixedPrices = {
+                day_use_12: safeNumber(pricing.day_use_12_price),
+                day_use_10: safeNumber(pricing.day_use_10_price),
+                day_use_8: safeNumber(pricing.day_use_8_price),
+                airport_pickup: safeNumber(pricing.airport_pickup_price)
+            };
+
+            if (!selectedType) {
+                return 0;
+            }
+
+            if (fixedPrices[selectedType] > 0) {
+                return fixedPrices[selectedType];
+            }
+
+            if (!tripDistance || !isDistanceBasedTrip(selectedType)) {
+                return 0;
+            }
+
+            const slabs = [
+                { max: 100, rate: safeNumber(pricing.price_per_km_0_100) },
+                { max: 200, rate: safeNumber(pricing.price_per_km_101_200) },
+                { max: 300, rate: safeNumber(pricing.price_per_km_201_300) },
+                { max: 400, rate: safeNumber(pricing.price_per_km_301_400) },
+                { max: 500, rate: safeNumber(pricing.price_per_km_401_500) },
+                { max: 600, rate: safeNumber(pricing.price_per_km_501_600) },
+                { max: 700, rate: safeNumber(pricing.price_per_km_601_700) },
+                { max: 800, rate: safeNumber(pricing.price_per_km_701_800) },
+                { max: 900, rate: safeNumber(pricing.price_per_km_801_900) },
+                { max: 1000, rate: safeNumber(pricing.price_per_km_901_1000) },
+                { max: Infinity, rate: safeNumber(pricing.price_per_km_above_1000) }
+            ];
+
+            const slab = slabs.find((item) => tripDistance <= item.max);
+            if (!slab || slab.rate <= 0) {
+                return 0;
+            }
+
+            let total = tripDistance * slab.rate;
+
+            if (selectedType === "round_trip") {
+                total *= 2;
+            }
+            if (selectedType === "day_use") {
+                total += safeNumber(pricing.DAY_USE);
+            }
+
+            return total * 1.02;
+        }
+
+        function updatePriceUI() {
+            document.getElementById("final-price").textContent = formatCurrency(currentEstimate);
+            document.getElementById("checkout-price").textContent = formatCurrency(currentEstimate);
+
+            const tripType = currentTripType();
+            const priceCaption = document.getElementById("fare-caption");
+            const checkoutNote = document.getElementById("checkout-note");
+
+            if (!tripType) {
+                priceCaption.textContent = "اختر نوع الرحلة أولًا لنعرض السعر المناسب لهذه العربية.";
+                checkoutNote.textContent = "اختر نوع الرحلة والنقطتين قبل متابعة الدفع.";
+                return;
+            }
+
+            if (currentEstimate > 0) {
+                priceCaption.textContent = `السعر الحالي محسوب على العربية ${currentCar.title} حسب البيانات المدخلة الآن.`;
+                checkoutNote.textContent = "السعر جاهز. يمكنك الآن متابعة الدفع أو مقارنة العربية الحالية ببدائل أقل سعرًا.";
+                return;
+            }
+
+            if (isDistanceBasedTrip(tripType)) {
+                priceCaption.textContent = "هذا النوع يعتمد على المسافة الفعلية، لذلك يجب تحديد نقطتي المشوار أولًا.";
+                checkoutNote.textContent = "أكمل اختيار النقطتين داخل مصر ليظهر السعر الفعلي.";
+            } else {
+                priceCaption.textContent = "هذا النوع بسعر ثابت، وسيظهر بمجرد اختيار نوع الرحلة الصحيح.";
+                checkoutNote.textContent = "اختر التاريخ والبيانات ثم أكمل للدفع.";
+            }
+        }
+
+        function calcPrice() {
+            currentEstimate = calculateEstimateForCar(currentCar, currentTripType(), distance);
+            updatePriceUI();
+            renderCarOptions();
+            syncStateToUrl();
+            updateSubmitState();
+        }
+
+        function pointMatchesInput(type) {
+            const inputValue = document.getElementById(`${type}-input`).value.trim();
+            const point = getPointByType(type);
+            if (!inputValue || !point) {
+                return false;
+            }
+            return inputValue === (point.display_name || "") || inputValue === (point.label || "");
+        }
+
+        async function ensurePointResolved(type) {
+            if (pointMatchesInput(type)) {
+                return true;
+            }
+
+            const inputValue = document.getElementById(`${type}-input`).value.trim();
+            if (inputValue.length < 2) {
+                return false;
+            }
+
+            try {
+                setRouteMessage(`جارٍ مطابقة ${type === "from" ? "نقطة الانطلاق" : "نقطة الوصول"}...`);
+                const center = map ? map.getCenter() : { lat: 30.0444, lng: 31.2357 };
+                const payload = await fetchJson(
+                    `{% url 'map_search' %}?q=${encodeURIComponent(inputValue)}&lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}`
+                );
+                const firstMatch = (payload.results || [])[0];
+                if (!firstMatch) {
+                    return false;
+                }
+                updatePoint(type, firstMatch, false);
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function getBookingBlockingMessage() {
+            const tripType = currentTripType();
+            const fromInput = document.getElementById("from-input").value.trim();
+            const toInput = document.getElementById("to-input").value.trim();
+            const customerName = document.getElementById("customer_name").value.trim();
+            const phoneNumber = document.getElementById("phone_number").value.trim();
+            const goDate = document.getElementById("go_date").value;
+            const returnDate = document.getElementById("return_date").value;
+
+            if (!tripType) {
+                return "اختر نوع الرحلة أولًا";
+            }
+            if (!fromInput || !toInput) {
+                return "حدد نقطة الانطلاق والوصول";
+            }
+            if (!goDate) {
+                return "اختر تاريخ الذهاب";
+            }
+            if (tripType === "round_trip" && !returnDate) {
+                return "اختر تاريخ العودة";
+            }
+            if (!customerName || !phoneNumber) {
+                return "أدخل الاسم ورقم الهاتف";
+            }
+            if (!currentEstimate || currentEstimate <= 0) {
+                return isDistanceBasedTrip(tripType) ? "استكمل المسار لحساب السعر" : "تعذر حساب السعر";
+            }
+            return "";
+        }
+
+        function updateSubmitState() {
+            const submitBtn = document.getElementById("submit-btn");
+            const checkoutNote = document.getElementById("checkout-note");
+            if (!submitBtn || !checkoutNote) {
+                return;
+            }
+
+            if (submitInFlight) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "جارٍ تجهيز الدفع...";
+                checkoutNote.textContent = "يتم الآن إنشاء الحجز وتحويلك إلى بوابة الدفع.";
+                return;
+            }
+
+            const blockingMessage = getBookingBlockingMessage();
+            submitBtn.disabled = Boolean(blockingMessage);
+            submitBtn.textContent = blockingMessage ? "أكمل البيانات للمتابعة" : "متابعة إلى الدفع";
+
+            if (blockingMessage) {
+                checkoutNote.textContent = blockingMessage;
+            } else if (currentEstimate > 0) {
+                checkoutNote.textContent = "السعر والحجز جاهزان. بالضغط سيتم تحويلك مباشرة إلى بوابة الدفع.";
+            }
+        }
+
+        function getComparableCars() {
+            const type = currentTripType();
+            const currentPrice = calculateEstimateForCar(currentCar, type, distance);
+            const priced = comparisonCars.map((item) => {
+                const estimate = calculateEstimateForCar(item, type, distance);
+                const hasPrice = estimate > 0;
+                return {
+                    ...item,
+                    estimatedPrice: estimate,
+                    hasPrice,
+                    cheaperBy: currentPrice > 0 && hasPrice ? Math.max(currentPrice - estimate, 0) : 0
+                };
+            });
+
+            const withPrice = priced.filter((item) => item.hasPrice).sort((a, b) => a.estimatedPrice - b.estimatedPrice);
+            const withoutPrice = priced.filter((item) => !item.hasPrice);
+            return { currentPrice, withPrice, withoutPrice };
+        }
+
+        function buildCarOptionCard(carData, bestPrice, currentPrice) {
+            const isActive = Number(carData.id) === currentCarId;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `car-option${isActive ? " is-active" : ""}${!carData.hasPrice ? " is-unavailable" : ""}`;
+            button.disabled = isActive;
+
+            let badge = "غير متاح";
+            let badgeClass = "";
+            if (isActive) {
+                badge = "العربية الحالية";
+            } else if (carData.hasPrice && bestPrice > 0 && Math.abs(carData.estimatedPrice - bestPrice) < 0.01) {
+                badge = "الأوفر الآن";
+                badgeClass = "best";
+            } else if (carData.hasPrice && currentPrice > 0 && carData.estimatedPrice < currentPrice) {
+                badge = `أقل بـ ${formatCurrency(currentPrice - carData.estimatedPrice)}`;
+            } else if (carData.hasPrice) {
+                badge = "متاحة لنفس المشوار";
+            }
+
+            const imageContent = carData.image_url
+                ? `<img src="${carData.image_url}" alt="${carData.title}">`
+                : `<i class="fa-solid fa-car-side"></i>`;
+
+            button.innerHTML = `
+                <div class="car-option-thumb">${imageContent}</div>
+                <div class="car-option-meta">
+                    <strong>${carData.title}</strong>
+                    <span>${carData.seats} ركاب • ${carData.transmission} • ${carData.model}</span>
+                </div>
+                <div class="car-option-price">
+                    <strong>${carData.hasPrice ? formatCurrency(carData.estimatedPrice) : "--"}</strong>
+                    <span class="${badgeClass}">${badge}</span>
+                </div>
+            `;
+
+            if (!isActive) {
+                button.addEventListener("click", () => navigateToCar(carData.id));
+            }
+
+            return button;
+        }
+
+        function renderCarOptions() {
+            const container = document.getElementById("car-options");
+            const summary = document.getElementById("options-summary");
+            const type = currentTripType();
+            container.innerHTML = "";
+
+            if (!type) {
+                summary.textContent = "اختر نوع الرحلة أولًا، ثم سيظهر ترتيب العربيات حسب السعر لهذا الطلب.";
+                return;
+            }
+
+            if (isDistanceBasedTrip(type) && (!fromPoint || !toPoint || !distance)) {
+                summary.textContent = "حدّد نقطتي الانطلاق والوصول ليتم ترتيب العربيات حسب أرخص سعر لنفس المشوار.";
+                return;
+            }
+
+            const { currentPrice, withPrice, withoutPrice } = getComparableCars();
+            const ranked = withPrice.length ? withPrice : withoutPrice;
+            const bestPrice = withPrice.length ? withPrice[0].estimatedPrice : 0;
+
+            if (!ranked.length) {
+                summary.textContent = "لا توجد عربيات متاحة للمقارنة الآن.";
+                return;
+            }
+
+            ranked.forEach((item) => {
+                container.appendChild(buildCarOptionCard(item, bestPrice, currentPrice));
+            });
+
+            if (withPrice.length) {
+                const cheaperCount = withPrice.filter((item) => item.estimatedPrice < currentPrice && Number(item.id) !== currentCarId).length;
+                summary.textContent = cheaperCount
+                    ? `وجدنا ${cheaperCount} خيار${cheaperCount > 1 ? "ات" : ""} أوفر من العربية الحالية لنفس المشوار.`
+                    : "العربية الحالية ضمن أفضل الخيارات سعرًا لهذا المشوار.";
+            } else {
+                summary.textContent = "بعض العربيات لا تحتوي على تسعير صالح لهذا النوع من الرحلات حاليًا.";
+            }
+        }
+
+        function getPrivateDraft() {
+            return {
+                customer_name: document.getElementById("customer_name").value.trim(),
+                phone_number: document.getElementById("phone_number").value.trim()
+            };
+        }
+
+        function persistPrivateDraft() {
+            try {
+                sessionStorage.setItem(privateDraftKey, JSON.stringify({
+                    ...getPrivateDraft(),
+                    saved_at: Date.now()
+                }));
+            } catch (error) {
+                console.warn("Could not persist private draft", error);
+            }
+        }
+
+        function restorePrivateDraft() {
+            try {
+                const raw = sessionStorage.getItem(privateDraftKey);
+                if (!raw) {
+                    return;
+                }
+                const draft = JSON.parse(raw);
+                if (!draft || (draft.saved_at && (Date.now() - draft.saved_at > 1000 * 60 * 60 * 6))) {
+                    sessionStorage.removeItem(privateDraftKey);
+                    return;
+                }
+                if (draft.customer_name) {
+                    document.getElementById("customer_name").value = draft.customer_name;
+                }
+                if (draft.phone_number) {
+                    document.getElementById("phone_number").value = draft.phone_number;
+                }
+            } catch (error) {
+                console.warn("Could not restore private draft", error);
+            }
+        }
+
+        function collectStateParams() {
+            const params = new URLSearchParams();
+
+            if (fromPoint) {
+                params.set("from_label", fromPoint.label || "");
+                params.set("from_display", fromPoint.display_name || "");
+                params.set("from_lat", String(fromPoint.lat));
+                params.set("from_lng", String(fromPoint.lng));
+                params.set("from_governorate", fromPoint.governorate || "");
+            }
+
+            if (toPoint) {
+                params.set("to_label", toPoint.label || "");
+                params.set("to_display", toPoint.display_name || "");
+                params.set("to_lat", String(toPoint.lat));
+                params.set("to_lng", String(toPoint.lng));
+                params.set("to_governorate", toPoint.governorate || "");
+            }
+
+            const tripType = currentTripType();
+            if (tripType) params.set("trip_type", tripType);
+            if (document.getElementById("go_date").value) params.set("go_date", document.getElementById("go_date").value);
+            if (document.getElementById("return_date").value) params.set("return_date", document.getElementById("return_date").value);
+            if (document.getElementById("go_time").value) params.set("go_time", document.getElementById("go_time").value);
+            if (document.getElementById("back_time").value) params.set("back_time", document.getElementById("back_time").value);
+            if (document.getElementById("payment_percentage").value) params.set("payment_percentage", document.getElementById("payment_percentage").value);
+
+            return params;
+        }
+
+        function syncStateToUrl() {
+            const params = collectStateParams();
+            const targetUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+            window.history.replaceState({}, "", targetUrl);
+        }
+
+        function navigateToCar(carId) {
+            persistPrivateDraft();
+            const params = collectStateParams();
+            const targetUrl = params.toString() ? `/allen/car/${carId}/?${params.toString()}` : `/allen/car/${carId}/`;
+            window.location.assign(targetUrl);
+        }
+
+        function restoreStateFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.toString()) {
+                return;
+            }
+
+            const tripType = params.get("trip_type") || "";
+            if (tripType) {
+                selectTripType(tripType, false);
+            }
+
+            const paymentPercentage = params.get("payment_percentage") || "100";
+            selectPaymentPercentage(paymentPercentage, false);
+
+            document.getElementById("go_date").value = params.get("go_date") || "";
+            document.getElementById("return_date").value = params.get("return_date") || "";
+            document.getElementById("go_time").value = params.get("go_time") || "";
+            document.getElementById("back_time").value = params.get("back_time") || "";
+
+            const fromLat = params.get("from_lat");
+            const fromLng = params.get("from_lng");
+            const toLat = params.get("to_lat");
+            const toLng = params.get("to_lng");
+
+            if (fromLat && fromLng) {
+                updatePoint("from", {
+                    lat: safeNumber(fromLat),
+                    lng: safeNumber(fromLng),
+                    label: params.get("from_label") || params.get("from_display") || "موقع الانطلاق",
+                    display_name: params.get("from_display") || params.get("from_label") || "موقع الانطلاق",
+                    governorate: params.get("from_governorate") || "",
+                    source: "query"
+                }, false);
+            }
+
+            if (toLat && toLng) {
+                updatePoint("to", {
+                    lat: safeNumber(toLat),
+                    lng: safeNumber(toLng),
+                    label: params.get("to_label") || params.get("to_display") || "موقع الوصول",
+                    display_name: params.get("to_display") || params.get("to_label") || "موقع الوصول",
+                    governorate: params.get("to_governorate") || "",
+                    source: "query"
+                }, false);
+            }
+        }
+
+        function selectTripType(type, updateUrl = true) {
+            document.getElementById("trip_type").value = type;
+            document.querySelectorAll(".trip-chip").forEach((chip) => {
+                chip.classList.toggle("is-active", chip.dataset.value === type);
+            });
+            document.getElementById("return-fields").classList.toggle("is-visible", type === "round_trip");
+            calcPrice();
+            if (updateUrl) {
+                syncStateToUrl();
+            }
+        }
+
+        function selectPaymentPercentage(value, updateUrl = true) {
+            document.getElementById("payment_percentage").value = value;
+            document.querySelectorAll(".payment-choice").forEach((choice) => {
+                choice.classList.toggle("is-active", choice.dataset.value === value);
+            });
+            if (updateUrl) {
+                syncStateToUrl();
+            }
+        }
+
+        function bindUIEvents() {
+            document.querySelectorAll(".trip-chip").forEach((chip) => {
+                chip.addEventListener("click", () => selectTripType(chip.dataset.value));
+            });
+
+            document.querySelectorAll(".payment-choice").forEach((choice) => {
+                choice.addEventListener("click", () => selectPaymentPercentage(choice.dataset.value));
+            });
+
+            ["go_date", "return_date", "go_time", "back_time"].forEach((fieldId) => {
+                document.getElementById(fieldId).addEventListener("change", () => {
+                    calcPrice();
+                    syncStateToUrl();
+                    updateSubmitState();
+                });
+            });
+
+            ["customer_name", "phone_number"].forEach((fieldId) => {
+                document.getElementById(fieldId).addEventListener("input", () => {
+                    persistPrivateDraft();
+                    updateSubmitState();
+                });
+            });
+        }
+
+        async function submitBooking() {
+            if (submitInFlight) {
+                return;
+            }
+
+            const submitBtn = document.getElementById("submit-btn");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "جارٍ التحقق من البيانات...";
+
+            const tripType = currentTripType();
+            try {
+                if (!tripType) {
+                    throw new Error("اختر نوع الرحلة أولًا");
+                }
+
+                const fromResolved = await ensurePointResolved("from");
+                const toResolved = await ensurePointResolved("to");
+                if (!fromResolved || !toResolved) {
+                    throw new Error("اختر نقطة الانطلاق والوصول من القائمة أو من الخريطة أولًا");
+                }
+
+                if (isDistanceBasedTrip(tripType)) {
+                    await drawRoute();
+                }
+
+                const customerName = document.getElementById("customer_name").value.trim();
+                const phoneNumber = document.getElementById("phone_number").value.trim();
+                const goDate = document.getElementById("go_date").value;
+                const returnDate = document.getElementById("return_date").value;
+                const goTime = document.getElementById("go_time").value;
+                const backTime = document.getElementById("back_time").value;
+                const paymentPercentage = document.getElementById("payment_percentage").value;
+
+                if (!goDate) {
+                    throw new Error("تاريخ الذهاب مطلوب قبل الدفع");
+                }
+                if (tripType === "round_trip" && !returnDate) {
+                    throw new Error("تاريخ العودة مطلوب لهذا النوع من الرحلات");
+                }
+                if (!customerName || !phoneNumber) {
+                    throw new Error("الاسم ورقم الهاتف مطلوبان لإكمال الحجز");
+                }
+                if (!currentEstimate || currentEstimate <= 0) {
+                    throw new Error("تعذر حساب السعر الحالي. راجع نوع الرحلة أو المسار أولًا");
+                }
+
+                persistPrivateDraft();
+
+                const payload = {
+                    csrfmiddlewaretoken: document.querySelector("[name=csrfmiddlewaretoken]").value,
+                    customer_name: customerName,
+                    phone_number: phoneNumber,
+                    trip_type: tripType,
+                    go_date: goDate,
+                    return_date: returnDate,
+                    go_time: goTime,
+                    back_time: backTime,
+                    payment_percentage: paymentPercentage,
+                    total_price: Number(currentEstimate.toFixed(2)),
+                    distance_km: Number(distance.toFixed(2)),
+                    from: fromPoint.display_name || fromPoint.label,
+                    to: toPoint.display_name || toPoint.label,
+                    car_id: currentCarId
+                };
+
+                submitInFlight = true;
+                updateSubmitState();
+
+                const response = await fetch("{% url 'create_car_payment' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": payload.csrfmiddlewaretoken
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || "تعذر إنشاء طلب الدفع");
+                }
+                window.location.href = result.checkout_url;
+            } catch (error) {
+                setRouteMessage(error.message || "حدث خطأ أثناء تجهيز الدفع", true);
+            } finally {
+                submitInFlight = false;
+                updateSubmitState();
+            }
+        }
+
+        function initPanorama() {
+            const pano = "{{ car_panorama_url|default:''|escapejs }}";
+            if (!pano) {
+                return;
+            }
+            pannellum.viewer("pano-viewer", {
+                type: "equirectangular",
+                panorama: pano,
+                autoLoad: true,
+                showControls: true
+            });
+        }
+
+        function initDates() {
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("go_date").min = today;
+            document.getElementById("return_date").min = today;
+        }
+
+        window.addEventListener("load", () => {
+            initMap();
+            bindUIEvents();
+            initMobileSheet();
+            initPanorama();
+            initDates();
+            restorePrivateDraft();
+            restoreStateFromUrl();
+            renderCarOptions();
+            updateSubmitState();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحقق من كود الرحلة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Cairo', sans-serif;
+        }
+        .container {
+            max-width: 900px;
+            margin-top: 30px;
+        }
+        .form-container {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .card-body p {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+        .alert {
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="{% url 'my_buses' %}" class="btn btn-primary" style="background-color:#290c38  ;">الرحلات الخاصه بك</a>
+<hr>
+        <h1 class="text-center mb-4 text-primary" style="color: #290c38; width:100%;" >تحقق من الرحلات</h1>
+<style>
+   .btn-primary{
+    margin-bottom: 50px !important;
+    width: 100%;
+   }
+</style>
+        <!-- عرض الرسائل -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} text-center" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- نموذج البحث باستخدام كود الرحلة -->
+
+        <!-- نموذج البحث باستخدام كود الجامعة -->
+        <div class="form-container">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="university_code" class="form-label">أدخل كود الجامعة:</label>
+                    <input type="text" id="university_code" name="university_code" class="form-control" placeholder="كود الجامعة">
+                </div>
+                <button type="submit" class="btn btn-primary w-100"style="background-color:#290c38  ;">بحث</button>
+            </form>
+        </div>
+
+        <!-- عرض بيانات الحجز باستخدام كود الرحلة -->
+        {% if booking %}
+        <div class="card my-4">
+            <div class="card-header">
+                تفاصيل الحجز
+            </div>
+            <div class="card-body">
+                <p class="code" ><strong>كود الرحلة:</strong> {{ booking.serial_code }}</p>
+                <p><strong>اسم المستخدم:</strong> {{ booking.user.username }}</p>
+                <p><strong>الراكب:</strong> {{ booking.passenger.name }}</p>
+                <p><strong>نوع الرحلة:</strong> {{ booking.get_trip_type_display }}</p>
+                <p><strong>تاريخ الحجز:</strong> {{ booking.booking_date }}</p>
+                <td>{{ booking.Trip.bus.plate_number }}</td>
+                <p><strong>عدد الكراسي المحجوزة:</strong> {{ booking.seats_reserved.count }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- عرض جميع الرحلات المحجوزة للطالب -->
+        {% if student_bookings %}
+        <h2 class="text-center text-primary my-4">جميع الرحلات المحجوزة</h2>
+        <div class="row">
+            {% for booking in student_bookings %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        كود الرحلة: {{ booking.serial_code }}
+                    </div>
+                    <div class="card-body">
+
+                        <p><strong>اسم المستخدم:</strong> {{ booking.user.username }}</p>
+                        <p><strong>طريقة الدفع:</strong> {{ booking.payment_method }}</p>
+                        <p><strong>حالة الدفع:</strong> {{ booking.status }}</p>
+                        <p><strong>حالة الحضور:</strong> {{ booking.attendance_status  }}</p>
+                        <p><strong>الرحله:</strong> {{ booking.Trip }}</p>
+                        <p><strong>تاريخ الحجز:</strong> {{ booking.booking_date }}</p>
+                        <p><strong>تاريخ الرحله:</strong> {{ booking.Trip.date }}</p>
+                        <p><strong>عدد الكراسي:</strong> {{ booking.seats_reserved.count }}</p>
+                        <p><strong>نوع الاشتراك:</strong> {{ booking.passenger.subscription_duration }} رحله</p>
+                        <p><strong>المتبقي من الاشتراك:</strong> {{ booking.passenger.remaining_rides }} رحله</p>
+                        <p><strong>رقم الكراسي المحجوزة:</strong></p>
+                        <ul>
+                            {% for seat in booking.seats_reserved.all %}
+                            <li>{{ seat.seat_number }}</li>
+                            {% endfor %}
+                        </ul>
+                        <p><strong>السعر الإجمالي:</strong> 
+                            <p>عدد الكراسي المحجوزة: {{ booking.seats_reserved.count }}</p>
+                            <p>السعر لكل كرسي: {{ booking.Trip.one_way_price }} جنيه</p>
+                            <p>السعر المطلوب : {{ booking.Trip.one_way_price|mul:booking.seats_reserved.count }} جنيه</p>
+                        </p>
+                    </div>
+                    
+                    <div class="card-footer text-center">
+                        <!-- نموذج زر تسجيل الحضور -->
+                        <form method="POST" action="{% url 'mark_attendance' booking.id %}">
+                            {% csrf_token %}
+                            <button type="submit" name="mark_attendance" value="true" class="btn btn-secondary w-100" style="margin-bottom: 30px;"><strong> تسجيل الحضور </strong></button>
+                        </form>
+                        
+                        <!-- نموذج زر حجز كمدفوع مسبقًا -->
+                        <form method="POST" action="{% url 'mark_attendance' booking.id %}">
+                            {% csrf_token %}
+                            <button type="submit" name="mark_paid" value="true" class="btn btn-primary w-100">تسجيل كمدفوع مسبقًا</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+<style>
+    .text-center{
+        color: #290c38 !important;
+    }
+    .card-header{
+        background-color: #290c38 !important;
+    }
+    .btn-primary{
+        background-color: #290c38 !important;
+
+    }
+</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock %}

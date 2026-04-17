@@ -1,0 +1,251 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+
+    #map {
+        height: 500px;
+        width: 100%;
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+        position: relative; /* Needed for search box */
+    }
+    .errornote {
+        color: #ba2121;
+        background: #fee;
+        border: 1px solid #ba2121;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+    .point-update-form {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        background: #f9f9f9;
+    }
+    #pac-input {
+        background-color: #fff;
+        font-family: Roboto, sans-serif;
+        font-size: 15px;
+        font-weight: 300;
+        margin: 10px;
+        padding: 5px 10px;
+        text-overflow: ellipsis;
+        width: 350px;
+        z-index: 10;
+        border: 1px solid transparent;
+        border-radius: 2px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{{ title }}</h1>
+
+    {% if error %}
+        <p class="errornote">{{ error }}</p>
+    {% endif %}
+    {% if messages %}
+        <ul class="messagelist">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="flex-container">
+        
+        <!-- العمود الأيمن: إدارة النقاط وتعديل الحجوزات -->
+        <div class="flex-child-main">
+            <div class="module">
+                <h2><i class="fa fa-pencil-square-o" aria-hidden="true"></i> 1. إدارة نقاط التوقف وتعديل الحجوزات</h2>
+                <p>يمكنك تعديل اسم النقطة هنا والضغط على "تعديل" لتحديث جميع الحجوزات المرتبطة بها.</p>
+                <div id="points-container">
+                    {% for point in points %}
+                    <form method="POST" action="" class="point-update-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="booking_ids" value="{{ point.booking_ids }}">
+                        
+                        <div class="form-row">
+                            <label for="new-location-{{ forloop.counter0 }}"><strong>النقطة (قابل للتعديل):</strong></label>
+                            <input type="text" id="new-location-{{ forloop.counter0 }}" name="new_location" value="{{ point.name }}" class="vTextField">
+                        </div>
+                        <div class="form-row">
+                            <span><strong>الركاب:</strong> {{ point.passengers|default:'-' }}</span>
+                        </div>
+                        <div class="submit-row" style="border: none; margin: 0; padding: 0;">
+                            <button type="submit" name="update_location" class="button">تعديل هذه النقطة</button>
+                        </div>
+                    </form>
+                    {% empty %}
+                    <p>لم يتم العثور على نقاط ركوب من الحجوزات المختارة. يمكنك إضافتها يدوياً في الأسفل.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- العمود الأيسر: حساب المسار والخريطة -->
+        <div class="flex-child-side">
+            <div class="module">
+                <h2><i class="fa fa-map-o" aria-hidden="true"></i> 2. حساب وعرض خط السير</h2>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <label for="origin"><strong>نقطة الانطلاق:</strong></label>
+                        <input type="text" id="origin" name="origin" value="{{ origin_point|default:'' }}" class="vTextField" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="destination"><strong>الوجهة النهائية:</strong></label>
+                        <input type="text" id="destination" name="destination" value="{{ destination_point|default:university_name }}" class="vTextField" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="start_time">وقت انطلاق الرحلة:</label>
+                        <input type="time" id="start_time" name="start_time" value="{{ start_time|default:'06:00' }}">
+                    </div>
+                    <fieldset class="module">
+                        <legend>نقاط التوقف (للرسم على الخريطة)</legend>
+                        <p>انسخ النقاط من اليمين أو أضف نقاطاً جديدة هنا.</p>
+                        <div id="waypoints-container">
+                            {% for point in points %}
+                                <input type="text" name="point-{{ forloop.counter0 }}" value="{{ point.name }}" class="vTextField" style="margin-bottom: 5px;">
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="button" onclick="addWaypointRow()">+ إضافة نقطة توقف</button>
+                    </fieldset>
+                    <div class="submit-row">
+                        <input type="submit" value="حساب وعرض خط السير">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if details %}
+    <div class="module">
+        <h2><i class="fa fa-road" aria-hidden="true"></i> 3. النتائج والخريطة</h2>
+        <!-- إضافة مربع البحث هنا ليتم وضعه فوق الخريطة -->
+        <input id="pac-input" class="controls" type="text" placeholder="ابحث عن مكان لتحديث خانات الإدخال..." />
+        <div id="map"></div>
+        <table id="result_list">
+            <thead>
+                <tr>
+                    <th>النقطة</th>
+                    <th>وقت الوصول المتوقع</th>
+                    <th>المدة من السابقة</th>
+                    <th>المسافة</th>
+                    <th>السرعة (كم/س)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for step in details %}
+                <tr class="{% cycle 'row1' 'row2' %}">
+                    <td>{{ step.point_name }}</td>
+                    <td>{{ step.arrival_time }}</td>
+                    <td>{{ step.duration_to_next }}</td>
+                    <td>{{ step.distance_to_next }}</td>
+                    <td>{{ step.avg_speed }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+{{ encoded_polyline|json_script:"encoded-polyline-data" }}
+{{ points|json_script:"initial-points-data" }}
+
+<script>
+    let waypointCounter = {{ points|length|default:0 }};
+    function addWaypointRow() {
+        const container = document.getElementById('waypoints-container');
+        const newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.name = `point-${waypointCounter}`;
+        newInput.className = 'vTextField';
+        newInput.style.marginBottom = '5px';
+        newInput.placeholder = 'اسم النقطة الجديدة';
+        container.appendChild(newInput);
+        waypointCounter++;
+    }
+
+    function initMap() {
+        const mapDiv = document.getElementById('map');
+        if (!mapDiv) return; // لا تفعل شيئاً إذا لم تكن هناك خريطة للعرض
+
+        const map = new google.maps.Map(mapDiv, {
+            zoom: 10,
+            center: {lat: 30.0444, lng: 31.2357},
+            mapTypeControl: false, // إخفاء أزرار التحكم بنوع الخريطة
+        });
+
+        // --- خاصية البحث ---
+        const searchInput = document.getElementById("pac-input");
+        const searchBox = new google.maps.places.SearchBox(searchInput);
+        map.controls[google.maps.ControlPosition.TOP_CENTER].push(searchInput);
+
+        searchBox.addListener("places_changed", () => {
+            const places = searchBox.getPlaces();
+            if (places.length == 0) return;
+            const place = places[0];
+            
+            // تحديث خانة "نقطة الانطلاق" إذا كانت فارغة، وإلا تحديث "الوجهة النهائية"
+            const originInput = document.getElementById('origin');
+            const destInput = document.getElementById('destination');
+            if (originInput.value.trim() === '') {
+                originInput.value = place.formatted_address;
+            } else if (destInput.value.trim() === '') {
+                destInput.value = place.formatted_address;
+            }
+            map.setCenter(place.geometry.location);
+            map.setZoom(15);
+        });
+
+        // --- رسم المسار والعلامات ---
+        const polylineDataElement = document.getElementById('encoded-polyline-data');
+        if (!polylineDataElement) return;
+        
+        const encodedPolyline = JSON.parse(polylineDataElement.textContent);
+        if (!encodedPolyline) return;
+
+        const decodedPath = google.maps.geometry.poly.decodePath(encodedPolyline);
+        
+        const routePolyline = new google.maps.Polyline({
+            path: decodedPath,
+            strokeColor: '#4A80F5',
+            strokeOpacity: 0.8,
+            strokeWeight: 6
+        });
+        routePolyline.setMap(map);
+
+        // --- رسم العلامات المخصصة للركاب ---
+        const initialPointsData = JSON.parse(document.getElementById('initial-points-data').textContent);
+        const geocoder = new google.maps.Geocoder();
+
+        initialPointsData.forEach((point) => {
+            const passengerCount = (point.passengers.split(',').length).toString();
+            geocoder.geocode({ 'address': point.name + ', Egypt' }, (results, status) => {
+                if (status === 'OK') {
+                    new google.maps.Marker({
+                        position: results[0].geometry.location,
+                        map: map,
+                        label: { text: passengerCount, color: "white", fontSize: "12px", fontWeight: "bold" },
+                        title: `${point.name}\nالركاب: ${passengerCount}`
+                    });
+                }
+            });
+        });
+
+        const bounds = new google.maps.LatLngBounds();
+        decodedPath.forEach(p => bounds.extend(p));
+        map.fitBounds(bounds);
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap&libraries=geometry,places"></script>
+{% endblock %}

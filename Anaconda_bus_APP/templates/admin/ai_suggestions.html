@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="module">
+    <h1>{{ title }}</h1>
+    
+    <div class="form-group">
+        <h2>معلومات الحجز</h2>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <p><strong>رقم الحجز:</strong> {{ reservation.id }}</p>
+            <p><strong>اسم الراكب:</strong> {{ reservation.get_student_name }}</p>
+            <p><strong>الهاتف:</strong> {{ reservation.get_passenger_phone }}</p>
+            <p><strong>نقطة التوقف الحالية:</strong> {{ reservation.pickup_location|default:"غير محدد" }}</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <h2>🎯 اقتراحات الذكاء الاصطناعي</h2>
+        
+        {% if pickup_suggestion %}
+        <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+            <h3>📍 اقتراح نقطة التوقف:</h3>
+            <p>{{ pickup_suggestion }}</p>
+            <form method="post" action="{% url 'admin:formreservation_apply_ai_suggestion' reservation.id %}">
+                {% csrf_token %}
+                <button type="submit" class="button">تطبيق اقتراح نقطة التوقف</button>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if trip_suggestion %}
+        <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+            <h3>🚍 اقتراح الرحلة:</h3>
+            <p>{{ trip_suggestion }}</p>
+        </div>
+        {% endif %}
+
+        {% if not pickup_suggestion and not trip_suggestion %}
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px;">
+            <p>⚠️ لا توجد اقتراحات متاحة لهذا الحجز</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if previous_reservations %}
+    <div class="form-group">
+        <h2>📊 الحجوزات السابقة للراكب</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; border: 1px solid #ddd;">رقم الحجز</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">التاريخ</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">نقطة التوقف</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">الرحلة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prev in previous_reservations %}
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{{ prev.id }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{{ prev.get_created_at }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{{ prev.pickup_location|default:"-" }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{{ prev.get_trip_name|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="submit-row">
+        <a href="{% url 'admin:app_formreservation_changelist' %}" class="button">العودة إلى القائمة</a>
+    </div>
+</div>
+{% endblock %}

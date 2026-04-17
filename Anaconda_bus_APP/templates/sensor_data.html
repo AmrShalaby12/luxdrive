@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>بيانات الحساسات</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            margin: 20px auto;
+        }
+        th, td {
+            border: 1px solid #888;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #ccc;
+        }
+        .chart-container {
+            width: 90%;
+            margin: 40px auto;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center;">جدول بيانات الحساسات</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>نوع الحساس</th>
+                <th>القيمة</th>
+                <th>الوقت</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sensor_type, readings in sensor_dict.items %}
+                {% for item in readings %}
+                    <tr>
+                        <td>{{ sensor_type }}</td>
+                        <td>{{ item.value }}</td>
+                        <td>{{ item.timestamp }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+            {% if sensor_dict|length == 0 %}
+            <tr>
+                <td colspan="3">لا توجد بيانات متاحة</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2 style="text-align:center;">الرسم البياني لكل حساس</h2>
+
+    {% for sensor_type, readings in sensor_dict.items %}
+        <div class="chart-container">
+            <h3 style="text-align:center;">{{ sensor_type }}</h3>
+            <canvas id="chart-{{ forloop.counter }}"></canvas>
+            <script>
+                const readings{{ forloop.counter }} = {{ readings|safe }};
+                const labels{{ forloop.counter }} = readings{{ forloop.counter }}.map(r => r.timestamp);
+                const values{{ forloop.counter }} = readings{{ forloop.counter }}.map(r => r.value);
+
+                const ctx{{ forloop.counter }} = document.getElementById("chart-{{ forloop.counter }}").getContext("2d");
+                new Chart(ctx{{ forloop.counter }}, {
+                    type: 'line',
+                    data: {
+                        labels: labels{{ forloop.counter }},
+                        datasets: [{
+                            label: '{{ sensor_type }}',
+                            data: values{{ forloop.counter }},
+                            borderColor: 'blue',
+                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'الوقت'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'القيمة'
+                                }
+                            }
+                        }
+                    }
+                });
+            </script>
+        </div>
+    {% endfor %}
+</body>
+</html>

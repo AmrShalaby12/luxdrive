@@ -1,0 +1,44 @@
+
+/* --- إصلاح عرض الأعمدة والنصوص --- */
+th, td {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    vertical-align: middle !important;
+}
+
+/* --- تخصيص حقل اسم الرحلة --- */
+.field-trip_name {
+    white-space: normal !important;
+    max-width: 250px !important;
+}
+
+/* --- تنسيق الأزرار في الأعمدة --- */
+td a.button,
+td .button {
+    display: inline-block;
+    white-space: nowrap !important;
+    padding: 4px 8px;
+    margin: 2px;
+    border-radius: 6px;
+    text-align: center;
+    background-color: #b30086 !important; /* اللون الموف */
+    color: white !important;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+/* --- منع تكسير الأزرار في صفوف مختلفة --- */
+td {
+    overflow: visible !important;
+}
+
+/* --- جعل الأزرار متجاوبة على الموبايل --- */
+@media (max-width: 600px) {
+    td a.button,
+    td .button {
+        display: block;
+        margin: 4px auto;
+        width: 90%;
+        font-size: 13px;
+    }
+}

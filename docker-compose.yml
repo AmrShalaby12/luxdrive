@@ -1,0 +1,75 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: allen_bus_web:latest
+    command: python manage.py runserver 0.0.0.0:8443
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    ports:
+      - "8443:8443"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DEBUG=True
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    networks:
+      - app_network
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: Allen_bus
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  redis:
+    image: redis:6
+    networks:
+      - app_network
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: dockerfile
+    command: celery -A Main_Bus_Management worker -l info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app_network
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: dockerfile
+    command: celery -A Main_Bus_Management beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

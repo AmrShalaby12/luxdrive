@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header py-3" style="background: linear-gradient(135deg, #3a1c5f, #290C38);">
+                    <h2 class="mb-0 text-center text-white">
+                        <i class="fas fa-calendar-check me-2"></i>حجوزات الفورم اليومية
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <label for="selected_date" class="form-label fw-bold">
+                                <i class="fas fa-calendar me-1"></i>اختر التاريخ
+                            </label>
+                            <input type="date" id="selected_date" class="form-control" 
+                                   value="{{ selected_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <button onclick="loadBookings()" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-1"></i>تحديث الحجوزات
+                            </button>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="text-muted">
+                                <small>إجمالي الحجوزات: <span id="total-count" class="badge bg-primary">0</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+        <p class="mt-2">جاري تحميل الحجوزات...</p>
+    </div>
+
+    <!-- Bookings Content -->
+    <div id="bookingsContent">
+        <!-- Bookings will be loaded here -->
+    </div>
+</div>
+
+<style>
+    .booking-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .booking-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .booking-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem;
+        border-radius: 12px 12px 0 0;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-confirmed { background-color: #d1ecf1; color: #0c5460; }
+    .status-cash { background-color: #d4edda; color: #155724; }
+    .status-failed { background-color: #f8d7da; color: #721c24; }
+    .status-attended { background-color: #d1ecf1; color: #0c5460; }
+
+    .passenger-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .passenger-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .trip-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .location-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        margin: 0.25rem;
+    }
+
+    .time-badge {
+        background: #fff3e0;
+        color: #f57c00;
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        margin: 0.25rem;
+    }
+
+    .price-badge {
+        background: #e8f5e8;
+        color: #2e7d32;
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stats-card h3 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .stats-card p {
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+        .booking-header {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .passenger-info {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+        
+        .action-buttons {
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    let currentBookings = [];
+    
+    function loadBookings() {
+        const selectedDate = document.getElementById('selected_date').value;
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const bookingsContent = document.getElementById('bookingsContent');
+        
+        if (!selectedDate) {
+            alert('يرجى اختيار التاريخ أولاً');
+            return;
+        }
+        
+        loadingSpinner.style.display = 'block';
+        bookingsContent.innerHTML = '';
+        
+        fetch(`/allen/api/form-bookings/${selectedDate}/`)
+            .then(response => response.json())
+            .then(data => {
+                currentBookings = data.bookings;
+                displayBookings(data);
+                loadingSpinner.style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingSpinner.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        حدث خطأ في تحميل الحجوزات: ${error.message}
+                    </div>
+                `;
+                loadingSpinner.style.display = 'block';
+            });
+    }
+
+    function displayBookings(data) {
+        const bookingsContent = document.getElementById('bookingsContent');
+        const totalCount = document.getElementById('total-count');
+        
+        totalCount.textContent = data.total_count;
+        
+        if (data.bookings.length === 0) {
+            bookingsContent.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">لا توجد حجوزات في هذا التاريخ</h4>
+                </div>
+            `;
+            return;
+        }
+        
+        // Display statistics
+        let statsHtml = `
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card text-center">
+                        <h3>${data.total_count}</h3>
+                        <p>إجمالي الحجوزات</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card text-center">
+                        <h3>${data.confirmed_count}</h3>
+                        <p>حجوزات مؤكدة</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card text-center">
+                        <h3>${data.pending_count}</h3>
+                        <p>قيد الانتظار</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card text-center">
+                        <h3>${data.total_revenue}</h3>
+                        <p>إجمالي الإيرادات</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Group bookings by city
+        const bookingsByCity = {};
+        data.bookings.forEach(booking => {
+            const city = booking.going_city_name || 'غير محدد';
+            if (!bookingsByCity[city]) {
+                bookingsByCity[city] = [];
+            }
+            bookingsByCity[city].push(booking);
+        });
+        
+        // Display bookings by city
+        Object.keys(bookingsByCity).forEach(city => {
+            statsHtml += `
+                <div class="mb-4">
+                    <h4 class="mb-3">
+                        <i class="fas fa-map-marker-alt me-2"></i>${city}
+                        <span class="badge bg-secondary ms-2">${bookingsByCity[city].length}</span>
+                    </h4>
+                    <div class="row">
+            `;
+            
+            bookingsByCity[city].forEach(booking => {
+                statsHtml += createBookingCard(booking);
+            });
+            
+            statsHtml += `
+                    </div>
+                </div>
+            `;
+        });
+        
+        bookingsContent.innerHTML = statsHtml;
+    }
+
+    function createBookingCard(booking) {
+        return `
+            <div class="col-lg-6 col-xl-4">
+                <div class="booking-card">
+                    <div class="booking-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="passenger-info">
+                                <div class="passenger-avatar">
+                                    ${booking.passenger_name ? booking.passenger_name.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">${booking.student_name || booking.passenger_name || 'غير محدد'}</div>
+                                    <small class="text-muted">${booking.university_code || 'غير محدد'}</small>
+                                    <small class="text-muted">${booking.phone_number || 'غير محدد'}</small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="status-badge status-${booking.status}">
+                                    ${getStatusText(booking.status)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="trip-info">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>نوع الرحلة:</strong>
+                                    <span class="ms-2">${booking.trip_type}</span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>التاريخ:</strong>
+                                    <span class="ms-2">${booking.trip_date}</span>
+                                </div>
+                            </div>
+                            
+                            ${booking.arrival_time ? `
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>وقت الذهاب:</strong>
+                                    <span class="time-badge">${booking.arrival_time}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${booking.back_time ? `
+                                <div class="col-6">
+                                    <strong>وقت العودة:</strong>
+                                    <span class="time-badge">${booking.back_time}</span>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="row">
+                                ${booking.going_city_name ? `
+                                <div class="col-6">
+                                    <strong>مدينة الذهاب:</strong>
+                                    <span class="location-badge">${booking.going_city_name}</span>
+                                </div>
+                                ` : ''}
+                                
+                                ${booking.going_pickup_location ? `
+                                <div class="col-6">
+                                    <strong>نقطة الركوب:</strong>
+                                    <span class="location-badge">${booking.going_pickup_location}</span>
+                                </div>
+                                ` : ''}
+                                
+                                ${booking.return_city_name ? `
+                                <div class="col-6">
+                                    <strong>مدينة العودة:</strong>
+                                    <span class="location-badge">${booking.return_city_name}</span>
+                                </div>
+                                ` : ''}
+                                
+                                ${booking.going_dropoff_location ? `
+                                <div class="col-6">
+                                    <strong>نقطة النزول:</strong>
+                                    <span class="location-badge">${booking.going_dropoff_location}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <strong>السعر الكلي:</strong>
+                                    <span class="price-badge">${booking.total_price} ج.م</span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>المدفوع:</strong>
+                                    <span class="price-badge">${booking.paid_amount} ج.م</span>
+                                </div>
+                            </div>
+                            
+                            ${booking.seat_number ? `
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <strong>رقم الكرسي:</strong>
+                                    <span class="badge bg-info">${booking.seat_number}</span>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${booking.merchant_order_id ? `
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <small class="text-muted">رقم الطلب: ${booking.merchant_order_id}</small>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="action-buttons mt-3">
+                            ${booking.passenger_phone ? `
+                            <a href="tel:${booking.passenger_phone}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-phone"></i>
+                            </a>
+                            ` : ''}
+                            
+                            ${booking.trip_id ? `
+                            <button onclick="viewTripDetails(${booking.trip_id})" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> الرحلة
+                            </button>
+                            ` : ''}
+                            
+                            <button onclick="sendWhatsAppNotification(${booking.id})" class="btn btn-sm btn-outline-success">
+                                <i class="fab fa-whatsapp"></i> واتساب
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function getStatusText(status) {
+        const statusMap = {
+            'pending': 'قيد الانتظار',
+            'confirmed': 'تم التأكيد',
+            'failed': 'فشل الدفع',
+            'cash': 'نقداً',
+            'subscription': 'اشتراك',
+            'attended': 'حضر'
+        };
+        return statusMap[status] || status;
+    }
+
+    function viewTripDetails(tripId) {
+        // فتح صفحة تفاصيل الرحلة
+        window.open(`/allen/trip/${tripId}/`, '_blank');
+    }
+
+    function sendWhatsAppNotification(bookingId) {
+        // إرسال إشعار واتساب
+        const booking = currentBookings.find(b => b.id === bookingId);
+        if (!booking) return;
+        
+        const message = `
+        🚌 تأكيد حجزك
+        📅 التاريخ: ${booking.trip_date}
+        🚌 النوع: ${booking.trip_type}
+        📍 ${booking.going_pickup_location || 'غير محدد'} - ${booking.going_dropoff_location || 'غير محدد'}
+        💰 السعر: ${booking.total_price} ج.م
+        📞 ${booking.phone_number || 'غير محدد'}
+        `;
+        
+        const phoneNumber = booking.phone_number || booking.passenger_phone;
+        if (phoneNumber) {
+            const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        } else {
+            alert('لا يوجد رقم هاتف لإرسال رسالة واتساب');
+        }
+    }
+
+    // Auto-load on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBookings();
+        
+        // Load bookings when date changes
+        document.getElementById('selected_date').addEventListener('change', loadBookings);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadBookings, 30000);
+    });
+</script>
+{% endblock %}

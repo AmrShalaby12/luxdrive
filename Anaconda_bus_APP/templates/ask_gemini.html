@@ -1,0 +1,766 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allen AI Agent - وكيل الذكاء الاصطناعي</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Arial Unicode MS', sans-serif;
+      background: linear-gradient(135deg, #000000 0%, #242424 100%);
+      min-height: 100vh;
+      direction: rtl;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header h1 {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .header .subtitle {
+      color: #666;
+      font-size: 1.1rem;
+      margin-top: 5px;
+    }
+
+    .ai-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .chat-container {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .welcome-section {
+      text-align: center;
+      padding: 40px 20px;
+      margin-bottom: 30px;
+    }
+
+    .welcome-section h2 {
+      color: #333;
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+
+    .welcome-section p {
+      color: #666;
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .chat-history {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 15px;
+      background: rgba(248, 250, 252, 0.5);
+    }
+
+    .chat-history::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-history::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .chat-history::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 10px;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .message-content {
+      max-width: 70%;
+      padding: 15px 20px;
+      border-radius: 20px;
+      position: relative;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user .message-content {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-bottom-right-radius: 5px;
+    }
+
+    .message.ai .message-content {
+      background: #f8fafc;
+      color: #333;
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 5px;
+    }
+
+    .message-avatar {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .message.user .message-avatar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .message.ai .message-avatar {
+      background: #f1f5f9;
+      color: #667eea;
+      border: 2px solid #e2e8f0;
+    }
+
+    .input-section {
+      margin-top: auto;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 15px;
+      align-items: flex-end;
+      background: rgba(248, 250, 252, 0.8);
+      padding: 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(226, 232, 240, 0.5);
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    #question {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 15px;
+      font-size: 16px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 60px;
+      max-height: 120px;
+      background: white;
+      transition: all 0.3s ease;
+      direction: rtl;
+    }
+
+    #question:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    #question::placeholder {
+      color: #94a3b8;
+    }
+
+    .send-button {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 15px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 120px;
+      justify-content: center;
+    }
+
+    .send-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .send-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .clear-button {
+      background: transparent;
+      color: #64748b;
+      border: 2px solid #e2e8f0;
+      padding: 12px 20px;
+      border-radius: 15px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .clear-button:hover:not(:disabled) {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .clear-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .answer-section {
+      margin-top: 20px;
+      padding: 25px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-radius: 20px;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .answer-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .answer-content {
+      color: #334155;
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #667eea;
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      background: #667eea;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+
+    .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% {
+        transform: scale(0);
+      }
+      40% {
+        transform: scale(1);
+      }
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .input-container {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .send-button, .clear-button {
+        width: 100%;
+      }
+
+      .message-content {
+        max-width: 85%;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .header, .chat-container {
+        background: rgba(30, 41, 59, 0.95);
+        color: #e2e8f0;
+      }
+
+      .welcome-section h2 {
+        color: #e2e8f0;
+      }
+
+      .welcome-section p {
+        color: #94a3b8;
+      }
+
+      .message.ai .message-content {
+        background: #334155;
+        color: #e2e8f0;
+        border-color: #475569;
+      }
+
+      #question {
+        background: #334155;
+        color: #e2e8f0;
+        border-color: #475569;
+      }
+
+      .input-container {
+        background: rgba(51, 65, 85, 0.8);
+      }
+
+      .answer-content {
+        color: #e2e8f0;
+      }
+    }
+        #map {
+      height: 400px; /* يمكنك تعديل الارتفاع */
+      width: 100%;
+      border-radius: 15px;
+      margin-top: 20px;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>
+
+        Allen AI Agent
+      </h1>
+      <div class="subtitle" style="color: #fff;">تم تطويره من خلال فريق نيكسوس ai</div>
+    </header>
+
+    <!-- Main Chat Container -->
+    <main class="chat-container">
+      <!-- Welcome Section -->
+      <div id="welcomeSection" class="welcome-section">
+        <h2>مرحباً بك في Allen AI</h2>
+        <p>اسأل أي سؤال وسأقوم بالإجابة عليه بأفضل ما لدي من معلومات ومعرفة</p>
+      </div>
+
+      <!-- Chat History -->
+      <div id="chatHistory" class="chat-history" style="display: none;"></div>
+
+      <!-- Input Section -->
+      <div class="input-section">
+        <div class="input-container">
+          <div class="input-wrapper">
+            <textarea 
+              id="question" 
+              placeholder="اكتب سؤالك هنا..."
+              rows="3"
+            ></textarea>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button id="sendButton" class="send-button" onclick="askGemini()">
+              <i class="fas fa-paper-plane"></i>
+              إرسال
+            </button>
+            <button id="clearButton" class="clear-button" onclick="clearChat()" disabled>
+              <i class="fas fa-trash"></i>
+              مسح
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Answer Display -->
+      <div id="answerSection" class="answer-section" style="display: none;">
+        <div class="answer-header">
+          <i class="fas fa-robot"></i>
+          إجابة Allen AI
+        </div>
+        <div id="answerContent" class="answer-content"></div>
+      </div>
+    </main>
+        <div id="mapContainer" style="display: none;">
+          <div id="map"></div>
+        </div>
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Allen AI Agent - مدعوم بتقنية الذكاء الاصطناعي المتقدمة</p>
+    </footer>
+  </div>
+
+  <script>
+    let chatHistory = [];
+    let isLoading = false;
+
+    // DOM Elements
+    const questionInput = document.getElementById('question');
+    const sendButton = document.getElementById('sendButton');
+    const clearButton = document.getElementById('clearButton');
+    const chatHistoryDiv = document.getElementById('chatHistory');
+    const welcomeSection = document.getElementById('welcomeSection');
+    const answerSection = document.getElementById('answerSection');
+    const answerContent = document.getElementById('answerContent');
+
+    // Event Listeners
+    questionInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askGemini();
+      }
+    });
+
+    questionInput.addEventListener('input', function() {
+      sendButton.disabled = isLoading || !this.value.trim();
+    });
+
+    async function askGemini() {
+      const question = questionInput.value.trim();
+      
+      if (!question) {
+        alert("من فضلك اكتب سؤال");
+        return;
+      }
+
+      if (isLoading) return;
+
+      // Set loading state
+      isLoading = true;
+      updateUI();
+
+      // Add user message to chat
+      addMessage('user', question);
+      questionInput.value = '';
+
+      // Show loading
+      showLoading();
+
+      try {
+        const response = await fetch(`/allen/ask-gemini/?q=${encodeURIComponent(question)}`);
+        const data = await response.json();
+        const answer = data.answer || data.error || "حدث خطأ غير متوقع";
+        
+        // Add AI response
+        addMessage('ai', answer);
+        showAnswer(answer);
+        
+      } catch (err) {
+        const errorMessage = "❌ حصل خطأ في الاتصال: " + err.message;
+        addMessage('ai', errorMessage);
+        showAnswer(errorMessage);
+      } finally {
+        isLoading = false;
+        updateUI();
+      }
+    }
+
+    function addMessage(type, content) {
+      const message = {
+        type: type,
+        content: content,
+        timestamp: new Date()
+      };
+      
+      chatHistory.push(message);
+      renderChatHistory();
+    }
+
+    function renderChatHistory() {
+      if (chatHistory.length === 0) {
+        chatHistoryDiv.style.display = 'none';
+        welcomeSection.style.display = 'block';
+        return;
+      }
+
+      welcomeSection.style.display = 'none';
+      chatHistoryDiv.style.display = 'block';
+      
+      chatHistoryDiv.innerHTML = chatHistory.map(message => `
+        <div class="message ${message.type}">
+          <div class="message-avatar">
+            <i class="fas fa-${message.type === 'user' ? 'user' : 'robot'}"></i>
+          </div>
+          <div class="message-content">
+            ${message.content}
+          </div>
+        </div>
+      `).join('');
+
+      // Scroll to bottom
+      chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+    }
+
+    function showLoading() {
+      answerSection.style.display = 'block';
+      answerContent.innerHTML = `
+        <div class="loading">
+          <i class="fas fa-robot"></i>
+          <span>جاري المعالجة</span>
+          <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showAnswer(answer) {
+      answerSection.style.display = 'block';
+      answerContent.textContent = answer;
+    }
+
+    function clearChat() {
+      if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
+        chatHistory = [];
+        renderChatHistory();
+        answerSection.style.display = 'none';
+        updateUI();
+      }
+    }
+
+    function updateUI() {
+      sendButton.disabled = isLoading || !questionInput.value.trim();
+      clearButton.disabled = isLoading || chatHistory.length === 0;
+      
+      if (isLoading) {
+        sendButton.innerHTML = `
+          <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+          </div>
+          معالجة...
+        `;
+      } else {
+        sendButton.innerHTML = `
+          <i class="fas fa-paper-plane"></i>
+          إرسال
+        `;
+      }
+    }
+
+    // Initialize
+    updateUI();
+  </script>
+  
+  <script>
+    let chatHistory = [];
+    let isLoading = false;
+    let mapInstance = null; // متغير لتخزين كائن الخريطة
+
+    // ... (DOM Elements) ...
+    const mapContainer = document.getElementById('mapContainer');
+
+    // ... (Event Listeners) ...
+
+    async function askGemini() {
+      const question = document.getElementById('question').value.trim();
+      if (!question || isLoading) return;
+
+      isLoading = true;
+      updateUI();
+      addMessage('user', question);
+      document.getElementById('question').value = '';
+      showLoading();
+
+      try {
+        const response = await fetch(`/allen/ask-gemini/?q=${encodeURIComponent(question)}`);
+        const data = await response.json();
+
+        // استخلاص التقرير والمسار من الاستجابة
+        const report = data.report || data.answer || data.error || "حدث خطأ غير متوقع";
+        const routePath = data.route_path || [];
+
+        addMessage('ai', report);
+        showAnswer(report);
+
+        // إذا كانت هناك إحداثيات، قم برسم الخريطة
+        if (routePath.length > 1) {
+          drawMap(routePath);
+        } else {
+          // إخفاء الخريطة إذا لم يكن هناك مسار
+          mapContainer.style.display = 'none';
+        }
+        
+      } catch (err) {
+        const errorMessage = "❌ حصل خطأ في الاتصال: " + err.message;
+        addMessage('ai', errorMessage);
+        showAnswer(errorMessage);
+        mapContainer.style.display = 'none';
+      } finally {
+        isLoading = false;
+        updateUI();
+      }
+    }
+
+    function drawMap(pathCoordinates) {
+      mapContainer.style.display = 'block';
+
+      // إذا كانت هناك خريطة قديمة، قم بإزالتها أولاً
+      if (mapInstance) {
+        mapInstance.remove();
+      }
+
+      // إنشاء خريطة جديدة وتوسيطها على أول نقطة
+      mapInstance = L.map('map').setView(pathCoordinates[0], 10);
+
+      // إضافة طبقة الخريطة الأساسية (من OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      } ).addTo(mapInstance);
+
+      // إضافة علامات (Markers) لكل نقطة
+      pathCoordinates.forEach((coords, index) => {
+        let markerOptions = {};
+        // تمييز النقطة الأولى (البداية) والأخيرة (النهاية)
+        if (index === 0) { // نقطة البداية
+          markerOptions = { 
+            icon: L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', iconSize: [25, 41], iconAnchor: [12, 41] } ) 
+          };
+        } else if (index === pathCoordinates.length - 1) { // نقطة النهاية
+          markerOptions = { 
+            icon: L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', iconSize: [25, 41], iconAnchor: [12, 41] } ) 
+          };
+        }
+        L.marker(coords, markerOptions).addTo(mapInstance).bindPopup(`نقطة ${index + 1}`);
+      });
+
+      // رسم الخط الواصل بين النقاط
+      const polyline = L.polyline(pathCoordinates, {color: '#667eea', weight: 5}).addTo(mapInstance);
+
+      // تكبير الخريطة لتناسب جميع النقاط
+      mapInstance.fitBounds(polyline.getBounds().pad(0.1));
+    }
+
+    // ... (باقي دوال الجافاسكريبت: addMessage, renderChatHistory, etc.)
+    // تأكد من تعديل دالة showAnswer لتخفي الخريطة عند عدم الحاجة
+    function showAnswer(answer) {
+      answerSection.style.display = 'block';
+      document.getElementById('answerContent').textContent = answer;
+      // إخفاء حاوية الخريطة مبدئياً
+      mapContainer.style.display = 'none';
+    }
+    
+    function clearChat() {
+      if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
+        chatHistory = [];
+        renderChatHistory();
+        answerSection.style.display = 'none';
+        mapContainer.style.display = 'none'; // إخفاء الخريطة عند المسح
+        if (mapInstance) {
+          mapInstance.remove();
+          mapInstance = null;
+        }
+        updateUI();
+      }
+    }
+    
+    // ... (باقي الكود)
+  </script>
+</body>
+</html>
+

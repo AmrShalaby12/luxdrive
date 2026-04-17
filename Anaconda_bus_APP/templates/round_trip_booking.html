@@ -1,0 +1,489 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+
+    <form method="post" id="bookingForm" class="shadow p-4 rounded bg-light">
+        {% csrf_token %}
+        <div class="mb-3">
+  <label for="destination_filter" class="form-label">اختر الوجهة:</label>
+  <select class="form-select" id="destination_filter" name="destination">
+    <option value="">-- اختر وجهة رحلتك--</option>
+    {% for dest in destinations %}
+      <option value="{{ dest.id }}">{{ dest.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+        <div class="row gy-4">
+            <!-- رحلة الذهاب -->
+            <div class="col-md-6">
+                <div class="card border-primary h-100">
+                    <div class="card-header bg-primary text-white text-center fw-bold">رحلة الذهاب</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="departure_trip" class="form-label">اختر رحلة الذهاب مع التاريخ: </label>
+                            <select name="departure_trip" id="departure_trip" class="form-select" required>
+                                <option value="">-- اختر رحلة الذهاب --</option>
+                                {% for trip in departure_trips %}
+                                    <option value="{{ trip.id }}">{{ trip.trip_name }} / {{ trip.date|date:"Y-m-d" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="departure_route" class="form-label">اختر نقطة الركوب:</label>
+                            <select name="departure_route" id="departure_route" class="form-select" required>
+                                <option value="">-- يرجى اختيار الرحلة أولاً --</option>
+                            </select>
+                        </div>
+
+                        <div id="departure_seats_container" class="mt-4" style="display:none;">
+                            <h5 class="text-center text-primary mb-3" style="color: #fff;">اختر مقاعد الذهاب</h5>
+                            <div id="departure_seats"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- رحلة العودة -->
+            <div class="col-md-6">
+                <div class="card border-info h-100">
+                    <div class="card-header bg-info text-white text-center fw-bold">رحلة العودة</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="return_trip" class="form-label">اختر رحلة العودة مع التاريخ: </label>
+                            <select name="return_trip" id="return_trip" class="form-select" required>
+                                <option value="">-- اختر رحلة العودة --</option>
+                                {% for trip in return_trips %}
+                                    <option value="{{ trip.id }}">{{ trip.trip_name }} / {{ trip.date|date:"Y-m-d" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="return_route" class="form-label">اختر نقطة الركوب:</label>
+                            <select name="return_route" id="return_route" class="form-select" required>
+                                <option value="">-- يرجى اختيار الرحلة أولاً --</option>
+                            </select>
+                        </div>
+
+                        <div id="return_seats_container" class="mt-4" style="display:none;">
+                            <h5 class="text-center text-info mb-3" style="color: #fff;">اختر مقاعد العودة</h5>
+                            <div id="return_seats"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            
+<button type="button" id="submitBooking" class="btn btn-success btn-lg px-5">تأكيد الحجز</button>
+        </div>
+    </form>
+</div>
+
+<style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background: #000;
+            min-height: 100vh;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+.bg-light {
+    background-color: #1a1a1a !important;
+}
+.bg-primary{
+    background-color: #290C38 !important;
+}
+.bg-info{
+    background-color: #290C38  !important;
+}
+.border-primary{
+    border-color: #290C38 !important;
+}
+.border-info{
+    border-color: #290C38 !important;
+}
+.text-info{
+    color: #290C38 !important;
+}
+.text-primary{
+    color: #290C38 !important;
+}
+.form-select:focus {
+    border-radius: 8px;
+    box-shadow: none;
+    border: 1px solid #290C38 !important;
+}
+.btn-success{
+    background-color: #290C38 !important;
+    border-color: #e7b70a!important;
+}
+.seat {
+    position: relative;
+    text-align: center;
+}
+
+.seat-checkbox {
+    display: none;
+}
+
+.seat-label {
+    display: block;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #fff;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.seat-label:hover {
+    background-color: #f1f1f1;
+}
+
+.seat-checkbox:checked + .seat-label {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.seat-number {
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.reserved .seat-label {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+</style>
+<script>
+document.getElementById("destination_filter").addEventListener("change", function() {
+    const destId = this.value;
+
+    fetch(`/allen/ajax/get-trips-by-destination/?destination_id=${destId}`)
+        .then(response => response.json())
+        .then(data => {
+            const departureSelect = document.getElementById("departure_trip");
+            const returnSelect = document.getElementById("return_trip");
+
+            // مسح الرحلات الحالية
+            departureSelect.innerHTML = '<option value="">-- اختر رحلة الذهاب --</option>';
+            returnSelect.innerHTML = '<option value="">-- اختر رحلة العودة --</option>';
+
+            // إضافة الرحلات الجديدة
+            data.departure_trips.forEach(trip => {
+                departureSelect.innerHTML += `<option value="${trip.id}">${trip.name}</option>`;
+            });
+            data.return_trips.forEach(trip => {
+                returnSelect.innerHTML += `<option value="${trip.id}">${trip.name}</option>`;
+            });
+        });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function loadSeatsAndRoutes(tripId, type) {
+        if (!tripId) return;
+
+        // المقاعد
+        fetch(`/allen/get_trip_seats/${tripId}/`)
+            .then(response => response.json())
+            .then(data => {
+                renderSeats(`${type}_seats`, data);
+                document.getElementById(`${type}_seats_container`).style.display = 'block';
+            });
+
+        // نقاط الركوب
+        fetch(`/allen/get_trip_pickup_points/${tripId}/`)
+            .then(response => response.json())
+            .then(data => {
+                const routeSelect = document.getElementById(`${type}_route`);
+                routeSelect.innerHTML = `<option value="">-- اختر نقطة الركوب --</option>`;
+                data.routes.forEach(route => {
+                    const option = document.createElement('option');
+                    option.value = route;
+                    option.textContent = route;
+                    routeSelect.appendChild(option);
+                });
+            });
+    }
+
+    document.getElementById('departure_trip').addEventListener('change', function () {
+        loadSeatsAndRoutes(this.value, 'departure');
+    });
+
+    document.getElementById('return_trip').addEventListener('change', function () {
+        loadSeatsAndRoutes(this.value, 'return');
+    });
+
+    function renderSeats(containerId, data) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        if (data.seats.length === 0) {
+            container.innerHTML = '<p class="text-danger text-center">لا توجد مقاعد متاحة</p>';
+            return;
+        }
+
+        const grid = document.createElement('div');
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+        grid.style.gap = '10px';
+
+        data.seats.forEach(seat => {
+            const seatDiv = document.createElement('div');
+            seatDiv.className = 'seat';
+            seatDiv.style.gridRow = seat.row + 1;
+            seatDiv.style.gridColumn = seat.column + 1;
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.name = containerId.includes('departure') ? 'departure_seats' : 'return_seats';
+            input.value = seat.id;
+            input.id = `${containerId}_seat_${seat.id}`;
+            input.className = 'seat-checkbox';
+            if (seat.is_reserved) {
+                input.disabled = true;
+                seatDiv.className += ' reserved';
+            }
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.className = 'seat-label';
+            label.innerHTML = `<i class="fas fa-chair"></i><div class="seat-number">${seat.number}</div>`;
+
+            seatDiv.appendChild(input);
+            seatDiv.appendChild(label);
+            grid.appendChild(seatDiv);
+        });
+
+        container.appendChild(grid);
+    }
+
+    document.getElementById('bookingForm').addEventListener('submit', function (e) {
+        const departureSeats = document.querySelectorAll('input[name="departure_seats"]:checked');
+        const returnSeats = document.querySelectorAll('input[name="return_seats"]:checked');
+        if (departureSeats.length === 0 || returnSeats.length === 0) {
+            e.preventDefault();
+            alert('يرجى اختيار مقاعد لكل من الذهاب والعودة');
+        }
+    });
+});
+</script>
+<script>
+document.getElementById('submitBooking').addEventListener('click', function () {
+    const form = document.getElementById('bookingForm');
+    const formData = new FormData(form);
+
+    fetch("", {
+        method: "POST",
+        headers: {
+            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.checkout_url) {
+            // ✅ فتح صفحة الدفع مباشرة
+            window.location.href = data.checkout_url;
+        } else if (data.error) {
+            alert("خطأ: " + data.error);
+        }
+    })
+    .catch(error => {
+        console.error("خطأ:", error);
+        alert("حدث خطأ أثناء معالجة الحجز.");
+    });
+});
+</script>
+<style>
+    :root {
+        --primary-purple: #290C38;
+        --secondary-gold: #e7b70a;
+        --dark-bg: #1a1a1a;
+        --darker-bg: #121212;
+    }
+
+    body {
+        background: linear-gradient(135deg, #000000, #1a1a1a);
+        min-height: 100vh;
+        direction: rtl;
+        overflow-x: hidden;
+        color: #fff;
+        font-family: 'Tajawal', sans-serif;
+    }
+
+    .bg-dark {
+        background-color: var(--dark-bg) !important;
+    }
+    
+    .bg-darker {
+        background-color: var(--darker-bg) !important;
+    }
+    
+    .bg-purple {
+        background-color: var(--primary-purple) !important;
+    }
+    
+    .border-purple {
+        border-color: var(--primary-purple) !important;
+    }
+    
+    .text-purple {
+        color: var(--primary-purple) !important;
+    }
+    
+    .text-gold {
+        color: var(--secondary-gold) !important;
+    }
+    
+    .btn-gold {
+        background-color: var(--secondary-gold) !important;
+        color: var(--primary-purple) !important;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-gold:hover {
+        background-color: #d4a506 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(231, 183, 10, 0.3);
+    }
+    
+    .form-select {
+        background-color: var(--darker-bg) !important;
+        color: white !important;
+        border: 1px solid #444 !important;
+        transition: all 0.3s ease;
+    }
+    
+    .form-select:focus {
+        border-color: var(--primary-purple) !important;
+        box-shadow: 0 0 0 0.25rem rgba(41, 12, 56, 0.25) !important;
+        background-color: var(--darker-bg) !important;
+        color: white !important;
+    }
+    
+    .form-label {
+        color: #ddd !important;
+        font-weight: 500;
+    }
+    
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background-color: var(--dark-bg);
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    .seats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 10px;
+        padding: 10px;
+        background-color: var(--darker-bg);
+        border-radius: 10px;
+        border: 1px solid #444;
+    }
+    
+    .seat {
+        position: relative;
+        text-align: center;
+        perspective: 1000px;
+    }
+    
+    .seat-checkbox {
+        display: none;
+    }
+    
+    .seat-label {
+        display: block;
+        padding: 10px 5px;
+        border: 2px solid #444;
+        border-radius: 8px;
+        cursor: pointer;
+        background-color: var(--dark-bg);
+        color: white;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        transform-style: preserve-3d;
+    }
+    
+    .seat-label:hover {
+        background-color: #333;
+        border-color: var(--secondary-gold);
+    }
+    
+    .seat-checkbox:checked + .seat-label {
+        background-color: var(--primary-purple);
+        color: white;
+        border-color: var(--secondary-gold);
+        transform: scale(1.05);
+    }
+    
+    .seat-number {
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    
+    .reserved .seat-label {
+        background-color: #dc3545 !important;
+        color: white !important;
+        border-color: #dc3545 !important;
+        cursor: not-allowed !important;
+        opacity: 0.7 !important;
+    }
+    
+    .seat-label i {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 18px;
+    }
+    
+    /* Animation for selected seats */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .seat-checkbox:checked + .seat-label {
+        animation: pulse 1s infinite;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .seats-grid {
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        }
+        
+        .btn-lg {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+{% endblock %}

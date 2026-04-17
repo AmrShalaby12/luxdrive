@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المدفوعات</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        form {
+            display: inline-block;
+        }
+        select {
+            padding: 5px;
+            margin-right: 5px;
+        }
+        button {
+            padding: 5px 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>إدارة المدفوعات</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>الكود الجامعي</th>
+                <th>طريقة الدفع</th>
+                <th>رقم الموبايل</th>
+                <th>رقم المعاملة</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.university_code }}</td>
+                    <td>{{ payment.get_payment_option_display }}</td>
+                    <td>{{ payment.mobile_number }}</td>
+                    <td>{{ payment.transaction_number }}</td>
+                    <td>{{ payment.get_status_display }}</td>
+                    <td>
+<form method="post" action="{% url 'update_seat_status' seat.id %}">
+    {% csrf_token %}
+    <select name="status">
+        <option value="confirmed">Confirm</option>
+        <option value="rejected">Reject</option>
+    </select>
+    <button type="submit">Update</button>
+</form>
+
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

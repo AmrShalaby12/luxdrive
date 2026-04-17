@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>تحديد المسار</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map { height: 500px; }
+        .route-form { margin: 20px; }
+    </style>
+</head>
+<body>
+    <h1>حدد موقعك ووجهتك</h1>
+    
+    <form method="post" class="route-form">
+        {% csrf_token %}
+        <input type="text" name="pickup" placeholder="موقعك الحالي" required>
+        <input type="text" name="dropoff" placeholder="الوجهة" required>
+        <button type="submit">حساب المسافة</button>
+    </form>
+    
+    <div id="map"></div>
+    
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([30.0444, 31.2357], 13); // القاهرة كمثال
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+        
+        // يمكنك إضافة وظائف تحديد الموقع هنا
+    </script>
+</body>
+</html>

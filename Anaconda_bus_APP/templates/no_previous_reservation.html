@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="alert alert-warning">
+    <p>⚠️ مفيش أي حجز سابق في نفس اليوم من الأسبوع اللي فات.</p>
+    <a href="{% url 'index' %}" class="btn btn-primary">رجوع للصفحة الرئيسية</a>
+  </div>
+{% endblock %}

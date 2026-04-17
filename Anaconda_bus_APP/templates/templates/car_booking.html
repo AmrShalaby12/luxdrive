@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجز سيارة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: row-reverse; /* الصورة على اليمين */
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+        }
+        .card img {
+            border-radius: 15px;
+            width: 40%;
+            height: auto;
+            object-fit: cover;
+        }
+        .card-body {
+            flex: 1;
+            text-align: left;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .card-text {
+            margin: 0.5rem 0;
+        }
+        .price-tag {
+            font-size: 1.2rem;
+            background-color: #000;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .btn-primary {
+            background-color: #000000;
+            color: #F1FF53;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+        }
+        .btn-primary:hover {
+            background-color: #F1FF53;
+            color: #000000;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #6c63ff;
+            margin-bottom: 20px;
+        }
+        .img{
+            max-height: 200px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body dir="rtl">
+    <h1 style="text-align: left; color:#93148F">
+    <b>Hello, ahmed
+<br>Good Morning</b>
+</h1>
+<!-- مثال على فلترة متقدمة -->
+<form method="GET" action="{% url 'car_list' %}">
+    <input type="text" name="brand" placeholder="العلامة التجارية">
+    <select name="transmission">
+        <option value="">ناقل الحركة</option>
+        <option value="Automatic">أوتوماتيك</option>
+        <option value="Manual">يدوي</option>
+    </select>
+    <input type="number" name="seats" placeholder="عدد المقاعد">
+    <button type="submit">بحث</button>
+</form>
+    <div class="container mt-4">
+        <h1 class=" mb-4 section-title" style="text-align: left; color:#93148F">Most Rented Car</h1>
+
+        <div class="row">
+            {% for car in cars %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+
+                    <div class="card-body">
+                        <h5 class="card-title" style="color:#93148F ;">{{ car.brand }} - {{ car.name }}</h5>
+                        <b><p class="card-text">{{ car.transmission }}</p></b>
+                        <p class="card-text">
+                            <span class="price-tag">${{ car.price_per_day }}/يوم</span>
+                        </p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#carModal{{ car.id }}">More</button>
+                    </div>                    {% if car.image %}
+                    <img src="{{ car.image.url }}" alt="{{ car.name }}" class="img">
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- نافذة المودال -->
+            <div class="modal fade" id="carModal{{ car.id }}" tabindex="-1" aria-labelledby="carModalLabel{{ car.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="carModalLabel{{ car.id }}">{{ car.brand }} - {{ car.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="POST" action="{% url 'car_booking' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="car_id" value="{{ car.id }}">
+                                {{ form.as_p }}
+                                <button type="submit" class="btn btn-success w-100" style="background-color: #93148F;">Book now</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+<!-- <form method="POST">
+    {% csrf_token %}
+    <select name="car_id">
+        {% for car in cars %}
+        <option value="{{ car.id }}">{{ car.name }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="phone" placeholder="رقم الهاتف" required>
+    <button type="submit">احجز السيارة</button>
+</form> -->
+<!-- 
+3d moddeling four car 
+لما يدوس علي more  الكود يوديه ف صفحه فيها بيانات العربيه 
+
+
+
+
+
+
+
+
+
+
+
+
+
+-->
+
+
+

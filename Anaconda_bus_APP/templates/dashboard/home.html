@@ -1,0 +1,219 @@
+<!-- templates/dashboard/home.html -->
+{% extends 'dashboard/base.html' %}
+
+{% block title %}الرئيسية - لوحة التحكم{% endblock %}
+{% block page_title %}الرئيسية{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card blue">
+            <div class="icon">
+                <i class="fas fa-route"></i>
+            </div>
+            <h3>{{ total_trips }}</h3>
+            <p>إجمالي الرحلات</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card green">
+            <div class="icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3>{{ active_trips }}</h3>
+            <p>الرحلات النشطة</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card orange">
+            <div class="icon">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <h3>{{ today_trips }}</h3>
+            <p>رحلات اليوم</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card purple">
+            <div class="icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3>{{ total_passengers }}</h3>
+            <p>إجمالي الركاب</p>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Trips -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="custom-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt text-primary me-2"></i>
+                    الرحلات القادمة
+                </h5>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>اسم الرحلة</th>
+                            <th>التاريخ</th>
+                            <th>الوقت</th>
+                            <th>الحافلة</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trip in upcoming_trips %}
+                        <tr>
+                            <td>
+                                <strong>{{ trip.trip_name }}</strong>
+                            </td>
+                            <td>
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ trip.date|date:"Y-m-d" }}
+                            </td>
+                            <td>
+                                <i class="fas fa-clock me-1"></i>
+                                {{ trip.start_time|time:"H:i" }}
+                            </td>
+                            <td>
+                                {% if trip.bus %}
+                                    <i class="fas fa-bus me-1"></i>
+                                    {{ trip.bus.name }}
+                                {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if trip.is_active %}
+                                    <span class="badge-status badge-active">نشط</span>
+                                {% else %}
+                                    <span class="badge-status badge-inactive">معطل</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'dashboard:trip_detail' trip.id %}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p>لا توجد رحلات قادمة</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="custom-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-university text-primary me-2"></i>
+                    الجامعات
+                </h5>
+            </div>
+            
+            <div class="p-3">
+                {% for category in categories %}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3" 
+                     style="background: #f8f9fa; border-radius: 8px;">
+                    <div>
+                        <h6 class="mb-1">{{ category.name }}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-route me-1"></i>
+                            {{ category.trips_count }} رحلة نشطة
+                        </small>
+                    </div>
+                    <a href="{% url 'dashboard:category_report' category.id %}" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-chart-bar"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted">لا توجد جامعات</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="custom-table mt-4">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-ticket-alt text-primary me-2"></i>
+                    إحصائيات الحجوزات
+                </h5>
+            </div>
+            
+            <div class="p-4 text-center">
+                <h2 class="mb-2" style="color: #3b82f6; font-weight: bold;">
+                    {{ total_bookings }}
+                </h2>
+                <p class="text-muted mb-0">إجمالي الحجوزات النشطة</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mt-4">
+    <div class="col-md-12">
+        <div class="custom-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt text-warning me-2"></i>
+                    إجراءات سريعة
+                </h5>
+            </div>
+            
+            <div class="p-4">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{% url 'dashboard:trips_list' %}" 
+                           class="btn btn-primary btn-custom w-100">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            إدارة الرحلات
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'dashboard:passengers_list' %}" 
+                           class="btn btn-success btn-custom w-100">
+                            <i class="fas fa-user-plus me-2"></i>
+                            إدارة الركاب
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'dashboard:reports_home' %}" 
+                           class="btn btn-info btn-custom w-100">
+                            <i class="fas fa-file-alt me-2"></i>
+                            عرض التقارير
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/admin/" 
+                           class="btn btn-secondary btn-custom w-100">
+                            <i class="fas fa-cog me-2"></i>
+                            لوحة الأدمن
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

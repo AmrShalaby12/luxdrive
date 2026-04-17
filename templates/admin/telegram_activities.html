@@ -1,0 +1,162 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}أنشطة Telegram{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    أنشطة Telegram
+                </h1>
+                <div class="btn-group">
+                    <a href="{% url 'telegram_admin_dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-tachometer-alt me-1"></i>الرئيسية
+                    </a>
+                    <a href="{% url 'telegram_notifications' %}" class="btn btn-outline-info">
+                        <i class="fas fa-bell me-1"></i>الإشعارات
+                    </a>
+                    <a href="{% url 'telegram_broadcast' %}" class="btn btn-outline-success">
+                        <i class="fas fa-broadcast-tower me-1"></i>رسالة جماعية
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">نوع الإجراء</label>
+                    <select name="action" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="message_received" {% if action_filter == 'message_received' %}selected{% endif %}>رسالة مستلمة</option>
+                        <option value="booking_viewed" {% if action_filter == 'booking_viewed' %}selected{% endif %}>حجز تم عرضه</option>
+                        <option value="booking_confirmed" {% if action_filter == 'booking_confirmed' %}selected{% endif %}>حجز مؤكد</option>
+                        <option value="booking_cancelled" {% if action_filter == 'booking_cancelled' %}selected{% endif %}>حجز ملغي</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">التاريخ</label>
+                    <input type="date" name="date" class="form-control" value="{{ date_filter }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">البحث</label>
+                    <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="ابحث عن مستخدم أو معرف الدردشة...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>بحث
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Activities Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>معرف الدردشة</th>
+                            <th>الإجراء</th>
+                            <th>رقم الحجز</th>
+                            <th>التفاصيل</th>
+                            <th>الوقت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in activities %}
+                        <tr>
+                            <td>
+                                {% if activity.user %}
+                                    <strong>{{ activity.user.username }}</strong>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code>{{ activity.chat_id }}</code>
+                            </td>
+                            <td>
+                                {% if activity.action == 'message_received' %}
+                                    <span class="badge bg-info">رسالة مستلمة</span>
+                                {% elif activity.action == 'booking_viewed' %}
+                                    <span class="badge bg-primary">حجز تم عرضه</span>
+                                {% elif activity.action == 'booking_confirmed' %}
+                                    <span class="badge bg-success">حجز مؤكد</span>
+                                {% elif activity.action == 'booking_cancelled' %}
+                                    <span class="badge bg-danger">حجز ملغي</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ activity.action }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if activity.booking_id %}
+                                    <span class="badge bg-warning">{{ activity.booking_id }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if activity.details %}
+                                    <button class="btn btn-sm btn-outline-info" onclick="showActivityDetails('{{ activity.details|escapejs }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ activity.created_at|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                لا توجد أنشطة
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Details Modal -->
+<div class="modal fade" id="activityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل النشاط</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="activityDetails"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showActivityDetails(details) {
+    document.getElementById('activityDetails').innerHTML = `
+        <div class="alert alert-info">
+            <h6>تفاصيل النشاط</h6>
+            <p>${details}</p>
+        </div>
+    `;
+    const modal = new bootstrap.Modal(document.getElementById('activityModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

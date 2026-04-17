@@ -1,0 +1,80 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل حضور الركاب</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Cairo', sans-serif;
+        }
+        .container {
+            max-width: 900px;
+            margin-top: 30px;
+        }
+        .form-container {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .btn-primary {
+            background-color: #290c38 !important;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background-color: #290c38;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4 text-primary" style="color: #290c38;">تسجيل حضور الركاب</h1>
+<h6 class="text-center mb-4 text-primary" style="color: #290c38;">برجي العلم بأن تسجيل الحضور يكون للرحلات الخاصه باليوم فقط و يجب عليك ان تكون حاجز مسبقا من حسابك الشخصي</h6>
+        <!-- عرض الرسائل -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} text-center" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- نموذج البحث باستخدام كود الجامعة -->
+        <div class="form-container">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="university_code" class="form-label">أدخل كود الجامعة:</label>
+                    <input type="text" id="university_code" name="university_code" class="form-control" placeholder="كود الجامعة">
+                </div>
+                <div class="mb-3">
+                    <label for="serial_code" class="form-label">كود الرحلة:</label>
+                    <input type="text" name="serial_code" id="serial_code" class="form-control" placeholder="أدخل كود الحجز" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100" style="background-color: #290c38;">تسجيل الحضور</button>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .text-primary{
+            color: #290c38 !important;
+        }
+    </style>
+</body>
+</html>
+{% endblock %}

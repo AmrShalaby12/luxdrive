@@ -1,0 +1,155 @@
+<!-- templates/dashboard/trips_list.html -->
+{% extends 'dashboard/base.html' %}
+
+{% block title %}الرحلات - لوحة التحكم{% endblock %}
+{% block page_title %}إدارة الرحلات{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="custom-table mb-4">
+    <div class="p-3">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">الجامعة</label>
+                    <select name="category" class="form-select">
+                        <option value="">الكل</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" 
+                                {% if current_filters.category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label">التاريخ</label>
+                    <input type="date" name="date" class="form-control" 
+                           value="{{ current_filters.date }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label">الحالة</label>
+                    <select name="is_active" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="true" {% if current_filters.is_active == 'true' %}selected{% endif %}>نشط</option>
+                        <option value="false" {% if current_filters.is_active == 'false' %}selected{% endif %}>معطل</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label">نوع الرحلة</label>
+                    <select name="trip_type" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="one_way" {% if current_filters.trip_type == 'one_way' %}selected{% endif %}>ذهاب</option>
+                        <option value="return" {% if current_filters.trip_type == 'return' %}selected{% endif %}>عودة</option>
+                        <option value="round_trip" {% if current_filters.trip_type == 'round_trip' %}selected{% endif %}>ذهاب وعودة</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>فلترة
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Renew Selected Trips Form -->
+<form method="post" action="{% url 'dashboard:renew_trips' %}" id="renewForm">
+    {% csrf_token %}
+    <input type="hidden" name="days_to_add" id="daysToAdd" value="1">
+    
+    <div class="custom-table mb-4">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-route text-primary me-2"></i>
+                قائمة الرحلات ({{ trips_data|length }})
+            </h5>
+            
+            <div class="btn-group">
+                <button type="button" class="btn btn-success btn-sm" 
+                        onclick="renewTrips(1)">
+                    <i class="fas fa-plus me-1"></i>تجديد +1 يوم
+                </button>
+                <button type="button" class="btn btn-info btn-sm" 
+                        onclick="renewTrips(7)">
+                    <i class="fas fa-calendar-week me-1"></i>تجديد +7 أيام
+                </button>
+                <button type="button" class="btn btn-warning btn-sm" 
+                        onclick="renewTrips(30)">
+                    <i class="fas fa-calendar-alt me-1"></i>تجديد +30 يوم
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
+                        <th>اسم الرحلة</th>
+                        <th>الجامعة</th>
+                        <th>التاريخ</th>
+                        <th>الحافلة</th>
+                        <th>الحجوزات</th>
+                        <th>نسبة الإشغال</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in trips_data %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="trip_ids" 
+                                   value="{{ item.trip.id }}" 
+                                   class="form-check-input trip-checkbox">
+                        </td>
+                        <td>
+                            <strong>{{ item.trip.trip_name }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ item.trip.start_time|time:"H:i" }}
+                            </small>
+                        </td>
+                        <td>
+                            {% if item.trip.category %}
+                                <span class="badge bg-primary">{{ item.trip.category.name }}</span>
+                            {% else %}
+                                <span class="text-muted">غير محدد</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.trip.date|date:"Y-m-d" }}</td>
+                        <td>
+                            {% if item.trip.bus %}
+                                {{ item.trip.bus.name }}
+                            {% else %}
+                                <span class="text-muted">غير محدد</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ item.total_reservations }}</strong> / 
+                            {% if item.trip.bus %}{{ item.trip.bus.capacity }}{% else %}0{% endif %}
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar 
+                                    {% if item.occupancy_rate >= 80 %}bg-success
+                                    {% elif item.occupancy_rate >= 50 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    style="width: {{ item.occupancy_rate }}%">
+                                    {{ item.occupancy_rate }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <form method="post" 
+                                  action="{% url 'dashboard:toggleContinue

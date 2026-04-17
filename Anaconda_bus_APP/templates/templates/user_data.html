@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+{% load base64_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Data</title>
+    <!-- إضافة مكتبة Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+        }
+        .card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+        }
+        .card-title {
+            font-weight: bold;
+            color: #9b4391;
+            margin-bottom: 20px;
+        }
+        .card-body span {
+            display: block;
+            font-size: 18px;
+            color: #fff;
+            background-color: #290c38;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        .card-body strong {
+            display: block;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        h5, h2 {
+            font-weight: bold;
+        }
+        .text-muted {
+            color: #6c757d !important;
+        }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #121212;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+          }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row g-4">
+        {% for item in items %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-header text-center bg-dark text-white">
+                    <h5>مرحبًا {{ item.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <span>كود الراكب</span>
+                    <strong>{{ item.id }}</strong>
+                    {% if user_type == "student" %}
+
+                    <span>الجامعة</span>
+                    <strong>{{ item.category.name }}</strong>
+
+                    <span>كود الجامعة</span>
+                    <strong>{{ item.university_code }}</strong>
+                    
+
+                    {% endif %}
+                    <span>عدد الرحلات الكلي</span>
+                    <strong>{{ item.total_rides }}</strong>
+
+                    <span>عدد الرحلات المستخدمة</span>
+                    <strong>{{ item.rides_used }}</strong>
+
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted">لا توجد بيانات لهذا المستخدم.</p>
+        {% endfor %}
+    </div>
+</div>
+<div class="floating-menu">
+    <div class="menu-button">
+      <i class="fas fa-bars"></i>
+    </div>
+    <div class="menu-items">
+      <ul>
+        <li>
+          <a class="nav-link" href="{% url 'index' %}">الرئيسية</a>
+        </li>
+        {% load passenger_tags %}
+        {% get_passenger as passenger %}
+        <li>
+          {% if passenger %}
+            <a class="nav-link" href="{% url 'subscriptions' passenger.id %}">الاشتراكات</a>
+          {% else %}
+            <a class="nav-link" href="#">الاشتراكات</a>
+          {% endif %}
+        </li>
+        <li>
+          <a class="nav-link" href="{% url 'user_bookings' %}">حجوزاتي</a>
+        </li>
+        <li>
+          <a class="nav-link" href="{% url 'user_data' %}">معلومات الحساب</a>
+        </li>
+        {% if not user.is_authenticated %}
+        <li>
+          <a class="nav-link" href="{% url 'login' %}">تسجيل الدخول</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+  <style>
+    .floating-menu {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+  
+    .menu-button {
+      width: 60px;
+      height: 60px;
+      background-color: #4b2354;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+  
+    .menu-button:hover {
+      transform: scale(1.1);
+    }
+  
+    .menu-items {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      position: absolute;
+      bottom: 80px; /* المسافة من الكرة */
+      right: 0;
+    }
+  
+    .menu-items ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+  
+    .menu-items li {
+      text-align: center;
+      margin: 5px 0;
+    }
+  
+    .menu-items a {
+      text-decoration: none;
+      padding: 10px 20px;
+      background-color: #fff;
+      color: #4b2354;
+      border-radius: 25px;
+      display: inline-block;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  
+    .menu-items a:hover {
+      background-color: #4b2354;
+      color: #fff;
+    }
+  
+    .menu-open .menu-items {
+      display: flex;
+      animation: fadeIn 0.5s ease forwards;
+    }
+  
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const menuButton = document.querySelector(".menu-button");
+      const menuItems = document.querySelector(".menu-items");
+      const menu = document.querySelector(".floating-menu");
+  
+      menuButton.addEventListener("click", () => {
+        menu.classList.toggle("menu-open");
+      });
+    });
+  </script>
+<!-- إضافة مكتبة Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock %}

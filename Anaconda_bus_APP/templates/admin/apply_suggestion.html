@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="module">
+    <h2>{{ title }}</h2>
+    <div class="form-row">
+        <label>الحجز الحالي:</label>
+        <strong>{{ reservation.id }} - {{ reservation.get_student_name }}</strong>
+    </div>
+    <div class="form-row">
+        <label>نقطة الركوب الحالية:</label>
+        <span>{{ reservation.pickup_location }}</span>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="submit-row">
+            <input type="submit" value="تطبيق الاقتراح" class="default">
+            <a href="../" class="button">إلغاء</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

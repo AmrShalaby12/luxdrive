@@ -1,0 +1,24 @@
+{% for choice in choices %}
+    <a href="{{ choice.query_string }}"
+       class="button{% if choice.selected %} selected{% endif %}">
+        {{ choice.display }}
+    </a>
+{% endfor %}
+<style>
+    a.button {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 2px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #f5f5f5;
+    text-decoration: none;
+    color: #333;
+}
+a.button.selected {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+</style>

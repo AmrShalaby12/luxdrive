@@ -1,0 +1,436 @@
+<!-- templates/dashboard/base.html -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}لوحة التحكم{% endblock %}</title>
+    
+    <!-- Bootstrap RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 260px;
+            background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 100%);
+            padding: 20px 0;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 25px;
+            margin: 5px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .sidebar .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(-5px);
+        }
+        
+        .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-right: 260px;
+            padding: 30px;
+        }
+        
+        /* Topbar */
+        .topbar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .topbar h4 {
+            margin: 0;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* Cards */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-right: 4px solid;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card.blue {
+            border-color: #3b82f6;
+        }
+        
+        .stat-card.green {
+            border-color: #10b981;
+        }
+        
+        .stat-card.orange {
+            border-color: #f59e0b;
+        }
+        
+        .stat-card.purple {
+            border-color: #8b5cf6;
+        }
+        
+        .stat-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card.blue .icon {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        
+        .stat-card.green .icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+        
+        .stat-card.orange .icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        
+        .stat-card.purple .icon {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+        }
+        
+        .stat-card h3 {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #1f2937;
+        }
+        
+        .stat-card p {
+            color: #6b7280;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        /* Tables */
+        .custom-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .custom-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .custom-table thead th {
+            padding: 15px;
+            font-weight: 600;
+            border: none;
+        }
+        
+        .custom-table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+        
+        .custom-table tbody tr {
+            transition: background-color 0.3s;
+        }
+        
+        .custom-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* Badges */
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-inactive {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        /* Buttons */
+        .btn-custom {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* Alerts */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+        }
+        
+        /* Progress bars */
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e5e7eb;
+        }
+        
+        .progress-bar {
+            border-radius: 10px;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+            
+            .main-content {
+                margin-right: 0;
+                padding: 15px;
+            }
+            
+            .topbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+        
+        /* Loading Spinner */
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .spinner-overlay.active {
+            display: flex;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="loadingSpinner">
+        <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-bus"></i>
+            <div>نظام إدارة الحافلات</div>
+        </div>
+        
+        <nav class="nav flex-column">
+            <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" 
+
+            </a>
+            
+            <a class="nav-link {% if 'trips' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'dashboard:trips_list' %}">
+                <i class="fas fa-route"></i>
+                <span>الرحلات</span>
+            </a>
+            
+            <a class="nav-link {% if 'passengers' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'dashboard:passengers_list' %}">
+                <i class="fas fa-users"></i>
+                <span>الركاب</span>
+            </a>
+            
+            <a class="nav-link {% if 'categories' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'dashboard:categories_list' %}">
+                <i class="fas fa-layer-group"></i>
+                <span>الجامعات</span>
+            </a>
+            
+            <a class="nav-link {% if 'buses' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'dashboard:buses_list' %}">
+                <i class="fas fa-bus-alt"></i>
+                <span>الحافلات</span>
+            </a>
+            
+            <a class="nav-link {% if 'reports' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'dashboard:reports_home' %}">
+                <i class="fas fa-chart-bar"></i>
+                <span>التقارير</span>
+            </a>
+            
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 20px 15px;">
+            
+            <a class="nav-link" href="/admin/">
+                <i class="fas fa-cog"></i>
+                <span>لوحة الأدمن</span>
+            </a>
+            
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Topbar -->
+        <div class="topbar">
+            <h4>{% block page_title %}لوحة التحكم{% endblock %}</h4>
+            
+            <div class="user-info">
+                <div>
+                    <div style="font-weight: 600; color: #1f2937;">{{ user.username }}</div>
+                    <div style="font-size: 12px; color: #6b7280;">مسؤول النظام</div>
+                </div>
+                <div class="user-avatar">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        // Show loading spinner on form submit
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                document.getElementById('loadingSpinner').classList.add('active');
+            });
+        });
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

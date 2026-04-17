@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}تأكيد كود التحقق{% endblock %}
+
+{% block content %}
+<style>
+    /* الخطوط والألوان الأساسية (مكررة لضمان التناسق) */
+    :root {
+        --primary-color: #6a0dad; /* موف (بنفسجي) غامق */
+        --secondary-color: #d1c4e9; /* موف فاتح */
+        --background-color: #ffffff; /* أبيض ناصع */
+        --text-color: #212121; /* لون النص الأساسي */
+        --form-bg: #f5f5f5; /* خلفية خفيفة للنموذج */
+    }
+
+    body {
+        background-color: var(--background-color);
+        font-family: 'Arial', sans-serif;
+        color: var(--text-color);
+        margin: 0;
+        padding: 0;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+    }
+
+    /* تنسيق الحاوية الرئيسية للنموذج */
+    .confirm-container {
+        max-width: 450px; /* أوسع قليلاً لاستيعاب الحقلين */
+        width: 90%;
+        padding: 40px 30px;
+        background-color: var(--form-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    /* تنسيق العنوان */
+    h2 {
+        color: var(--primary-color);
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+        border-bottom: 3px solid var(--secondary-color);
+        padding-bottom: 10px;
+        display: inline-block;
+    }
+
+    /* تنسيق النموذج */
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* تنسيق التسميات (Labels) */
+    label {
+        text-align: right;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: var(--text-color);
+        font-size: 1rem;
+    }
+
+    /* تنسيق حقول الإدخال */
+    input[type="text"] {
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 1rem;
+        box-sizing: border-box;
+        text-align: right;
+    }
+
+    input[type="text"]:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px rgba(106, 13, 173, 0.4);
+        outline: none;
+    }
+
+    /* تنسيق زر الإرسال */
+    button[type="submit"] {
+        background-color: var(--primary-color);
+        color: var(--background-color);
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        margin-top: 10px;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #580a8b;
+        transform: translateY(-2px);
+    }
+
+    /* تنسيق رابط إعادة الإرسال */
+    .resend-link {
+        margin-top: 20px;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .resend-link a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.3s ease;
+    }
+
+    .resend-link a:hover {
+        color: #580a8b;
+        text-decoration: underline;
+    }
+
+    /* تنسيق رسائل الأخطاء */
+    .error-message {
+        color: #e53935;
+        margin-top: -10px;
+        margin-bottom: 15px;
+        text-align: right;
+    }
+
+</style>
+  {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+<center><div class="confirm-container">
+    <h2>تأكيد كود التحقق 🔒</h2>
+    <p style="color: #616161; margin-bottom: 25px;">أدخل كود التحقق المُرسَل إلى رقم هاتفك لاستكمال العملية.</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label for="id_phone_number">رقم الهاتف:</label>
+        <input type="text" id="id_phone_number" name="phone_number" placeholder="05xxxxxxxxx" required
+               {% if phone_number %} value="{{ phone_number }}" readonly {% endif %}>
+        
+        <label for="id_otp">كود التحقق:</label>
+        <input type="text" id="id_otp" name="otp" placeholder="أدخل الكود المكون من 6 أرقام" required maxlength="6">
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="error-message">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <button type="submit">تأكيد</button>
+    </form>
+    
+ 
+</div>
+</center>
+
+{% endblock %}

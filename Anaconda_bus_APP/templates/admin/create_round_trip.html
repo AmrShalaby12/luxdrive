@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إنشاء رحلة ذهاب وعودة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding-top: 40px;
+      font-family: 'Cairo', sans-serif;
+    }
+
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #343a40;
+    }
+
+    .select2-container--default .select2-selection--single,
+    .select2-container--default .select2-selection--multiple {
+      height: 45px;
+      border-radius: 10px;
+    }
+
+    .select2-selection__rendered {
+      line-height: 45px !important;
+    }
+
+    .select2-selection__arrow {
+      top: 10px !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card p-4 bg-white">
+        <h2 class="mb-4 text-center">🛫 إنشاء رحلة ذهاب وعودة متعددة الأيام</h2>
+
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="mb-4">
+            <label for="departure_trip" class="form-label"><strong>رحلة الذهاب:</strong></label>
+            <select name="departure_trip" class="form-control select2-single" required>
+              <option value="">اختر رحلة الذهاب</option>
+              {% for trip in trips %}
+                <option value="{{ trip.id }}">{{ trip.trip_name }} - {{ trip.date }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label for="return_trips" class="form-label"><strong>رحلات العودة:</strong></label>
+            <select name="return_trips" multiple class="form-control select2-multiple" required>
+              {% for trip in trips %}
+                <option value="{{ trip.id }}">{{ trip.trip_name }} - {{ trip.date }}</option>
+              {% endfor %}
+            </select>
+            <small class="text-muted">يمكنك تحديد أكثر من رحلة بالضغط على Ctrl أو Cmd.</small>
+          </div>
+
+          <div class="text-center">
+            <button type="submit" class="btn btn-success px-5">🔗 ربط الرحلات</button>
+            <a href="{% url 'admin:Anaconda_bus_APP_trip_changelist' %}" class="btn btn-secondary ms-3">⬅ العودة للرحلات</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  /* حل مشكلة الشكل المعكوك للرحلات المختارة */
+  .select2-container--default .select2-selection--multiple {
+    min-height: 80px;
+    max-height: 140px;
+    overflow-y: auto;
+    border-radius: 10px;
+    padding: 6px 8px;
+  }
+
+  .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    white-space: normal !important;
+    word-break: break-word;
+    padding: 8px 10px;
+    background-color: #e9ecef;
+    color: #000;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    margin-top: 4px;
+  }
+
+  .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    margin-left: 6px;
+    color: #dc3545;
+    font-weight: bold;
+  }
+</style>
+
+<!-- jQuery + Select2 + Bootstrap -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $('.select2-single').select2({
+      placeholder: "اختر رحلة الذهاب",
+      width: '100%',
+      dir: "rtl"
+    });
+
+    $('.select2-multiple').select2({
+      placeholder: "اختر رحلات العودة",
+      width: '100%',
+      dir: "rtl"
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+  <h2>إحصائيات الرحلات لليوم التالي</h2>
+  {% if stats %}
+    <ul>
+      <li>إجمالي القادمين غدا: <b>{{ stats.total_return_trip }}</b></li>
+      <li>إجمالي رحلة العوده الساعه 1: <b>{{ stats.trip_1 }}</b></li>
+      <li>إجمالي رحلة العوده الساعه 2 <b>{{ stats.trip_2 }}</b></li>
+      <li>إجمالي رحلة العوده الساعه 3: <b> {{ stats.trip_3 }}</b></li>
+      <li>إجمالي رحلة العوده الساعه 4: <b> {{ stats.trip_4 }}</b></li>
+    </ul>
+  {% else %}
+    <p>لا توجد إحصائيات متاحة حالياً.</p>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

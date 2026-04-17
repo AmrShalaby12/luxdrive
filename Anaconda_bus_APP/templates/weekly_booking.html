@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="booking-container">
+    <div class="main-card">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h1><i class="fas fa-calendar-week me-3"></i>الحجز الأسبوعي</h1>
+            <p>{{ category.name }} - اختر أيام ومواعيد رحلاتك الأسبوعية</p>
+            
+            <div class="student-info">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-user me-2"></i>{{ passenger.name }}</h5>
+                        <p class="mb-0"><i class="fas fa-id-card me-2"></i>{{ passenger.university_code }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-university me-2"></i>{{ category.name }}</h5>
+                        <p class="mb-0"><i class="fas fa-phone me-2"></i>{{ passenger.phone_number }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-section">
+            <form method="post" id="weeklyBookingForm">
+                {% csrf_token %}
+                
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                    <p class="mt-2">جاري تحميل المواعيد المتاحة...</p>
+                </div>
+
+                <!-- Days and Times Section -->
+                <div id="daysAndTimesSection" style="display: none;">
+                    <!-- Departure Days -->
+                    <div class="mb-4">
+                        <h4 class="mb-4">
+                            <i class="fas fa-arrow-right text-primary me-2"></i>
+                            أيام الذهاب
+                        </h4>
+                        <div id="departureDaysContainer">
+                            <!-- Days will be loaded here -->
+                        </div>
+                    </div>
+
+                    <hr class="my-5">
+
+                    <!-- Return Days -->
+                    <div class="mb-4">
+                        <h4 class="mb-4">
+                            <i class="fas fa-arrow-left text-success me-2"></i>
+                            أيام العودة
+                        </h4>
+                        <div id="returnDaysContainer">
+                            <!-- Days will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Locations Section -->
+                    <div class="locations-section">
+                        <h4 class="mb-4">
+                            <i class="fas fa-map-marker-alt text-warning me-2"></i>
+                            نقاط الالتقاط والنزول
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city_select" class="form-label">
+                                    <i class="fas fa-city me-1"></i> المدينة
+                                </label>
+                                <select class="form-select" id="city_select" name="city">
+                                    <option value="">اختر المدينة أولاً</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pickup_location_select" class="form-label">
+                                    <i class="fas fa-map-pin me-1"></i> نقطة الالتقاط
+                                </label>
+                                <select class="form-select" id="pickup_location_select" name="pickup_location" disabled>
+                                    <option value="">اختر المدينة أولاً</option>
+                                </select>
+                                {{ form.pickup_location }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dropoff_location_select" class="form-label">
+                                    <i class="fas fa-flag-checkered me-1"></i> نقطة النزول
+                                </label>
+                                <select class="form-select" id="dropoff_location_select" name="dropoff_location" disabled>
+                                    <option value="">اختر المدينة أولاً</option>
+                                </select>
+                                {{ form.dropoff_location }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    {{ form.departure_days }}
+                    {{ form.return_days }}
+                    {{ form.departure_time }}
+                    {{ form.return_time }}
+
+                    <!-- Submit Buttons -->
+                    <div class="text-center mt-5">
+                        <button type="submit" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-save me-2"></i> حفظ الحجز الأسبوعي
+                        </button>
+                        <a href="{% url 'my_buses' %}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i> عودة
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --success-color: #27ae60;
+        --light-bg: #f8f9fa;
+        --border-color: #dee2e6;
+        --border-radius: 12px;
+    }
+
+    .booking-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .main-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .header-section {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 2.5rem;
+        text-align: center;
+    }
+
+    .student-info {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .form-section {
+        padding: 3rem;
+    }
+
+    .day-card {
+        background: var(--light-bg);
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .day-card:hover {
+        border-color: var(--secondary-color);
+        transform: translateY(-2px);
+    }
+
+    .day-card.selected {
+        border-color: var(--success-color);
+        background: rgba(39, 174, 96, 0.1);
+    }
+
+    .day-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .day-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin: 0;
+    }
+
+    .time-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .time-slot {
+        background: white;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.75rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .time-slot:hover {
+        border-color: var(--secondary-color);
+        background: rgba(52, 152, 219, 0.1);
+    }
+
+    .time-slot.selected {
+        border-color: var(--success-color);
+        background: var(--success-color);
+        color: white;
+    }
+
+    .time-slot.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #e9ecef;
+    }
+
+    .locations-section {
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin: 2rem 0;
+    }
+
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .loading-spinner.active {
+        display: block;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryId = {{ category.id }};
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const daysAndTimesSection = document.getElementById('daysAndTimesSection');
+        
+        const arabicDays = {
+            'saturday': 'السبت',
+            'sunday': 'الأحد', 
+            'monday': 'الإثنين',
+            'tuesday': 'الثلاثاء',
+            'wednesday': 'الأربعاء',
+            'thursday': 'الخميس',
+            'friday': 'الجمعة'
+        };
+
+        function loadSchedulesAndBuildUI() {
+            loadingSpinner.classList.add('active');
+            daysAndTimesSection.style.display = 'none';
+
+            fetch(`/allen/api/weekly-schedules/${categoryId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    buildDepartureDays(data.departure_schedules);
+                    buildReturnDays(data.return_schedules);
+                    loadCityAndLocationOptions(data.cities);
+                    
+                    loadingSpinner.classList.remove('active');
+                    daysAndTimesSection.style.display = 'block';
+                })
+                .catch(error => {
+                    loadingSpinner.innerHTML = '<div class="alert alert-danger">حدث خطأ في تحميل المواعيد</div>';
+                });
+        }
+
+        function loadCityAndLocationOptions(cities) {
+            const citySelect = document.getElementById('city_select');
+            const pickupSelect = document.getElementById('pickup_location_select');
+            const dropoffSelect = document.getElementById('dropoff_location_select');
+            const pickupHidden = document.querySelector('input[name="pickup_location"]');
+            const dropoffHidden = document.querySelector('input[name="dropoff_location"]');
+            
+            // تخزين بيانات المدن
+            window.citiesData = cities;
+            
+            // ملء قائمة المدن
+            citySelect.innerHTML = '<option value="">اختر المدينة أولاً</option>';
+            cities.forEach(city => {
+                citySelect.innerHTML += `<option value="${city.name}">${city.name}</option>`;
+            });
+            
+            // عند اختيار المدينة
+            citySelect.addEventListener('change', function() {
+                const selectedCity = this.value;
+                
+                if (selectedCity) {
+                    // البحث عن بيانات المدينة المختارة
+                    const cityData = cities.find(city => city.name === selectedCity);
+                    
+                    if (cityData) {
+                        // تفعيل قوائم النقاط
+                        pickupSelect.disabled = false;
+                        dropoffSelect.disabled = false;
+                        
+                        // ملء قائمة نقاط الالتقاط
+                        pickupSelect.innerHTML = '<option value="">اختر نقطة الالتقاط</option>';
+                        cityData.pickup_points.forEach(point => {
+                            pickupSelect.innerHTML += `<option value="${point}">${point}</option>`;
+                        });
+                        
+                        // ملء قائمة نقاط النزول
+                        dropoffSelect.innerHTML = '<option value="">اختر نقطة النزول</option>';
+                        cityData.dropoff_points.forEach(point => {
+                            dropoffSelect.innerHTML += `<option value="${point}">${point}</option>`;
+                        });
+                    }
+                } else {
+                    // إعادة تعيين القوائم عند عدم اختيار مدينة
+                    pickupSelect.disabled = true;
+                    dropoffSelect.disabled = true;
+                    pickupSelect.innerHTML = '<option value="">اختر المدينة أولاً</option>';
+                    dropoffSelect.innerHTML = '<option value="">اختر المدينة أولاً</option>';
+                    pickupHidden.value = '';
+                    dropoffHidden.value = '';
+                }
+            });
+            
+            // تحديث القيم المخفية عند التغيير
+            pickupSelect.addEventListener('change', function() {
+                pickupHidden.value = this.value;
+            });
+            
+            dropoffSelect.addEventListener('change', function() {
+                dropoffHidden.value = this.value;
+            });
+            
+            // إخفاء الحقول الأصلية
+            if (pickupHidden) {
+                pickupHidden.style.display = 'none';
+            }
+            if (dropoffHidden) {
+                dropoffHidden.style.display = 'none';
+            }
+        }
+
+        function buildDepartureDays(schedules) {
+            const container = document.getElementById('departureDaysContainer');
+            const groupedSchedules = groupSchedulesByDay(schedules);
+            
+            let html = '';
+            Object.keys(groupedSchedules).forEach(day => {
+                const times = groupedSchedules[day];
+                html += `
+                    <div class="day-card" data-day="${day}">
+                        <div class="day-header">
+                            <h5 class="day-title">${arabicDays[day]}</h5>
+                            <input type="checkbox" class="day-checkbox" data-day="${day}" data-trip-type="departure">
+                        </div>
+                        <div class="time-slots">
+                            ${times.map(time => `
+                                <div class="time-slot" data-time="${time}" data-day="${day}" data-trip-type="departure">
+                                    <i class="fas fa-clock me-1"></i>${time}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<p class="text-muted">لا توجد مواعيد متاحة للذهاب</p>';
+        }
+
+        function buildReturnDays(schedules) {
+            const container = document.getElementById('returnDaysContainer');
+            const groupedSchedules = groupSchedulesByDay(schedules);
+            
+            let html = '';
+            Object.keys(groupedSchedules).forEach(day => {
+                const times = groupedSchedules[day];
+                html += `
+                    <div class="day-card" data-day="${day}">
+                        <div class="day-header">
+                            <h5 class="day-title">${arabicDays[day]}</h5>
+                            <input type="checkbox" class="day-checkbox" data-day="${day}" data-trip-type="return">
+                        </div>
+                        <div class="time-slots">
+                            ${times.map(time => `
+                                <div class="time-slot" data-time="${time}" data-day="${day}" data-trip-type="return">
+                                    <i class="fas fa-clock me-1"></i>${time}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<p class="text-muted">لا توجد مواعيد متاحة للعودة</p>';
+        }
+
+        function groupSchedulesByDay(schedules) {
+            const grouped = {};
+            schedules.forEach(schedule => {
+                if (!grouped[schedule.day]) {
+                    grouped[schedule.day] = [];
+                }
+                grouped[schedule.day].push(schedule.time);
+            });
+            
+            Object.keys(grouped).forEach(day => {
+                grouped[day].sort();
+            });
+            
+            return grouped;
+        }
+
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('day-checkbox')) {
+                const dayCard = e.target.closest('.day-card');
+                const timeSlots = dayCard.querySelectorAll('.time-slot');
+                
+                if (e.target.checked) {
+                    dayCard.classList.add('selected');
+                    timeSlots.forEach(slot => slot.classList.remove('disabled'));
+                } else {
+                    dayCard.classList.remove('selected');
+                    timeSlots.forEach(slot => {
+                        slot.classList.remove('selected');
+                        slot.classList.add('disabled');
+                    });
+                }
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('time-slot')) {
+                const dayCheckbox = document.querySelector(
+                    `.day-checkbox[data-day="${e.target.dataset.day}"][data-trip-type="${e.target.dataset.tripType}"]`
+                );
+                
+                if (!dayCheckbox.checked) {
+                    dayCheckbox.checked = true;
+                    dayCheckbox.dispatchEvent(new Event('change'));
+                }
+                
+                document.querySelectorAll(
+                    `.time-slot[data-day="${e.target.dataset.day}"][data-trip-type="${e.target.dataset.tripType}"]`
+                ).forEach(slot => slot.classList.remove('selected'));
+                
+                e.target.classList.add('selected');
+            }
+        });
+
+        document.getElementById('weeklyBookingForm').addEventListener('submit', function(e) {
+            const selectedDepartureDays = [];
+            const selectedReturnDays = [];
+
+            document.querySelectorAll('.day-checkbox[data-trip-type="departure"]:checked').forEach(checkbox => {
+                const day = checkbox.dataset.day;
+                const selectedTime = document.querySelector(
+                    `.time-slot[data-day="${day}"][data-trip-type="departure"].selected`
+                );
+                
+                if (selectedTime) {
+                    selectedDepartureDays.push(day);
+                }
+            });
+
+            document.querySelectorAll('.day-checkbox[data-trip-type="return"]:checked').forEach(checkbox => {
+                const day = checkbox.dataset.day;
+                const selectedTime = document.querySelector(
+                    `.time-slot[data-day="${day}"][data-trip-type="return"].selected`
+                );
+                
+                if (selectedTime) {
+                    selectedReturnDays.push(day);
+                }
+            });
+
+            if (selectedDepartureDays.length === 0 && selectedReturnDays.length === 0) {
+                e.preventDefault();
+                alert('يرجى اختيار يوم واحد على الأقل للذهاب أو العودة');
+                return;
+            }
+
+            document.querySelector('input[name="departure_days"]').value = JSON.stringify(selectedDepartureDays);
+            document.querySelector('input[name="return_days"]').value = JSON.stringify(selectedReturnDays);
+        });
+
+        loadSchedulesAndBuildUI();
+    });
+</script>
+{% endblock %}

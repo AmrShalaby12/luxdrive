@@ -1,0 +1,11 @@
+{% if routes %}
+    <ul>
+        {% for route in routes %}
+            <li>
+                {{ route.bus.name }}: {{ route.from_location }} -> {{ route.to_location }} ({{ route.date }})
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>لا توجد رحلات مطابقة.</p>
+{% endif %}

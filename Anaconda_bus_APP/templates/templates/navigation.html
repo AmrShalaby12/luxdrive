@@ -1,0 +1,77 @@
+<!-- رابط ملف CSS المخصص للنافيجيشن -->
+<link rel="stylesheet" href="/static/orders/css/navigation.css">
+
+<nav class="navbar navbar-expand-lg navbar-dark custom-navbar" style="background-color: #290c38;">
+    <div class="container">
+        <!-- Logo -->
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <img src="/allen/media/items/logo.png" alt="Allen Travel Logo" class="logo me-2">
+        </a>
+        {% comment %} <li class="nav-item">
+            <a class="nav-link" href="{% url 'subscriptions' %}">الاشتراكات</a>
+        </li> {% endcomment %}
+        
+        <!-- Toggler button for small screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" >
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navbar links -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'index' %}">الرئيسية</a>
+                </li>
+{% load passenger_tags %}
+{% get_passenger as passenger %}
+{% if passenger %}
+{% if user_type == "student" %}
+
+    <a class="nav-link" href="{% url 'subscriptions' passenger.id %}">الاشتراكات</a>
+    {% endif %}
+
+{% else %}
+    <a class="nav-link" href="#">الاشتراكات</a>
+{% endif %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'user_bookings' %}">حجوزاتي</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'user_data' %}">معلومات الحساب</a>
+                </li>
+                <!-- <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">تسجيل الدخول</a>
+                </li> -->
+                {% if not user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">تسجيل الدخول</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+<style>
+    body{
+        text-align: center !important;
+    }
+    .navbar-nav {
+        padding-right: 0 !important;
+    }
+    .logo {
+        height: 45px; /* ارتفاع الشعار */
+        width: auto; /* الحفاظ على نسبة العرض إلى الارتفاع */
+        transition: transform 0.3s ease;
+    }
+    .logo:hover {
+        transform: scale(1.1); /* تكبير بسيط عند تمرير الفأرة */
+    }
+    .brand-text {
+        font-size: 1.2rem; /* حجم الخط للنص بجانب الشعار */
+        font-weight: bold;
+    }
+    
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>

@@ -1,0 +1,1961 @@
+{% extends 'base.html' %}
+
+{% block title %}حجوزاتي{% endblock %}
+
+{% block content %}
+<div class="bookings-container">
+    <!-- Header Section -->
+    <header class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                <i class="fas fa-calendar-check"></i>
+                حجوزاتي
+            </h1>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <span class="stat-number">{{ active_bookings|length }}</span>
+                    <span class="stat-label">نشطة</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ pending_form_bookings|length }}</span>
+                    <span class="stat-label">قيد الانتظار</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ completed_form_bookings|length }}</span>
+                    <span class="stat-label">مكتملة</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Enhanced Floating Menu -->
+    <div class="floating-menu" id="floatingMenu">
+        <div class="menu-backdrop" id="menuBackdrop"></div>
+        <div class="menu-button" id="menuButton" role="button" tabindex="0" aria-label="فتح القائمة" aria-expanded="false">
+            <i class="fas fa-bars menu-icon"></i>
+            <i class="fas fa-times close-icon"></i>
+        </div>
+        <nav class="menu-items" id="menuItems" role="navigation">
+            <ul>
+                <li>
+                    <a class="nav-link" href="{% url 'index' %}" aria-label="الصفحة الرئيسية">
+                        <i class="fas fa-home"></i>
+                        <span>الرئيسية</span>
+                    </a>
+                </li>
+                {% load passenger_tags %}
+                {% get_passenger as passenger %}
+                <li>
+                    {% if passenger %}
+                        <a class="nav-link" href="{% url 'subscriptions' passenger.id %}" aria-label="الاشتراكات">
+                            <i class="fas fa-credit-card"></i>
+                            <span>الاشتراكات</span>
+                        </a>
+                    {% else %}
+                        <a class="nav-link" href="#" aria-label="الاشتراكات">
+                            <i class="fas fa-credit-card"></i>
+                            <span>الاشتراكات</span>
+                        </a>
+                    {% endif %}
+                </li>
+                <li>
+                    <a class="nav-link active" href="{% url 'user_bookings' %}" aria-label="حجوزاتي">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>حجوزاتي</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="{% url 'user_data' %}" aria-label="معلومات الحساب">
+                        <i class="fas fa-user"></i>
+                        <span>معلومات الحساب</span>
+                    </a>
+                </li>
+                {% if not user.is_authenticated %}
+                <li>
+                    <a class="nav-link" href="{% url 'login' %}" aria-label="تسجيل الدخول">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>تسجيل الدخول</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Filter and Search Section -->
+    <section class="filters-section">
+        <div class="container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="ابحث في الحجوزات...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">الكل</button>
+                <button class="filter-btn" data-filter="active">نشطة</button>
+                <button class="filter-btn" data-filter="form">حجوزات فورم</button>
+                <button class="filter-btn" data-filter="upcoming">قادمة</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pending Form Bookings Section -->
+    <section class="bookings-section" id="pendingFormBookings">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-hourglass-half text-warning"></i>
+                    حجوزات فورم (قيد الانتظار)
+                </h2>
+                {% if pending_form_bookings %}
+                    <span class="section-count">{{ pending_form_bookings|length }} حجز</span>
+                {% endif %}
+                
+            </div>
+                <p>هنا هتلاقي حجوزات الفورم بتاعتك الي في انتظار الموافقة. عليها من مديرين التشغيل , هيجيلك رساله واتساب بتاكيد الحجز علطول لا تقلق ولو و بمجرد ما يكتمل حجزك هتلاقيه ظاهر تحت في الحجوزات المكتمله</p>
+
+            {% if pending_form_bookings %}
+                <div class="bookings-grid">
+                    {% for booking in pending_form_bookings %}
+                    <article class="booking-card" data-booking-type="form" data-booking-id="{{ booking.id }}">
+                        <div class="card-header">
+                            <div class="trip-info">
+                                <h3 class="trip-title">{{ booking.trip.name|default:"رحلة غير محددة" }}</h3>
+                                <div class="trip-meta">
+                                    <span class="trip-date">
+                                        <i class="fas fa-calendar"></i>
+                                        {{ booking.trip.date|date:"Y-m-d" }}
+                                    </span>
+                                    <span class="trip-type">{{ booking.get_trip_type_display }}</span>
+                                </div>
+                            </div>
+                            <div class="booking-status">
+                                <span class="status-badge" style="background-color: var(--warning-color);">قيد الانتظار</span>
+                            </div>
+                        </div>
+
+                        <div class="card-content">
+                            <div class="booking-details">
+                                <div class="detail-group primary">
+                                    <div class="detail-item">
+
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-id-card"></i>
+                                        <div class="detail-content">
+                                            <span class="detail-label">الهوية</span>
+                                            <span class="detail-value">{{ booking.passenger_id|default:"غير محدد" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="detail-group secondary">
+     
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span class="detail-value">{{ booking.pickup_location|default:"غير محدد" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-actions mt-3 d-flex flex-column gap-2">
+                                <button class="action-btn primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editFormReservationModal"
+                                        data-booking-id="{{ booking.id }}">
+                                    <i class="fas fa-edit"></i>
+                                    <span>تعديل الحجز</span>
+                                </button>
+                                
+                                <button class="action-btn danger" onclick="confirmCancelFormBooking('{{ booking.id }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                    <span>إلغاء الحجز</span>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <h3 class="empty-title">لا توجد حجوزات قيد الانتظار</h3>
+                    <p class="empty-description">لم تقم بأي حجوزات قيد الانتظار حتى الآن</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Active Bookings Section -->
+    <section class="bookings-section" id="activeBookings">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-clock text-success"></i>
+                    الحجوزات النشطة
+                </h2>
+                {% if active_bookings %}
+                    <span class="section-count">{{ active_bookings|length }} حجز</span>
+                {% endif %}
+            </div>
+            <p>تظهر الحجوزات النشطة هنا.  وهنا مش هينفع تعدل في الحجوزات الي من النوع ده لانك خلاص اتسكنت في رحله , في حجوزات الفورم مسموحلك تعدل بس بعد ماقبل ما تتسكن</p>
+
+            {% if active_bookings %}
+                <div class="bookings-grid">
+                    {% for booking in active_bookings %}
+                    <article class="booking-card" data-booking-type="active">
+                        <div class="card-header">
+                            <div class="trip-info">
+                                <h3 class="trip-title">{{ booking.Trip }}</h3>
+                                <div class="trip-meta">
+                                    <span class="trip-date">
+                                        <i class="fas fa-calendar"></i>
+                                        {{ booking.Trip.date }}
+                                    </span>
+                                    <span class="trip-type">{{ booking.get_trip_type_display }}</span>
+                                </div>
+                            </div>
+                            <div class="booking-status">
+                                <span class="status-badge active">نشط</span>
+                            </div>
+                        </div>
+
+                        {% if booking.Trip.bus.bus_image %}
+                        <div class="bus-image-container">
+                            <img src="{{ booking.Trip.bus.bus_image.url }}" 
+                                 alt="صورة الباص" 
+                                 class="bus-image"
+                                 loading="lazy">
+                            <div class="image-overlay">
+                                <span class="bus-type">{{ booking.Trip.bus.bus_type }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="card-content">
+                            <div class="booking-details">
+                                <div class="detail-group primary">
+                                    <div class="detail-item">
+                                        <i class="fas fa-chair"></i>
+                                        <div class="detail-content">
+                                            <span class="detail-label">المقاعد المحجوزة</span>
+                                            <div class="seats-display">
+                                                {% for seat in booking.seats_reserved.all %}
+                                                    <span class="seat-number">{{ seat.seat_number }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <div class="detail-content">
+                                            <span class="detail-label">مكان الركوب</span>
+                                            <span class="detail-value">{{ booking.selected_route }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="detail-group secondary">
+                                    <div class="detail-item">
+                                        <i class="fas fa-phone"></i>
+                                        <span class="detail-value">{{ booking.Trip.bus.driver_number }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-id-card"></i>
+                                        <span class="detail-value">{{ booking.Trip.bus.plate_number }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="booking-code-section">
+                                    <label class="code-label">كود الحجز</label>
+                                    <div class="code-container">
+                                        <span class="booking-code" 
+                                              id="serial-code-{{ booking.id }}" 
+                                              onclick="copyToClipboard('serial-code-{{ booking.id }}')"
+                                              role="button"
+                                              tabindex="0"
+                                              aria-label="نسخ كود الحجز">
+                                            {{ booking.serial_code }}
+                                        </span>
+                                        <button class="copy-btn" onclick="copyToClipboard('serial-code-{{ booking.id }}')" aria-label="نسخ">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    <div class="copy-feedback" id="copy-message-{{ booking.id }}">
+                                        <i class="fas fa-check"></i>
+                                        تم النسخ بنجاح!
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-actions">
+                                <a href="{% url 'scan_qr' %}?trip_code={{ booking.Trip.id }}&university_code={{ booking.serial_code }}" 
+                                   class="action-btn primary">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>اسكان الآن</span>
+                                </a>
+                                <button class="action-btn secondary" 
+                                        onclick="openEditModal('{{ booking.id }}', '{{ booking.Trip.id }}', '{{ booking.trip_type }}')">
+                                    <i class="fas fa-edit"></i>
+                                    <span>تعديل الحجز</span>
+                                </button>
+
+                                {% if booking.Trip.bus.latitude and booking.Trip.bus.longitude %}
+                                <a href="{% url 'track_bus_view' booking.Trip.bus.id %}" 
+                                   class="action-btn secondary">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>عرض الموقع</span>
+                                </a>
+                                {% endif %}
+                                
+                                <button class="action-btn danger" 
+                                        onclick="confirmCancelBooking('{{ booking.id }}', '{{ booking.Trip }}')">
+                                    <i class="fas fa-times-circle"></i>
+                                    <span>إلغاء الحجز</span>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <h3 class="empty-title">لا توجد حجوزات نشطة</h3>
+                    <p class="empty-description">لم تقم بأي حجوزات نشطة حتى الآن</p>
+                    <a href="{% url 'index' %}" class="empty-action">
+                        <i class="fas fa-plus"></i>
+                        احجز رحلة جديدة
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Completed Form Bookings Section -->
+<!-- Completed Form Bookings Section -->
+<section class="bookings-section" id="completedFormBookings">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-check-circle text-info"></i>
+                حجوزات فورم (مكتملة)
+            </h2>
+            {% if completed_form_bookings %}
+                <span class="section-count">{{ completed_form_bookings|length }} حجز</span>
+            {% endif %}
+        </div>
+        <p>هنا هتلاقي حجوزات الفورم المكتملة والي تم الموافقة عليها. تقدر تشوف موقع العربيه في الوقت الحقيقي لو متاح.</p>
+
+        {% if completed_form_bookings %}
+            <div class="bookings-grid">
+                {% for booking in completed_form_bookings %}
+                <article class="booking-card" data-booking-type="form-completed">
+                    <div class="card-header">
+                        <div class="trip-info">
+                            <h3 class="trip-title">{{ booking.trip.name|default:"رحلة غير محددة" }}</h3>
+                            <div class="trip-meta">
+                                <span class="trip-date"><i class="fas fa-calendar"></i> {{ booking.trip.date|date:"Y-m-d" }}</span>
+                                <span class="trip-type">{{ booking.get_trip_type_display }}</span>
+                            </div>
+                        </div>
+                        <div class="booking-status">
+                            <span class="status-badge" style="background-color: var(--success-color);">مكتمل</span>
+                        </div>
+                    </div>
+                    
+                    {% if booking.trip.bus.bus_image %}
+                    <div class="bus-image-container">
+                        <img src="{{ booking.trip.bus.bus_image.url }}" alt="صورة الباص" class="bus-image" loading="lazy">
+                        <div class="image-overlay">
+                            <span class="bus-type">{{ booking.trip.bus.bus_type }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-content">
+                        <div class="booking-details">
+                            <div class="detail-group primary">
+                                <div class="detail-item">
+                                    <i class="fas fa-user"></i>
+                                    <div class="detail-content">
+                                        <span class="detail-label">الاسم</span>
+                                        <span class="detail-value">{{ booking.passenger_name|default:"غير محدد" }}</span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <div class="detail-content">
+                                        <span class="detail-label">مكان الركوب</span>
+                                        <span class="detail-value">{{ booking.pickup_location|default:"غير محدد" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-group secondary">
+                                {% if booking.trip.bus.driver_number %}
+                                <div class="detail-item">
+                                    <i class="fas fa-phone"></i>
+                                    <span class="detail-value">{{ booking.trip.bus.driver_number }}</span>
+                                </div>
+                                {% endif %}
+                                {% if booking.trip.bus.plate_number %}
+                                <div class="detail-item">
+                                    <i class="fas fa-id-card"></i>
+                                    <span class="detail-value">{{ booking.trip.bus.plate_number }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="card-actions">
+                            {% if booking.trip.bus.latitude and booking.trip.bus.longitude %}
+                            <a href="{% url 'track_bus_view' booking.trip.bus.id %}" class="action-btn secondary full-width">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>عرض الموقع</span>
+                            </a>
+                            {% else %}
+                            <div class="no-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>الموقع غير متاح حالياً</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fas fa-list-check"></i></div>
+                <h3 class="empty-title">لا توجد حجوزات فورم مكتملة</h3>
+                <p class="empty-description">لم يتم الموافقة على أي من حجوزات الفورم حتى الآن</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="cancelModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">تأكيد إلغاء الحجز</h3>
+            <button class="modal-close" onclick="closeCancelModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>هل أنت متأكد أنك تريد إلغاء حجزك في رحلة:</p>
+            <p><strong><span id="tripName"></span></strong></p>
+            <p class="warning-text">لا يمكن التراجع عن هذا الإجراء.</p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="modal-btn secondary" onclick="closeCancelModal()">تراجع</button>
+            <a href="#" id="confirmCancelLink" class="modal-btn danger">نعم، قم بالإلغاء</a>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cancelFormModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الإلغاء</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد أنك تريد إلغاء هذا الحجز نهائياً؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">تراجع</button>
+                <a href="#" id="confirmCancelFormLink" class="btn btn-danger">نعم، قم بالإلغاء</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editFormReservationModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg, #3a1c5f, #290C38); color:white;">
+                <h5 class="modal-title" id="editModalLabel"><i class="fas fa-edit me-2"></i>تعديل حجز الفورم</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="edit-form-container">
+                    <div class="text-center p-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">جاري تحميل بيانات الحجز...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Booking Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">تعديل موعد الرحلة</h3>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>اختر موعد الرحلة الجديد المتاح لجامعتك.</p>
+            <form id="editBookingForm">
+                <input type="hidden" id="currentBookingId" name="booking_id">
+                
+                <div class="form-group mb-3">
+                    <label for="availableTrips">الرحلات المتاحة:</label>
+                    <select id="availableTrips" name="new_trip_id" class="form-control" required>
+                        <!-- سيتم ملء الخيارات هنا عبر JavaScript -->
+                    </select>
+                </div>
+                
+                <div id="modal-loader" style="display: none; text-align: center;">
+                    <p>جاري تحميل الرحلات المتاحة...</p>
+                </div>
+            </form>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="modal-btn secondary" onclick="closeEditModal()">إلغاء</button>
+            <button type="button" class="modal-btn primary" onclick="submitBookingChange()">تأكيد التعديل</button>
+        </div>
+    </div>
+</div>
+
+<!-- External Dependencies -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+// دالة تأكيد الإلغاء
+function confirmCancelBooking(bookingId, tripName) {
+    const modal = document.getElementById('cancelModal');
+    const tripNameElement = document.getElementById('tripName');
+    const confirmLink = document.getElementById('confirmCancelLink');
+    
+    tripNameElement.textContent = tripName;
+    confirmLink.href = `/allen/cancel_booking/${bookingId}/`;
+    
+    modal.classList.add('show');
+    
+    setTimeout(() => {
+        const closeButton = modal.querySelector('.modal-close');
+        if (closeButton) closeButton.focus();
+    }, 300);
+}
+
+function closeCancelModal() {
+    const modal = document.getElementById('cancelModal');
+    modal.classList.remove('show');
+}
+
+// دالة تأكيد إلغاء حجز الفورم
+function confirmCancelFormBooking(bookingId) {
+    const cancelUrl = `/allen/cancel-form-reservation/${bookingId}/`;
+    $('#confirmCancelFormLink').attr('href', cancelUrl);
+    const cancelModal = new bootstrap.Modal(document.getElementById('cancelFormModal'));
+    cancelModal.show();
+}
+
+// دالة لفتح نافذة التعديل
+function openEditModal(bookingId, tripId, tripType) {
+    const modal = document.getElementById('editModal');
+    const loader = document.getElementById('modal-loader');
+    const select = document.getElementById('availableTrips');
+    
+    document.getElementById('currentBookingId').value = bookingId;
+    select.innerHTML = '';
+    loader.style.display = 'block';
+    modal.classList.add('show');
+
+    // جلب الرحلات المتاحة عبر AJAX
+    fetch(`/allen/ajax/get-available-trips/?booking_id=${bookingId}`)
+        .then(response => response.json())
+        .then(data => {
+            loader.style.display = 'none';
+            if (data.trips && data.trips.length > 0) {
+                select.innerHTML = '<option value="">-- اختر رحلة جديدة --</option>';
+                data.trips.forEach(trip => {
+                    const option = document.createElement('option');
+                    option.value = trip.id;
+                    const tripDate = new Date(trip.date).toLocaleDateString('ar-EG');
+                    option.textContent = `${trip.trip_name} - ${tripDate} - الساعة ${trip.start_time}`;
+                    select.appendChild(option);
+                });
+            } else {
+                select.innerHTML = '<option value="">لا توجد رحلات بديلة متاحة حالياً</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching trips:', error);
+            loader.style.display = 'none';
+            select.innerHTML = '<option value="">حدث خطأ أثناء تحميل الرحلات</option>';
+        });
+}
+
+// دالة لإغلاق النافذة
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('show');
+}
+
+// دالة لإرسال طلب التعديل
+function submitBookingChange() {
+    const bookingId = document.getElementById('currentBookingId').value;
+    const newTripId = document.getElementById('availableTrips').value;
+
+    if (!newTripId) {
+        alert('الرجاء اختيار رحلة جديدة أولاً.');
+        return;
+    }
+    
+    window.location.href = `/allen/change-booking/${bookingId}/${newTripId}/`;
+}
+
+// دالة نسخ النص
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent.trim();
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showCopyFeedback(elementId);
+        }).catch(err => {
+            console.error('فشل في نسخ النص:', err);
+            fallbackCopyTextToClipboard(text, elementId);
+        });
+    } else {
+        fallbackCopyTextToClipboard(text, elementId);
+    }
+}
+
+function fallbackCopyTextToClipboard(text, elementId) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showCopyFeedback(elementId);
+    } catch (err) {
+        console.error('فشل في نسخ النص:', err);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showCopyFeedback(elementId) {
+    const bookingId = elementId.split('-').pop();
+    const feedbackElement = document.getElementById('copy-message-' + bookingId);
+    
+    if (feedbackElement) {
+        feedbackElement.classList.add('show');
+        
+        setTimeout(() => {
+            feedbackElement.classList.remove('show');
+        }, 3000);
+    }
+    
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
+}
+
+// Floating Menu Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const menuButton = document.getElementById('menuButton');
+    const menuBackdrop = document.getElementById('menuBackdrop');
+    const floatingMenu = document.getElementById('floatingMenu');
+    
+    function toggleMenu() {
+        const isOpen = floatingMenu.classList.contains('menu-open');
+        
+        if (isOpen) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    }
+    
+    function openMenu() {
+        floatingMenu.classList.add('menu-open');
+        menuButton.setAttribute('aria-expanded', 'true');
+        menuButton.setAttribute('aria-label', 'إغلاق القائمة');
+        
+        setTimeout(() => {
+            const firstLink = floatingMenu.querySelector('.nav-link');
+            if (firstLink) firstLink.focus();
+        }, 300);
+    }
+    
+    function closeMenu() {
+        floatingMenu.classList.remove('menu-open');
+        menuButton.setAttribute('aria-expanded', 'false');
+        menuButton.setAttribute('aria-label', 'فتح القائمة');
+        menuButton.focus();
+    }
+    
+    menuButton.addEventListener('click', toggleMenu);
+    menuBackdrop.addEventListener('click', closeMenu);
+    
+    menuButton.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleMenu();
+        }
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && floatingMenu.classList.contains('menu-open')) {
+            closeMenu();
+        }
+    });
+    
+    // Search and Filter Functionality
+    const searchInput = document.getElementById('searchInput');
+    const bookingCards = document.querySelectorAll('.booking-card');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            bookingCards.forEach(card => {
+                const cardText = card.textContent.toLowerCase();
+                const shouldShow = searchTerm === '' || cardText.includes(searchTerm);
+                
+                card.style.display = shouldShow ? 'block' : 'none';
+                
+                if (shouldShow) {
+                    card.style.animation = 'fadeIn 0.3s ease';
+                }
+            });
+        });
+    }
+    
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filterType = this.getAttribute('data-filter');
+            
+            bookingCards.forEach(card => {
+                const cardType = card.getAttribute('data-booking-type');
+                let shouldShow = false;
+                
+                switch(filterType) {
+                    case 'all':
+                        shouldShow = true;
+                        break;
+                    case 'active':
+                        shouldShow = cardType === 'active';
+                        break;
+                    case 'form':
+                        shouldShow = cardType === 'form' || cardType === 'form-completed';
+                        break;
+                    case 'upcoming':
+                        shouldShow = true; // This would need additional logic
+                        break;
+                }
+                
+                card.style.display = shouldShow ? 'block' : 'none';
+                
+                if (shouldShow) {
+                    card.style.animation = 'fadeIn 0.3s ease';
+                }
+            });
+        });
+    });
+    
+    // Close modal on backdrop click
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-overlay')) {
+            closeCancelModal();
+            closeEditModal();
+        }
+    });
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCancelModal();
+            closeEditModal();
+        }
+    });
+});
+$(document).ready(function() {
+    const editModal = new bootstrap.Modal(document.getElementById('editFormReservationModal'));
+    const editFormContainer = $('#edit-form-container');
+
+    // عند فتح نافذة التعديل
+    $('#editFormReservationModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const bookingId = button.data('booking-id');
+        
+        // عرض مؤشر التحميل
+        editFormContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">جاري تحميل بيانات الحجز...</p></div>');
+
+        // جلب بيانات الحجز عبر AJAX
+        $.ajax({
+            url: `/allen/edit-form-reservation/${bookingId}/`,
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.form_html) {
+                    editFormContainer.html(response.form_html);
+                    
+                    // إضافة event listener للنموذج
+                    $('#edit-reservation-form').on('submit', function(e) {
+                        e.preventDefault();
+                        submitEditForm(this, bookingId);
+                    });
+                } else {
+                    editFormContainer.html('<p class="text-danger text-center">فشل تحميل نموذج التعديل.</p>');
+                }
+            },
+            error: function(xhr) {
+                let errorMsg = 'فشل تحميل بيانات الحجز';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                editFormContainer.html(`<p class="text-danger text-center">${errorMsg}</p>`);
+            }
+        });
+    });
+
+    // دالة إرسال النموذج
+    function submitEditForm(form, bookingId) {
+        const formData = new FormData(form);
+        
+        $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            beforeSend: function() {
+                $(form).find('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> جاري الحفظ...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    // إغلاق الـ modal وتحديث الصفحة
+                    $('#editFormReservationModal').modal('hide');
+                    showNotification('success', response.success);
+                    setTimeout(function() {
+                        location.reload(); // أو تحديث القائمة فقط بدون reload كامل
+                    }, 1000);
+                }
+            },
+            error: function(xhr) {
+                let errorMsg = 'حدث خطأ أثناء التعديل';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                    
+                    // عرض الأخطاء في النموذج
+                    if (xhr.responseJSON.errors) {
+                        // معالجة أخطاء التحقق هنا
+                    }
+                }
+                showNotification('error', errorMsg);
+                $(form).find('button[type="submit"]').prop('disabled', false).html('حفظ التعديلات');
+            },
+            complete: function() {
+                $(form).find('button[type="submit"]').prop('disabled', false).html('حفظ التعديلات');
+            }
+        });
+    }
+
+    // دالة عرض الإشعارات
+    function showNotification(type, message) {
+        // تنفيذ لعرض الإشعارات (يمكن استخدام Toast أو SweetAlert)
+        alert(`${type}: ${message}`);
+    }
+});
+
+</script>
+
+<style>
+/* CSS Variables for Design System */
+:root {
+    --primary-color: #9b4391;
+    --primary-light: #b565a7;
+    --primary-dark: #7a2f73;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --bg-tertiary: #2a2a2a;
+    --bg-card: #2d2d2d;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #888888;
+    
+    --border-color: #404040;
+    --border-radius: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-sm: 8px;
+    
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+    
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-xxl: 3rem;
+}
+
+/* Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    line-height: 1.6;
+    direction: rtl;
+}
+
+.bookings-container {
+    min-height: 100vh;
+    padding-bottom: var(--spacing-xxl);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+}
+
+/* Page Header */
+.page-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    padding: var(--spacing-xl) 0;
+    margin-bottom: var(--spacing-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    pointer-events: none;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-lg) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    position: relative;
+    z-index: 1;
+}
+
+.page-title i {
+    font-size: 2rem;
+    opacity: 0.9;
+}
+
+.header-stats {
+    display: flex;
+    gap: var(--spacing-lg);
+    position: relative;
+    z-index: 1;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    text-align: center;
+    min-width: 120px;
+    transition: transform var(--transition-normal);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: var(--spacing-xs);
+}
+
+/* Enhanced Floating Menu */
+.floating-menu {
+    position: fixed;
+    bottom: var(--spacing-xl);
+    right: var(--spacing-xl);
+    z-index: 1000;
+}
+
+.menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+    z-index: -1;
+}
+
+.menu-button {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    position: relative;
+    border: none;
+    outline: none;
+}
+
+.menu-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 32px rgba(155, 67, 145, 0.4);
+}
+
+.menu-button:focus {
+    outline: 2px solid var(--primary-light);
+    outline-offset: 2px;
+}
+
+.menu-icon,
+.close-icon {
+    font-size: 1.25rem;
+    transition: all var(--transition-fast);
+    position: absolute;
+}
+
+.close-icon {
+    opacity: 0;
+    transform: rotate(90deg);
+}
+
+.menu-items {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px) scale(0.9);
+    transition: all var(--transition-normal);
+}
+
+.menu-items ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.menu-items .nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    color: var(--primary-color);
+    text-decoration: none;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.menu-items .nav-link:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateX(-4px);
+}
+
+.menu-items .nav-link.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.menu-items .nav-link i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Menu Open State */
+.floating-menu.menu-open .menu-backdrop {
+    opacity: 1;
+    visibility: visible;
+}
+
+.floating-menu.menu-open .menu-icon {
+    opacity: 0;
+    transform: rotate(-90deg);
+}
+
+.floating-menu.menu-open .close-icon {
+    opacity: 1;
+    transform: rotate(0deg);
+}
+
+.floating-menu.menu-open .menu-items {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+/* Filters Section */
+.filters-section {
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.search-box {
+    position: relative;
+    max-width: 400px;
+}
+
+.search-box i {
+    position: absolute;
+    right: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    z-index: 1;
+}
+
+.search-box input {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-md));
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all var(--transition-normal);
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(155, 67, 145, 0.1);
+}
+
+.search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+.filter-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.filter-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+}
+
+.filter-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Section Headers */
+.bookings-section {
+    margin-bottom: var(--spacing-xxl);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.section-title i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.section-count {
+    background: var(--primary-color);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Bookings Grid */
+.bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: var(--spacing-xl);
+}
+
+/* Booking Cards */
+.booking-card {
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+    position: relative;
+}
+
+.booking-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.card-header {
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.trip-info {
+    flex: 1;
+}
+
+.trip-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-sm) 0;
+    line-height: 1.3;
+}
+
+.trip-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.trip-date {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.trip-date i {
+    color: var(--primary-color);
+}
+
+.trip-type {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    display: inline-block;
+}
+
+.booking-status {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+    background: var(--success-color);
+    color: white;
+}
+
+.status-badge.form {
+    background: var(--info-color);
+    color: white;
+}
+
+/* Bus Image */
+.bus-image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.bus-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+}
+
+.booking-card:hover .bus-image {
+    transform: scale(1.05);
+}
+
+.image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+    color: white;
+}
+
+.bus-type {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Card Content */
+.card-content {
+    padding: var(--spacing-lg);
+}
+
+.booking-details {
+    margin-bottom: var(--spacing-lg);
+}
+
+.detail-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.detail-group.primary .detail-item {
+    margin-bottom: var(--spacing-md);
+}
+
+.detail-group.secondary {
+    display: flex;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.detail-group.secondary .detail-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+}
+
+.detail-item i {
+    color: var(--primary-color);
+    font-size: 1.125rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.detail-content {
+    flex: 1;
+}
+
+.detail-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xs);
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.seats-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+.seat-number {
+    background: var(--primary-color);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    min-width: 32px;
+    text-align: center;
+}
+
+.seat-number.single {
+    background: var(--info-color);
+}
+
+/* Booking Code Section */
+.booking-code-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.code-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.code-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.booking-code {
+    flex: 1;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    user-select: all;
+}
+
+.booking-code:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+}
+
+.copy-btn {
+    background: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.copy-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.copy-feedback {
+    display: none;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--success-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.copy-feedback.show {
+    display: flex;
+    animation: fadeInOut 3s ease;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0; transform: translateY(4px); }
+    20%, 80% { opacity: 1; transform: translateY(0); }
+}
+
+/* Card Actions */
+.card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.action-btn.primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.action-btn.secondary {
+    background: var(--info-color);
+    color: white;
+}
+
+.action-btn.secondary:hover {
+    background: #138496;
+    transform: translateY(-1px);
+}
+
+.action-btn.danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.action-btn.danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.action-btn.full-width {
+    width: 100%;
+}
+
+.no-location {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-lg);
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.empty-description {
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-xl) 0;
+    font-size: 1rem;
+}
+
+.empty-action {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: var(--primary-color);
+    color: white;
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+}
+
+.empty-action:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: all var(--transition-normal);
+}
+
+.modal-overlay.show .modal-content {
+    transform: scale(1) translateY(0);
+}
+
+.modal-header {
+    padding: var(--spacing-xl);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    transition: all var(--transition-normal);
+}
+
+.modal-close:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: var(--spacing-xl);
+}
+
+.modal-body p {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--text-primary);
+}
+
+.warning-text {
+    color: var(--warning-color);
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+.modal-actions {
+    padding: var(--spacing-xl);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.modal-btn.secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.modal-btn.secondary:hover {
+    background: var(--bg-tertiary);
+}
+
+.modal-btn.danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.modal-btn.danger:hover {
+    background: #c82333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 var(--spacing-sm);
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .header-stats {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .stat-card {
+        min-width: auto;
+    }
+    
+    .bookings-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .filters-section {
+        padding: var(--spacing-md);
+    }
+    
+    .filter-buttons {
+        justify-content: center;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .detail-group.secondary {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .floating-menu {
+        bottom: var(--spacing-lg);
+        right: var(--spacing-lg);
+    }
+    
+    .menu-button {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: var(--spacing-md);
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-actions {
+        padding: var(--spacing-lg);
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header {
+        padding: var(--spacing-lg) 0;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+    }
+    
+    .booking-card {
+        margin: 0 -var(--spacing-sm);
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .card-header {
+        padding: var(--spacing-md);
+    }
+    
+    .card-content {
+        padding: var(--spacing-md);
+    }
+    
+    .booking-code-section {
+        padding: var(--spacing-md);
+    }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #666666;
+        --text-secondary: #cccccc;
+    }
+}
+
+/* Focus Styles */
+.action-btn:focus,
+.filter-btn:focus,
+.booking-code:focus,
+.copy-btn:focus {
+    outline: 2px solid var(--primary-light);
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .floating-menu,
+    .filters-section,
+    .card-actions {
+        display: none !important;
+    }
+    
+    .booking-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .page-header {
+        background: none !important;
+        color: #000 !important;
+    }
+}
+</style>
+{% endblock %}

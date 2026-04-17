@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}استعادة كلمة المرور{% endblock %}
+
+{% block content %}
+<style>
+    /* الخطوط والألوان الأساسية */
+    :root {
+        --primary-color: #6a0dad; /* موف (بنفسجي) غامق */
+        --secondary-color: #d1c4e9; /* موف فاتح */
+        --background-color: #ffffff; /* أبيض ناصع */
+        --text-color: #212121; /* لون النص الأساسي */
+        --form-bg: #f5f5f5; /* خلفية خفيفة للنموذج */
+    }
+
+    body {
+        background-color: var(--background-color);
+        font-family: 'Arial', sans-serif;
+        color: var(--text-color);
+        margin: 0;
+        padding: 0;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh; /* تأكد من ظهورها في منتصف الصفحة */
+    }
+
+    /* تنسيق الحاوية الرئيسية للنموذج */
+    .reset-container {
+        max-width: 400px;
+        width: 90%;
+        padding: 40px 30px;
+        background-color: var(--form-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    /* تنسيق العنوان */
+    h2 {
+        color: var(--primary-color);
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+        border-bottom: 3px solid var(--secondary-color);
+        padding-bottom: 10px;
+        display: inline-block;
+    }
+
+    /* تنسيق النموذج */
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* تنسيق التسميات (Labels) */
+    label {
+        text-align: right;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: var(--text-color);
+        font-size: 1rem;
+    }
+
+    /* تنسيق حقول الإدخال */
+    input[type="text"] {
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 1rem;
+        box-sizing: border-box; /* لضمان أن الـ padding لا يزيد العرض */
+        text-align: right; /* اتجاه الكتابة من اليمين لليسار */
+    }
+
+    input[type="text"]:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px rgba(106, 13, 173, 0.4);
+        outline: none;
+    }
+
+    /* تنسيق زر الإرسال */
+    button[type="submit"] {
+        background-color: var(--primary-color);
+        color: var(--background-color);
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        margin-top: 10px;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #580a8b; /* موف أغمق عند التمرير */
+        transform: translateY(-2px);
+    }
+
+    /* تنسيق رسائل الأخطاء (إذا كانت موجودة) */
+    .error-message {
+        color: #e53935; /* لون أحمر للأخطاء */
+        margin-top: -10px;
+        margin-bottom: 15px;
+        text-align: right;
+    }
+
+    /* تنسيق CSRF Token (عادة لا يتم رؤيته) */
+    .csrf-token-hidden {
+        display: none;
+    }
+
+</style>
+  {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+<center>
+<div class="reset-container">
+    <h2>استعادة كلمة المرور 🔑</h2>
+    <p style="color: #616161; margin-bottom: 25px;">أدخل رقم هاتفك المسجل لإرسال رمز التحقق.</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <label for="id_phone_number">رقم الهاتف:</label>
+        <input type="text" id="id_phone_number" name="phone_number" placeholder="مثال: 05xxxxxxxxx" required>
+        
+        {% if form.phone_number.errors %}
+            {% for error in form.phone_number.errors %}
+                <p class="error-message">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <button type="submit">إرسال الكود</button>
+    </form>
+</div>
+</center>
+{% endblock %}

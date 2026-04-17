@@ -1,0 +1,17 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static %}
+
+{% block object-tools-items %}
+    {# --- الزر المخصص للمُجدوِل الذكي --- #}
+    {% if perms.Anaconda_bus_APP.view_formreservation %}
+        <li>
+            <a href="{% url 'admin:smart_scheduler' %}" class="addlink" style="background-color: #198754; border-color: #198754;">
+                <i class="fas fa-brain" style="margin-left: 5px;"></i>
+                {% trans 'فتح المُجدوِل الذكي' %}
+            </a>
+        </li>
+    {% endif %}
+    
+    {# --- أزرار جانجو الافتراضية --- #}
+    {{ block.super }}
+{% endblock %}

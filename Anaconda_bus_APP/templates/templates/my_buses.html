@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الرحلات الخاصة بي</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!-- إضافة Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    body {
+        font-family: 'Cairo', sans-serif;
+        background-color: #f8f9fa;
+    }
+    .bus-card {
+        margin-bottom: 30px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .bus-header {
+        background-color: #290c38;
+        color: white;
+        padding: 15px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        text-align: center;
+    }
+    .bus-body {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 0 0 10px 10px;
+    }
+    .route-section {
+        margin-bottom: 20px;
+        background-color: #f1f1f1;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .route-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #e9ecef;
+        padding: 10px 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    .route-header strong {
+        color: #290c38;
+    }
+    .booking-item {
+        padding: 10px;
+        border-bottom: 2px solid #290c38
+    }
+    .booking-item:last-child {
+        border-bottom: none;
+    }
+    .text-center {
+        color: #290c38;
+    }
+    .btn-primary {
+        background-color: #290c38;
+        border: none;
+    }
+            #map {
+            width: 100%;
+            height: 500px;
+            border: none;
+            margin-top: 20px;
+        }
+        #loading {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+</style>
+</head>
+<body>
+
+<div class="container my-5">
+    <h1 class="text-center mb-4">الرحلات خاصتك</h1>
+    {% for bus_data in buses_data %}
+    <div class="bus-card">
+        <div class="bus-header">
+            <h4>{{ bus_data.bus.name }}</h4>
+        </div>
+        <div class="bus-body">
+            <p><strong>نوع الباص:</strong> {{ bus_data.bus.bus_type }}</p>
+            <p><strong>رقم النمر:</strong> {{ bus_data.bus.plate_number }}</p>
+            <p><strong>السعة الكلية:</strong> {{ bus_data.bus.capacity }}</p>
+
+            <h5 class="mt-4">المناطق:</h5>
+            {% for area, bookings in bus_data.bookings_by_route_and_area.items %}
+            <button class="btn btn-secondary btn-block mb-2" data-bs-toggle="collapse" data-bs-target="#area-{{ forloop.counter }}">
+                {{ area }} (عدد الركاب: {{ bookings|length }})
+            </button>
+            <div id="area-{{ forloop.counter }}" class="collapse">
+                {% for booking in bookings %}
+                <div class="booking-item">
+                    <p><strong>الراكب:</strong> {{ booking.passenger.name }}</p>
+                    <p><strong>رقم الهاتف:</strong> {{ booking.passenger_phone }}</p>
+                    <p><strong>عدد الكراسي المحجوزة:</strong> {{ booking.reserved_seats_count }}</p>
+                    <p><strong>حالة الحضور:</strong> {{ booking.attendance_status }}</p>
+                    <p><strong>حالة الدفع:</strong> <span id="payment-status-{{ booking.id }}">{{ booking.status }}</span></p>
+                    <p><strong>طريقة الدفع:</strong> {{ booking.payment_method }}</p>
+                    <p><strong>مدة الاشتراك:</strong> {{ booking.passenger.subscription_duration }}</p>
+                    <p><strong>المتبقي من الاشتراك:</strong> {{ booking.passenger.remaining_rides }}</p>
+                    <p><strong>المحطة المختارة:</strong> {{ booking.selected_route }}</p>
+
+                    {% if booking.attendance_status == "present" and booking.status == "active" %}
+
+                    <div class="mt-3">
+                        <!-- زر لتغيير الحالة إلى "Completed" -->
+                        <button onclick="updatePaymentStatus({{ booking.id }}, 'completed')" class="btn btn-primary btn-sm">
+                            الدفع كاش
+                        </button>
+
+                        <!-- زر لتغيير الحالة إلى "Prepaid" -->
+                        <button onclick="updatePaymentStatus({{ booking.id }}, 'prepaid')" class="btn btn-warning btn-sm">
+                            الدفع من خلال الاشتراك او رحله مدفوعه مسبقا
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted">لا توجد حجوزات لهذه المنطقة.</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <br>
+            <button style="width: 100%; padding:10px" class="btn btn-success btn-sm share-location-btn" data-bus-id="{{ bus_data.bus.id }}">مشاركة الموقع المباشر</button>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted text-center">لا توجد باصات مرتبطة بهذا الحساب.</p>
+    {% endfor %}
+</div>
+
+<script>
+    function updatePaymentStatus(bookingId, status) {
+        const statusElement = document.querySelector(`#payment-status-${bookingId}`);
+        const messageContainerId = `message-${bookingId}`;
+        let messageContainer = document.querySelector(`#${messageContainerId}`);
+
+        // إذا لم يكن عنصر الرسالة موجودًا، قم بإنشائه
+        if (!messageContainer) {
+            messageContainer = document.createElement('div');
+            messageContainer.id = messageContainerId;
+            messageContainer.style.marginTop = '10px';
+            statusElement.parentNode.appendChild(messageContainer);
+        }
+
+        // إرسال الطلب إلى السيرفر
+        fetch(`/update-payment-status/${bookingId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}', // احرص على أن csrf_token صالح
+            },
+            body: JSON.stringify({ status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // تحديث النص الخاص بحالة الدفع
+                statusElement.innerText = status;
+                messageContainer.innerHTML = '<span style="color: green;">تم تحديث حالة الدفع بنجاح!</span>';
+            } else {
+                messageContainer.innerHTML = '<span style="color: red;">حدث خطأ أثناء تحديث حالة الدفع.</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            messageContainer.innerHTML = '<span style="color: red;">تعذر الاتصال بالخادم.</span>';
+        });
+    }
+</script>
+
+
+<!-- إضافة Bootstrap JS -->
+<script>
+    document.querySelectorAll('.share-location-btn').forEach(button => {
+        const busId = button.getAttribute('data-bus-id');
+        let intervalId;
+        let timeoutId;
+    
+        // تحقق من حالة الزر عند تحميل الصفحة
+        if (localStorage.getItem(`sharing-${busId}`) === 'true') {
+            button.textContent = "إيقاف مشاركة الموقع";
+            button.classList.remove("btn-success");
+            button.classList.add("btn-danger");
+            startSharingLocation(busId, button); // استئناف مشاركة الموقع
+        }
+    
+        button.addEventListener('click', function () {
+            if (this.textContent === "مشاركة الموقع المباشر") {
+                if (confirm("هل تريد مشاركة الموقع المباشر؟")) {
+                    startSharingLocation(busId, this);
+                    localStorage.setItem(`sharing-${busId}`, 'true'); // حفظ الحالة
+                }
+            } else {
+                stopSharingLocation(busId, this);
+                localStorage.removeItem(`sharing-${busId}`); // إزالة الحالة
+            }
+        });
+    
+        function startSharingLocation(busId, button) {
+            const updateLocation = () => {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+    
+                        // إرسال الموقع إلى الخادم
+                        fetch(`/allen/update-live-location/${busId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                latitude: latitude,
+                                longitude: longitude
+                            })
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                console.log("تم تحديث الموقع بنجاح!");
+                            } else {
+                                console.error("حدث خطأ أثناء تحديث الموقع.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                    },
+                    error => {
+                        console.error("تعذر الحصول على الموقع:", error);
+                    },
+                    { enableHighAccuracy: true, maximumAge: 0 }
+                );
+            };
+    
+            // التحديث الأولي
+            updateLocation();
+    
+            // تحديث الموقع كل 20 ثانية
+            intervalId = setInterval(updateLocation, 5000);
+    
+            timeoutId = setTimeout(() => {
+                stopSharingLocation(busId, button);
+                alert("تم إيقاف مشاركة الموقع تلقائيًا بعد 3 ساعات.");
+            }, 10800000); // 60 دقيقة
+    
+            // تحديث الزر
+            button.textContent = "إيقاف مشاركة الموقع";
+            button.classList.remove("btn-success");
+            button.classList.add("btn-danger");
+        }
+    
+        function stopSharingLocation(busId, button) {
+            clearInterval(intervalId); // إيقاف التحديث الدوري
+            clearTimeout(timeoutId); // إلغاء المؤقت في حال تم الإيقاف يدويًا قبل مرور 60 دقيقة
+    
+            // إرسال طلب لإيقاف مشاركة الموقع
+            fetch(`/allen/stop-live-location/${busId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                } else if (data.error) {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    
+            // إعادة تعيين الزر
+            button.textContent = "مشاركة الموقع المباشر";
+            button.classList.remove("btn-danger");
+            button.classList.add("btn-success");
+        }
+    });
+    
+</script>
+<script>
+    function updatePaymentStatus(bookingId, status) {
+        fetch(`/update-payment-status/${bookingId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم تحديث حالة الدفع بنجاح!');
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء تحديث حالة الدفع.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('تعذر الاتصال بالخادم.');
+        });
+    }
+    
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock %}

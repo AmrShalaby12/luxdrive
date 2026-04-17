@@ -1,0 +1,806 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعادة الحجز - خدمة VIP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2d1b69 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* VIP Background Effects */
+        .vip-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .golden-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #ffd700, transparent),
+                radial-gradient(2px 2px at 40px 70px, #ffed4e, transparent),
+                radial-gradient(1px 1px at 90px 40px, #ffd700, transparent),
+                radial-gradient(1px 1px at 130px 80px, #ffed4e, transparent),
+                radial-gradient(2px 2px at 160px 30px, #ffd700, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: sparkle 3s linear infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* VIP Header */
+        .vip-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .crown-animation {
+            font-size: 4rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            text-shadow: 0 0 30px #ffd700;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .vip-title {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+
+
+        .vip-subtitle {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .premium-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #1a1a3e;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Form Wrapper */
+        .form-wrapper {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 40px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .form-glow {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #290c38, transparent, #6b0a9b96);
+            border-radius: 25px;
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+
+
+
+        .section-title {
+            font-size: 2.5rem;
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .rotating-icon {
+            animation: rotate 2s linear infinite;
+        }
+
+
+        /* VIP Form */
+        .vip-form {
+            position: relative;
+        }
+
+        .reservation-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+        }
+
+        .reservation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(255, 215, 0, 0.2);
+        }
+
+        .card-shine {
+            position: absolute;
+            top: 0;
+
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+            animation: shine 3s infinite;
+        }
+
+
+        .card-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            padding: 2px;
+            background-size: 400% 400%;
+            animation: borderMove 4s ease infinite;
+        }
+
+        @keyframes borderMove {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .trip-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #1a1a3e;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .passenger-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #e0e0e0;
+            font-size: 1.2rem;
+        }
+
+        .passenger-info i {
+            color: #ffd700;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            gap: 25px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .floating-label {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #1a1a3e;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 2;
+        }
+
+        .vip-input {
+            width: 100%;
+            padding: 20px 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .vip-input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+            transform: scale(1.02);
+        }
+
+        .vip-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .input-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 15px;
+            background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .vip-input:focus + .input-glow {
+            opacity: 1;
+        }
+
+        /* Return Section */
+        .return-section {
+            margin-top: 30px;
+            padding-top: 25px;
+        }
+
+        .section-divider {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+
+        .divider-text {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #1a1a3e;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffd700, transparent);
+        }
+
+        /* Seat Display */
+        .seat-display {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255, 215, 0, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            margin-top: 20px;
+        }
+
+        .seat-icon {
+            font-size: 2rem;
+            color: #ffd700;
+        }
+
+        .seat-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .seat-label {
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .seat-number {
+            color: #ffd700;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Card Separator */
+        .card-separator {
+            display: flex;
+            align-items: center;
+            margin: 30px 0;
+            gap: 15px;
+        }
+
+        .separator-line {
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent);
+        }
+
+        .separator-icon {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #1a1a3e;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .vip-button {
+            position: relative;
+            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+            background-size: 200% 200%;
+            border: none;
+            padding: 20px 50px;
+            border-radius: 50px;
+            color: #1a1a3e;
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(255, 215, 0, 0.3);
+        }
+
+        .vip-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(255, 215, 0, 0.4);
+            animation: buttonGlow 1s ease infinite;
+        }
+
+        @keyframes buttonGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .button-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .button-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .vip-button:hover .button-glow {
+            opacity: 1;
+        }
+
+        .button-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(1px 1px at 10px 10px, #fff, transparent),
+                radial-gradient(1px 1px at 30px 20px, #fff, transparent),
+                radial-gradient(1px 1px at 50px 15px, #fff, transparent);
+            opacity: 0;
+            animation: particles 2s linear infinite;
+        }
+
+        .vip-button:hover .button-particles {
+            opacity: 0.6;
+        }
+
+
+        /* VIP Features */
+        .vip-features {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-2px);
+            border-color: #ffd700;
+            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.2);
+        }
+
+        .feature-item i {
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: #fff;
+        }
+
+        .crown-loader {
+            font-size: 4rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+            animation: crownSpin 2s linear infinite;
+        }
+
+
+        .loading-text {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            color: #e0e0e0;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background-size: 200% 100%;
+            animation: loadingProgress 2s ease-in-out infinite;
+        }
+
+ 
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .vip-title {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .form-wrapper {
+                padding: 25px;
+            }
+
+            .card-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .vip-features {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+
+            .vip-button {
+                padding: 15px 40px;
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .vip-title {
+                font-size: 1.5rem;
+            }
+
+            .crown-animation {
+                font-size: 3rem;
+            }
+
+            .form-wrapper {
+                padding: 20px;
+            }
+
+            .reservation-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="vip-background">
+        <div class="golden-particles"></div>
+    </div>
+              {% csrf_token %}
+
+                {% for res in last_reservations %}
+    <div class="container">
+        <!-- VIP Header -->
+        <header class="vip-header">
+            <div class="crown-animation">
+                <i class="fas fa-crown"></i>
+            </div>
+            <p class="vip-title">تجربة استثنائية ل {{ res.passenger }} </p>
+                <p style="text-align: center; color: #e0e0e0; font-size: 0.9rem; max-width: 800px; margin: 20px auto;">
+                    الصفحه دي معموله مخصوص ليك 👌 عشان نوفرلك وقتك ومجهودك.  
+                    بدل ما تعيد الحجز من الأول كل مره، هنا تقدر تكرر آخر حجز ليك بنفس التفاصيل أو تعدل عليها لو حابب.  
+                    الصفحه دي معموله عشانك يا {{ res.passenger }}. 🚍✨
+                </p>
+            <div class="premium-badge">
+                <span>عضو VIP</span>
+                <i class="fas fa-gem"></i>
+            </div>
+        </header>
+
+        <!-- Main Form -->
+        <div class="form-wrapper">
+            <div class="form-glow"></div>
+            
+            <h2 class="section-title">
+                <i class="fas fa-redo-alt rotating-icon"></i>
+                إعادة الحجز
+            </h2>
+
+            <form method="post" class="vip-form">
+  
+                <div class="reservation-card vip-card">
+                    <div class="card-shine"></div>
+                    <div class="card-border"></div>
+                    
+                    <div class="card-header">
+                        <div class="trip-badge">
+                            <i class="fas fa-route"></i>
+                            <span class="trip-type">{{ res.trip_type }}</span>
+                        </div>
+                        <div class="passenger-info">
+                            <i class="fas fa-user-crown"></i>
+                            <span class="passenger-name">{{ res.passenger }}</span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="input-group premium-input">
+                            <label class="floating-label">
+                                <i class="fas fa-map-marker-alt"></i>
+                                نقطة الركوب
+                            </label>
+                            <input type="text" 
+                                   name="pickup_location" 
+                                    value="{% if res.pickup_location %}{{ res.pickup_location }}{% elif res.selected_route %}{{ res.selected_route }}{% endif %}"
+                                   class="form-control vip-input"
+                                   required>
+                            <div class="input-glow"></div>
+                        </div>
+
+                        <div class="input-group premium-input">
+                            <label class="floating-label">
+                                <i class="fas fa-flag-checkered"></i>
+                                نقطة النزول (ذهاب)
+                            </label>
+                            <input type="text" 
+                                   name="going_dropoff_location" 
+                                   value="{{ res.going_dropoff_location }}" 
+                                   class="form-control vip-input"
+                                   required>
+                            <div class="input-glow"></div>
+                        </div>
+
+                        {% if res.trip_type == "round_trip" or res.trip_type == "ذهاب وعودة" %}
+                        <div class="return-section">
+                            <div class="section-divider">
+                                <span class="divider-text">رحلة العودة</span>
+                                <div class="divider-line"></div>
+                            </div>
+
+                            <div class="input-group premium-input">
+                                <label class="floating-label">
+                                    <i class="fas fa-undo"></i>
+                                    نقطة ركوب العودة
+                                </label>
+                                <input type="text" 
+                                       name="return_pickup_location" 
+                                       value="{{ res.return_pickup_location }}" 
+                                       class="form-control vip-input">
+                                <div class="input-glow"></div>
+                            </div>
+
+                            <div class="input-group premium-input">
+                                <label class="floating-label">
+                                    <i class="fas fa-home"></i>
+                                    نقطة النزول (عودة)
+                                </label>
+                                <input type="text" 
+                                       name="return_dropoff_location" 
+                                       value="{{ res.return_dropoff_location }}" 
+                                       class="form-control vip-input">
+                                <div class="input-glow"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if res.seat %}
+                        <div class="seat-display">
+                            <div class="seat-icon">
+                                <i class="fas fa-chair"></i>
+                            </div>
+                            <div class="seat-info">
+                                <span class="seat-label">المقعد المحجوز</span>
+                                <span class="seat-number">{{ res.seat }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if not forloop.last %}
+                <div class="card-separator">
+                    <div class="separator-line"></div>
+                    <div class="separator-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="separator-line"></div>
+                </div>
+                {% endif %}
+
+                {% endfor %}
+
+                <div class="form-actions">
+                    <button type="submit" class="vip-button primary-button">
+                        <span class="button-content">
+                            <i class="fas fa-crown"></i>
+                            إتمام الحجز
+                        </span>
+                        <div class="button-glow"></div>
+                        <div class="button-particles"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- VIP Features -->
+        <div class="vip-features">
+            <div class="feature-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>حماية متقدمة</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-headset"></i>
+                <span>دعم VIP 24/7</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-bolt"></i>
+                <span>معالجة فورية</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Animation -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="crown-loader">
+                <i class="fas fa-crown"></i>
+            </div>
+            <p class="loading-text">جاري معالجة طلبك الذهبي...</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+{% endblock %}

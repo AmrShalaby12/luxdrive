@@ -1,0 +1,60 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+
+<h2>🚌 قائمة الركاب</h2>
+
+<!-- ✅ نموذج الفلترة -->
+<form method="get">
+    <label for="user_type">🔹 نوع المستخدم:</label>
+    <select name="user_type">
+        <option value="">- جميع الأنواع -</option>
+        <option value="student">طالب جامعي</option>
+        <option value="regular">مستخدم عادي</option>
+    </select>
+
+    <label for="category">🏛️ الجامعة:</label>
+    <select name="category">
+        <option value="">- جميع الجامعات -</option>
+        {% for passenger in passengers %}
+        <option value="{{ passenger.category.id }}">{{ passenger.category }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="button">🔍 تصفية</button>
+</form>
+
+<hr>
+
+<!-- ✅ عرض الركاب -->
+<form method="post">
+    {% csrf_token %}
+    <table border="1">
+        <tr>
+            <th>📌</th>
+            <th>📍 الاسم</th>
+            <th>📞 رقم الهاتف</th>
+            <th>🏛️ الجامعة</th>
+            <th>🚍 الرحلات المتبقية</th>
+        </tr>
+        {% for passenger in passengers %}
+        <tr>
+            <td><input type="checkbox" name="selected_passengers" value="{{ passenger.id }}"></td>
+            <td>{{ passenger.name }}</td>
+            <td>{{ passenger.phone_number }}</td>
+            <td>{{ passenger.category }}</td>
+            <td>{{ passenger.remaining_rides }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <hr>
+
+    <!-- ✅ نموذج الرسالة -->
+    <label for="custom_message">✍️ اكتب الرسالة:</label>
+    <textarea name="custom_message" rows="5" cols="60" required></textarea>
+
+    <br><br>
+    <button type="submit" class="button">🚀 إرسال الرسالة عبر واتساب</button>
+</form>
+
+{% endblock %}

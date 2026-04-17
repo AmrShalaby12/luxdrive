@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نجاح الحجز</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 40px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        h1 {
+            color: red;
+            font-size: 2rem;
+            margin-top: 10px;
+        }
+
+        p {
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: red;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            background: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        a:hover {
+            background: #0056b3;
+        }
+
+        .lottie-container {
+            margin: 20px auto;
+            width: 150px;
+            height: 150px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- إضافة أيقونة -->
+<i class="fas fa-times-circle success-icon"></i>
+
+        <!-- أو يمكنك استخدام Lottie للرسوم المتحركة -->
+        <!-- 
+        <div class="lottie-container" id="lottie-animation"></div>
+        -->
+
+        <h1> غير مسموح لك بالدخول إلى هذه الصفحة</h1>
+
+        <a href="/">العودة إلى الصفحة الرئيسية</a>
+    </div>
+
+    <script>
+         Lottie Animation - Uncomment if using Lottie animation
+         const animation = lottie.loadAnimation({
+             container: document.getElementById('lottie-animation'),
+             renderer: 'svg',
+             loop: true,
+             autoplay: true,
+             path: 'https://assets2.lottiefiles.com/packages/lf20_7dwvchtr.json' // Link to Lottie JSON file
+         });
+    </script>
+</body>
+</html>

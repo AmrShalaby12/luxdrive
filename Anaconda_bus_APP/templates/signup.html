@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل مستخدم - الين ترافيل</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+{% block title %}
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <h1>Allen Travel</h1>
+            </div>
+            <p class="subtitle"> We transport you comfortably and safely, and we are always safe </p>
+        </div>
+
+        <!-- Main Form Container -->
+        <div class="form-container">
+            <!-- Display Non-Field Errors -->
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}
+                        <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="form-header">
+                <h2> تسجيل حساب جديد</h2>
+            </div>
+
+            <!-- Registration Form -->
+            <form method="POST" class="signup-form" id="registrationForm">
+                {% csrf_token %}
+                
+                <!-- User Type Selection -->
+                <div class="form-section">
+                    <h3><i class="fas fa-users"></i> نوع المستخدم</h3>
+                    <div class="user-type-toggle">
+                        {% for field in form %}
+                            {% if field.name == 'user_type' %}
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="user-type-options">
+                                    {{ field }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Personal Information Section -->
+                <div class="form-section">
+                    <h3><i class="fas fa-user"></i> المعلومات الشخصية</h3>
+                    
+                    <!-- Username Field -->
+                    {% for field in form %}
+                        {% if field.name == 'username' %}
+                            <div class="form-group">
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <label for="{{ field.id_for_label }}">
+                                    <i class="fas fa-id-card"></i>
+                                    الاسم الرباعي (باللغة العربية)
+                                </label>
+                                {{ field }}
+                                <small class="hint">
+                                    <i class="fas fa-info-circle"></i>
+                                    لا يسمح باستخدام المسافات، ضع _ أو - بين الأسماء
+                                </small>
+                                <small class="example">
+                                    <i class="fas fa-lightbulb"></i>
+                                    مثال: أحمد_محمد_علي_السيد
+                                </small>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Password Field -->
+                    {% for field in form %}
+                        {% if field.name == 'password' %}
+                            <div class="form-group">
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <label for="{{ field.id_for_label }}">
+                                    <i class="fas fa-lock"></i>
+                                    كلمة المرور
+                                </label>
+                                <div class="password-input">
+                                    {{ field }}
+                                    <button type="button" class="toggle-password" onclick="togglePassword('{{ field.id_for_label }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength">
+                                    <div class="strength-bar"></div>
+                                    <span class="strength-text">قوة كلمة المرور</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Phone Number Field -->
+                    {% for field in form %}
+                        {% if field.name == 'phone_number' %}
+                            <div class="form-group">
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <label for="{{ field.id_for_label }}">
+                                    <i class="fas fa-phone"></i>
+                                    رقم الهاتف
+                                </label>
+                                {{ field }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- University Information Section (Default Visible for University Students) -->
+                <div class="form-section" id="university-section">
+                    <h3><i class="fas fa-university"></i> المعلومات الجامعية</h3>
+                    
+                    <!-- University ID Field -->
+                    {% for field in form %}
+                        {% if field.name == 'university_id' %}
+                            <div class="form-group">
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <label for="{{ field.id_for_label }}">
+                                    <i class="fas fa-id-badge"></i>
+                                    الكود الجامعي الخاص بك (ID)
+                                    في حاله عدم توافره قم بكتابه كود مثل Amr12345
+                                    , تذكره جيداً لأنه سيستخدم في تسجيل الدخول
+                                </label>
+                                {{ field }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- University Category Field -->
+                    {% for field in form %}
+                        {% if field.name == 'category' %}
+                            <div class="form-group">
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <label for="{{ field.id_for_label }}">
+                                    <i class="fas fa-building"></i>
+                                    الجامعة
+                                </label>
+                                {{ field }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Parent Phone Number Field -->
+                    {% for field in form %}
+                        {% if field.name == 'parent_number' %}
+                            <div class="form-group">
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <label for="{{ field.id_for_label }}">
+                                    <i class="fas fa-phone-alt"></i>
+                                    رقم هاتف ولي الأمر
+                                </label>
+                                {{ field }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-user-plus"></i>
+                        إنشاء الحساب
+                        <div class="btn-loader"></div>
+                    </button>
+                </div>
+
+                <!-- Login Link -->
+                <div class="form-footer">
+                    <p>لديك حساب بالفعل؟ 
+                        <a href="{% url 'login' %}" class="login-link">
+                            <i class="fas fa-sign-in-alt"></i>
+                            سجل دخولك هنا
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-shield-alt"></i>
+                <h4>آمان تام</h4>
+                <p>حماية بياناتك بأعلى معايير الأمان</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-clock"></i>
+                <h4>متاح 24/7</h4>
+                <p>الوصول لحسابك في أي وقت</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-graduation-cap"></i>
+                <h4>تعليم متميز</h4>
+                <p>محتوى تعليمي عالي الجودة</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #1a1919 0%, #111111 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, #290c38 0%, #4d1b66 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: #fff;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        /* Form Container */
+        .form-container {
+            padding: 40px 30px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-header h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .form-header p {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+
+        /* User Type Selection */
+        .user-type-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .user-type-options input[type="radio"] {
+            display: none;
+        }
+
+        .user-type-options label {
+            padding: 15px 25px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: #f8f9fa;
+            position: relative;
+            overflow: hidden;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-type-options label:hover {
+            border-color: #4facfe;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.2);
+        }
+
+        .user-type-options input[type="radio"]:checked + label {
+            border-color: #4facfe;
+            background: linear-gradient(135deg, #290c38 0%, #551a72 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        /* Form Sections */
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #290c38;
+        }
+
+        .form-section h3 {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: 'Cairo', sans-serif;
+            color: #2c3e50;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .hint, .example {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .hint {
+            color: #7f8c8d;
+        }
+
+        .example {
+            color: #9b4391;
+            font-weight: 500;
+        }
+
+        /* Password Input */
+        .password-input {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 1rem;
+            z-index: 10;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e0e6ed;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .strength-text {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        /* Submit Button */
+        .form-actions {
+            margin-top: 30px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #290c38 0%, #5a2077 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Form Footer */
+        .form-footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e6ed;
+        }
+
+        .login-link {
+            color: #290c38;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .login-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Features Section */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .feature i {
+            font-size: 2rem;
+            color: #290c38;
+            margin-bottom: 10px;
+        }
+
+        .feature h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .feature p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        /* Error Styles */
+        .error {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .field-errors,
+        .form-errors {
+            background: #fdf2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Hidden Section */
+        .hidden {
+            display: none !important;
+        }
+
+        /* University Section Default Display */
+        #university-section {
+            display: block; /* Show by default for university students */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .form-container {
+                padding: 30px 20px;
+            }
+
+            .user-type-options {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .user-type-options label {
+                min-width: 200px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-header h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userTypeRadios = document.querySelectorAll('input[name="user_type"]');
+            const universitySection = document.getElementById('university-section');
+            const usernameField = document.getElementById('id_username');
+            const passwordField = document.getElementById('id_password');
+            const form = document.getElementById('registrationForm');
+
+            // Set default user type to university_student if not already set
+            let defaultSet = false;
+            userTypeRadios.forEach(radio => {
+                if (radio.checked) {
+                    defaultSet = true;
+                }
+                if (radio.value === 'university_student' && !defaultSet) {
+                    radio.checked = true;
+                    defaultSet = true;
+                }
+            });
+
+            // User type toggle functionality
+            function toggleUniversityFields() {
+                const selectedValue = document.querySelector('input[name="user_type"]:checked');
+                if (selectedValue && selectedValue.value === 'regular') {
+                    universitySection.classList.add('hidden');
+                    // Remove required attribute from university fields
+                    const universityFields = universitySection.querySelectorAll('input, select');
+                    universityFields.forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                } else {
+                    universitySection.classList.remove('hidden');
+                    universitySection.classList.add('fade-in');
+                    // Add required attribute to university fields
+                    const universityFields = universitySection.querySelectorAll('input, select');
+                    universityFields.forEach(field => {
+                        if (field.name === 'university_id' || field.name === 'category' || field.name === 'parent_number') {
+                            field.setAttribute('required', 'required');
+                        }
+                    });
+                }
+            }
+
+            userTypeRadios.forEach(radio => {
+                radio.addEventListener('change', toggleUniversityFields);
+            });
+
+            // Initialize on page load
+            toggleUniversityFields();
+
+            // Username field - replace spaces with underscores
+            if (usernameField) {
+                usernameField.addEventListener('input', function() {
+                    this.value = this.value.replace(/\s+/g, '_');
+                    
+                    // Validate Arabic name
+                    const arabicNameRegex = /^[\u0600-\u06FF_]{2,}$/;
+                    if (this.value && !arabicNameRegex.test(this.value)) {
+                        this.style.borderColor = '#e74c3c';
+                        showError(this, 'يجب أن يحتوي الاسم على أحرف عربية فقط');
+                    } else {
+                        this.style.borderColor = '#4facfe';
+                        hideError(this);
+                    }
+                });
+            }
+
+            // Password strength indicator
+            if (passwordField) {
+                passwordField.addEventListener('input', function() {
+                    const password = this.value;
+                    const strengthBar = document.querySelector('.strength-bar');
+                    const strengthText = document.querySelector('.strength-text');
+                    
+                    if (!strengthBar || !strengthText) return;
+                    
+                    let strength = 0;
+                    let strengthLabel = '';
+                    let color = '';
+
+                    if (password.length >= 8) strength++;
+                    if (/[A-Z]/.test(password)) strength++;
+                    if (/[a-z]/.test(password)) strength++;
+                    if (/[0-9]/.test(password)) strength++;
+                    if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+                    switch (strength) {
+                        case 0:
+                        case 1:
+                            strengthLabel = 'ضعيفة جداً';
+                            color = '#e74c3c';
+                            break;
+                        case 2:
+                            strengthLabel = 'ضعيفة';
+                            color = '#f39c12';
+                            break;
+                        case 3:
+                            strengthLabel = 'متوسطة';
+                            color = '#f1c40f';
+                            break;
+                        case 4:
+                            strengthLabel = 'قوية';
+                            color = '#27ae60';
+                            break;
+                        case 5:
+                            strengthLabel = 'قوية جداً';
+                            color = '#2ecc71';
+                            break;
+                    }
+
+                    strengthBar.style.background = `linear-gradient(to right, ${color} ${strength * 20}%, #e0e6ed ${strength * 20}%)`;
+                    strengthText.textContent = `قوة كلمة المرور: ${strengthLabel}`;
+                    strengthText.style.color = color;
+                });
+            }
+
+            // Form submission
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = document.querySelector('.submit-btn');
+                    const btnLoader = document.querySelector('.btn-loader');
+                    
+                    if (submitBtn && btnLoader) {
+                        submitBtn.style.pointerEvents = 'none';
+                        btnLoader.style.display = 'block';
+                        
+                        // Re-enable after 3 seconds (in case of error)
+                        setTimeout(() => {
+                            submitBtn.style.pointerEvents = 'auto';
+                            btnLoader.style.display = 'none';
+                        }, 3000);
+                    }
+                });
+            }
+
+            // Phone number formatting
+            const phoneFields = document.querySelectorAll('input[type="tel"], input[name="phone_number"], input[name="parent_number"]');
+            phoneFields.forEach(field => {
+                field.addEventListener('input', function() {
+                    // Remove non-digits
+                    this.value = this.value.replace(/\D/g, '');
+                    
+                    // Validate Egyptian phone number
+                    if (this.value && !/^01[0-9]{9}$/.test(this.value)) {
+                        this.style.borderColor = '#e74c3c';
+                        showError(this, 'رقم الهاتف يجب أن يبدأ بـ 01 ويتكون من 11 رقم');
+                    } else {
+                        this.style.borderColor = '#4facfe';
+                        hideError(this);
+                    }
+                });
+            });
+
+            // Helper functions
+            function showError(element, message) {
+                hideError(element); // Remove existing error
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                element.parentNode.appendChild(errorDiv);
+                element.classList.add('shake');
+                setTimeout(() => element.classList.remove('shake'), 500);
+            }
+
+            function hideError(element) {
+                const existingError = element.parentNode.querySelector('.error');
+                if (existingError) {
+                    existingError.remove();
+                }
+            }
+        });
+
+        // Toggle password visibility
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleBtn = document.querySelector(`button[onclick="togglePassword('${fieldId}')"] i`);
+            
+            if (passwordField && toggleBtn) {
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    toggleBtn.className = 'fas fa-eye-slash';
+                } else {
+                    passwordField.type = 'password';
+                    toggleBtn.className = 'fas fa-eye';
+                }
+            }
+        }
+
+        // Add smooth scrolling for better UX
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+</body>
+</html>
+

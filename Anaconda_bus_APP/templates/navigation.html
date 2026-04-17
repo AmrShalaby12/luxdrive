@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Navbar - Allen Travel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+
+
+        body {
+            text-align: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #000;
+        }
+
+        /* Welcome Animation Overlay */
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #290c38 0%, #4a1a5c 50%, #290c38 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeOut 3s ease-in-out 2s forwards;
+            /* سيتم إخفاء هذا العنصر بواسطة JavaScript إذا كانت رسالة الترحيب قد عُرضت بالفعل */
+        }
+
+        .welcome-content {
+            text-align: center;
+            color: white;
+            animation: welcomeSlide 2s ease-out;
+        }
+
+        .welcome-logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            animation: logoSpin 2s ease-out;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .welcome-text {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            animation: textGlow 2s ease-out;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            animation: subtitleFade 2s ease-out 0.5s both;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        @keyframes welcomeSlide {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes logoSpin {
+            from {
+                transform: rotate(-360deg) scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: rotate(0deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textGlow {
+            0%, 100% {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.6);
+            }
+        }
+
+        @keyframes subtitleFade {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 0.8;
+                transform: translateY(0);
+            }
+        }
+
+        /* Professional Navbar Styles */
+        .custom-navbar {
+            background: linear-gradient(135deg, #290c38 0%, #4a1a5c 50%, #290c38 100%) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(41, 12, 56, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 0;
+            position: relative;
+            overflow: hidden;
+            animation: navbarSlideDown 1s ease-out 3s both;
+        }
+
+        .custom-navbar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes navbarSlideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        .navbar-brand {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .navbar-brand:hover {
+            transform: translateY(-2px);
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+        }
+
+        .navbar-nav {
+            padding-right: 0 !important;
+        }
+
+        .nav-link {
+            color: #ffffff !important;
+            font-weight: 500;
+            padding: 12px 20px !important;
+            margin: 0 5px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            background: transparent;
+            border: 2px solid transparent;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-link:hover::before {
+            left: 100%;
+        }
+
+        .nav-link:hover {
+            color: #290c38 !important;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-link:active {
+            transform: translateY(-1px);
+        }
+
+        /* Install App Button Styles */
+        #installAppBtn {
+            background: linear-gradient(135deg, #28a745, #20c997) !important;
+            border: none !important;
+            padding: 10px 20px !important;
+            border-radius: 25px !important;
+            color: white !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+            cursor: pointer !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        #installAppBtn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        #installAppBtn:hover::before {
+            left: 100%;
+        }
+
+        #installAppBtn:hover {
+            transform: translateY(-3px) scale(1.05) !important;
+            box-shadow: 0 8px 30px rgba(40, 167, 69, 0.5) !important;
+        }
+
+        /* Navbar Toggler Styles */
+        .navbar-toggler {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-toggler:hover {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='m4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Responsive Design */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(41, 12, 56, 0.95);
+                backdrop-filter: blur(10px);
+                border-radius: 15px;
+                margin-top: 15px;
+                padding: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .nav-link {
+                margin: 5px 0;
+                text-align: center;
+            }
+
+            .welcome-text {
+                font-size: 2rem;
+            }
+
+            .welcome-logo {
+                width: 100px;
+                height: 100px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .welcome-text {
+                font-size: 1.5rem;
+            }
+
+            .welcome-subtitle {
+                font-size: 1rem;
+            }
+
+            .logo {
+                height: 40px;
+            }
+
+            .nav-link {
+                padding: 10px 15px !important;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            padding: 100px 20px 50px;
+            animation: contentFadeIn 1s ease-out 4s both;
+        }
+
+        @keyframes contentFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 60px 40px;
+            margin: 40px auto;
+            max-width: 800px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-title {
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.3rem;
+            line-height: 1.6;
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* إخفاء رسالة الترحيب عند عدم الحاجة إليها */
+        .welcome-overlay.hidden {
+            display: none !important;
+        }
+
+        /* تعديل الأنيميشن للناف بار عندما لا تظهر رسالة الترحيب */
+        .navbar-immediate {
+            animation: navbarSlideDown 0.5s ease-out both !important;
+        }
+
+        .content-immediate {
+            animation: contentFadeIn 0.5s ease-out 0.5s both !important;
+        }
+    </style>
+<meta name="google-site-verification" content="ztFnX7urGDzJUI6hwAMqlx56efLLyFQmrhg8KXlaP5M" />  
+</head>
+<body>
+    <!-- Welcome Animation Overlay -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-content">
+            <div class="welcome-text"> Allen Travel </div>
+        </div>
+    </div>
+
+    <!-- Professional Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar" id="mainNavbar">
+        <div class="container">
+            <!-- Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="/allen/media/items/logo.png" alt="Allen Travel Logo" class="logo me-2">
+            </a>
+            
+            <!-- Toggler button for small screens -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}">
+                            <i class="fas fa-home me-2"></i>الرئيسية
+                        </a>
+                    </li>
+                    
+                    {% load passenger_tags %}
+                    {% get_passenger as passenger %}
+                    {% if passenger %}
+                        {% if user_type == "student" %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'subscriptions' passenger.id %}">
+                                    <i class="fas fa-credit-card me-2"></i>الاشتراكات
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user_type == "regular" %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'car_list' %}">
+                                    <i class="fas fa-car me-2"></i>حجز سياره كامله
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-credit-card me-2"></i>الاشتراكات
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="nav-item">
+                        <!-- Install App Button -->
+                        <button id="installAppBtn" style="display: none;">
+                            <i class="fas fa-download me-2"></i>تحميل التطبيق
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'user_bookings' %}">
+                            <i class="fas fa-calendar-check me-2"></i>حجوزاتي
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'user_data' %}">
+                            <i class="fas fa-user-circle me-2"></i>معلومات الحساب
+                        </a>
+                    </li>
+                    
+                    {% if not user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript for Session-based Welcome Message and PWA Installation -->
+    <script>
+        // التحقق من رسالة الترحيب
+        document.addEventListener('DOMContentLoaded', function() {
+            const welcomeOverlay = document.getElementById('welcomeOverlay');
+            const mainNavbar = document.getElementById('mainNavbar');
+            const mainContent = document.getElementById('mainContent');
+            
+            // التحقق من sessionStorage لمعرفة ما إذا كانت رسالة الترحيب قد عُرضت بالفعل
+            const welcomeShown = sessionStorage.getItem('welcomeMessageShown');
+            
+            if (welcomeShown === 'true') {
+                // إخفاء رسالة الترحيب وإظهار المحتوى مباشرة
+                welcomeOverlay.classList.add('hidden');
+                mainNavbar.classList.add('navbar-immediate');
+                mainContent.classList.add('content-immediate');
+            } else {
+                // عرض رسالة الترحيب وحفظ الحالة في sessionStorage
+                sessionStorage.setItem('welcomeMessageShown', 'true');
+                
+                // إخفاء رسالة الترحيب بعد انتهاء الأنيميشن
+                setTimeout(function() {
+                    welcomeOverlay.style.display = 'none';
+                }, 5000); // 5 ثوان (2 ثانية انتظار + 3 ثوان fadeOut)
+            }
+        });
+
+        // PWA Installation functionality
+        let deferredPrompt;
+
+        window.addEventListener("beforeinstallprompt", (event) => {
+            // منع العرض التلقائي للنافذة
+            event.preventDefault();
+            deferredPrompt = event;
+
+            // إظهار زر التثبيت
+            document.getElementById("installAppBtn").style.display = "block";
+
+            document.getElementById("installAppBtn").addEventListener("click", () => {
+                // إظهار نافذة تثبيت التطبيق
+                deferredPrompt.prompt();
+
+                // التحقق من اختيار المستخدم
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === "accepted") {
+                        console.log("تم تثبيت التطبيق!");
+                    } else {
+                        console.log("تم إلغاء تثبيت التطبيق");
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        });
+
+        // إخفاء زر التثبيت عند تثبيت التطبيق
+        window.addEventListener("appinstalled", (event) => {
+            console.log("تم تثبيت التطبيق بنجاح!");
+            document.getElementById("installAppBtn").style.display = "none";
+        });
+
+        // التحقق من حالة التثبيت عند تحميل الصفحة
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            document.getElementById("installAppBtn").style.display = "none";
+        }
+    </script>
+</body>
+</html>
+

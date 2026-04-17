@@ -1,0 +1,25 @@
+<h2>اختيار مقعد للرحلة: {{ trip.trip_name }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+    {% for seat in seats %}
+      <label style="position: relative; cursor: pointer;">
+        <input type="radio" name="selected_seat" value="{{ seat.id }}" style="display: none;"
+               {% if seat.id in reserved_seats %}disabled{% endif %}>
+
+        <div style="
+          width: 50px; height: 50px;
+          border: 2px solid {% if seat.id in reserved_seats %}#ff0000{% else %}#4CAF50{% endif %};
+          background-color: {% if seat.id in reserved_seats %}#f8d7da{% else %}#d4edda{% endif %};
+          border-radius: 5px;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <i class="fas fa-chair"></i>
+          <span>{{ seat.seat_number }}</span>
+        </div>
+      </label>
+    {% endfor %}
+  </div>
+
+  <button type="submit" class="btn btn-primary mt-3">💾 حفظ المقعد</button>
+</form>
