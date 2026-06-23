@@ -67,6 +67,133 @@ def generate_unique_discount_code(length=10):
         if not DiscountCode.objects.filter(code=code).exists():
             return code
 
+
+def _admin_notification_value(obj, field_names):
+    for field_name in field_names:
+        value = getattr(obj, field_name, None)
+        if value not in (None, ""):
+            return value
+    return None
+
+
+def _admin_notification_name(value):
+    if not value:
+        return ""
+
+    get_full_name = getattr(value, "get_full_name", None)
+    if callable(get_full_name):
+        full_name = get_full_name()
+        if full_name:
+            return full_name
+
+    for field_name in ("name", "student_name", "customer_name", "full_name", "username", "phone_number", "phone"):
+        field_value = getattr(value, field_name, None)
+        if field_value:
+            return str(field_value)
+
+    return str(value)
+
+
+def _admin_notification_event(obj, title, kind):
+    timestamp = _admin_notification_value(
+        obj,
+        ("created_at", "booking_date", "created_on", "created", "timestamp", "updated_at"),
+    )
+    passenger_obj = _admin_notification_value(obj, ("passenger", "user"))
+    person_name = _admin_notification_value(
+        obj,
+        ("student_name", "customer_name", "full_name", "name"),
+    ) or _admin_notification_name(passenger_obj)
+    phone = _admin_notification_value(obj, ("phone_number", "phone", "mobile_number"))
+    trip_obj = _admin_notification_value(obj, ("Trip", "trip", "weekly_schedule", "schedule", "category", "car", "subscription"))
+    trip_name = _admin_notification_value(
+        trip_obj,
+        ("trip_name", "name", "title"),
+    ) if trip_obj else ""
+    location = _admin_notification_value(
+        obj,
+        (
+            "selected_route",
+            "pickup_location",
+            "going_pickup_location",
+            "return_pickup_location",
+            "from_location",
+            "to_location",
+            "dropoff_location",
+        ),
+    )
+    status = _admin_notification_value(obj, ("status", "trip_type", "payment_method"))
+
+    parts = [person_name, phone, trip_name, location, status]
+    body = " | ".join(str(part) for part in parts if part not in (None, ""))
+    if not body:
+        body = str(obj)
+
+    try:
+        admin_url = reverse(
+            f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change",
+            args=[obj.pk],
+        )
+    except Exception:
+        admin_url = "/allen/admin/"
+
+    if hasattr(timestamp, "isoformat"):
+        timestamp_value = timestamp.isoformat()
+    elif timestamp:
+        timestamp_value = str(timestamp)
+    else:
+        timestamp_value = ""
+
+    return {
+        "id": f"{obj._meta.label_lower}:{obj.pk}",
+        "title": title,
+        "body": body[:220],
+        "kind": kind,
+        "url": admin_url,
+        "created_at": timestamp_value,
+        "_sort_key": f"{timestamp_value}-{obj.pk:012d}",
+    }
+
+
+@login_required
+def admin_booking_notifications(request):
+    if not request.user.is_staff:
+        return JsonResponse({"detail": "forbidden"}, status=403)
+
+    from django.apps import apps
+
+    model_configs = (
+        ("Booking", "حجز رحلة جديد", "trip_booking"),
+        ("FormReservation", "حجز فورم جديد", "form_reservation"),
+        ("WeeklyBooking", "حجز أسبوعي جديد", "weekly_booking"),
+        ("CarBooking", "حجز سيارة جديد", "car_booking"),
+        ("SubscriptionBooking", "حجز اشتراك جديد", "subscription_booking"),
+        ("FormBooking", "حجز فورم سريع جديد", "form_booking"),
+    )
+    events = []
+
+    for model_name, title, kind in model_configs:
+        try:
+            model = apps.get_model("Anaconda_bus_APP", model_name)
+        except LookupError:
+            continue
+
+        for obj in model.objects.order_by("-pk")[:8]:
+            events.append(_admin_notification_event(obj, title, kind))
+
+    events.sort(key=lambda item: item["_sort_key"], reverse=True)
+    events = events[:30]
+    for event in events:
+        event.pop("_sort_key", None)
+
+    return JsonResponse(
+        {
+            "events": events,
+            "server_time": timezone.now().isoformat(),
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )
+
 def new_login_signup_view(request):
     login_form = CustomUserLoginForm(data=request.POST or None)
     signup_form = CustomUserSignupForm(data=request.POST or None)
@@ -2001,7 +2128,7 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return render(request, "Anaconda_bus_APP/login.html", {"message": "Logged out."})
+    return redirect("login")
 def signup(request):
     if request.method == "POST":
         form = SignupForm(request.POST)
@@ -3883,12 +4010,23 @@ from django.utils.timezone import now
 def car_list(request):
     unique_models = Car.objects.values_list('model', flat=True).distinct()
     category = request.GET.get('category', '')
+    search_query = request.GET.get('q', '').strip()
+
     cars = Car.objects.filter(model=category) if category else Car.objects.all()
+
+    # البحث عن السيارات بالاسم أو الماركة أو الموديل
+    if search_query:
+        cars = cars.filter(
+            Q(name__icontains=search_query) |
+            Q(brand__icontains=search_query) |
+            Q(model__icontains=search_query)
+        )
 
     context = {
         'unique_models': unique_models,
         'cars': cars,
         'category': category,
+        'search_query': search_query,
         'cars_count': cars.count(),
         'models_count': unique_models.count() if hasattr(unique_models, 'count') else len(unique_models),
     }

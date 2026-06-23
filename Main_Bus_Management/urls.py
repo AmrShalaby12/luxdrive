@@ -12,6 +12,7 @@ urlpatterns = [
     # المسارات الحالية في مشروعك
     path('grappelli/', include('grappelli.urls')),
 
+    path('admin/', admin.site.urls),
     path('allen/admin/', admin.site.urls),
     path('', include('Anaconda_bus_APP.urls')),
     

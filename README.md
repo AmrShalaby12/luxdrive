@@ -1,4 +1,4 @@
-# Allen Bus Management
+# LuxDrive
 
 الملف ده معمول مخصوص عشان أي طالب أو ديفلوبر يمسك المشروع بسرعة ويفهمه من غير ما يتوه في الملفات. الشرح هنا بالعامية المصرية، بس محافظ على أسماء الملفات والكلاسات والراوتات زي ما هي في الكود.
 
@@ -171,7 +171,6 @@ python -m venv .venv
 ```powershell
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-pip install Kashier==1.0.6
 ```
 
 شغل PostgreSQL محلي وخلي الإعدادات تشير على localhost:

@@ -422,6 +422,77 @@
         color: var(--cars-muted);
     }
 
+    .cars-search {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(147, 20, 143, 0.12);
+        box-shadow: 0 8px 20px rgba(31, 23, 35, 0.05);
+    }
+
+    .cars-search-icon {
+        color: var(--cars-primary);
+        font-size: 0.95rem;
+        margin-inline-start: 0.35rem;
+    }
+
+    .cars-search-input {
+        flex: 1 1 220px;
+        min-width: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        color: var(--cars-ink);
+        font-size: 0.98rem;
+        padding: 0.45rem 0.2rem;
+    }
+
+    .cars-search-input::placeholder {
+        color: var(--cars-muted);
+    }
+
+    .cars-search-btn {
+        border: none;
+        cursor: pointer;
+        padding: 0.6rem 1.3rem;
+        border-radius: 14px;
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(135deg, var(--cars-primary) 0%, var(--cars-primary-dark) 100%);
+        box-shadow: 0 10px 22px rgba(147, 20, 143, 0.22);
+        transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .cars-search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(147, 20, 143, 0.28);
+    }
+
+    .cars-search-clear {
+        text-decoration: none;
+        font-weight: 700;
+        color: var(--cars-muted);
+        padding: 0.55rem 0.9rem;
+        border-radius: 14px;
+        border: 1px solid rgba(147, 20, 143, 0.14);
+    }
+
+    .cars-search-clear:hover {
+        color: var(--cars-primary);
+    }
+
+    .cars-search-summary {
+        margin: 0 0 1rem;
+        color: var(--cars-muted);
+        font-size: 0.95rem;
+    }
+
     @media (min-width: 768px) {
         .cars-shell {
             padding: 1.4rem;
@@ -523,6 +594,27 @@
                     {% endfor %}
                 </div>
             </div>
+
+            <form method="get" action="{% url 'car_list' %}" class="cars-search">
+                {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+                <i class="fas fa-search cars-search-icon"></i>
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search_query }}"
+                    class="cars-search-input"
+                    placeholder="ابحث باسم السيارة أو الماركة أو الموديل...">
+                <button type="submit" class="cars-search-btn">بحث</button>
+                {% if search_query %}
+                <a href="{% if category %}{% url 'car_list' %}?category={{ category }}{% else %}{% url 'car_list' %}{% endif %}" class="cars-search-clear">إلغاء</a>
+                {% endif %}
+            </form>
+
+            {% if search_query %}
+            <p class="cars-search-summary">
+                نتائج البحث عن <strong>"{{ search_query }}"</strong> — {{ cars_count }} سيارة.
+            </p>
+            {% endif %}
 
             {% if cars %}
             <div class="cars-grid">

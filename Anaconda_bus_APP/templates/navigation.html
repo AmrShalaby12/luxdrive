@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Navbar - Allen Travel</title>
+    <title>LuxDrive</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -393,7 +393,7 @@
     <!-- Welcome Animation Overlay -->
     <div class="welcome-overlay" id="welcomeOverlay">
         <div class="welcome-content">
-            <div class="welcome-text"> Allen Travel </div>
+            <div class="welcome-text"> LuxDrive </div>
         </div>
     </div>
 
@@ -402,7 +402,7 @@
         <div class="container">
             <!-- Logo -->
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="/allen/media/items/logo.png" alt="Allen Travel Logo" class="logo me-2">
+                <img src="/allen/media/items/logo.png" alt="LuxDrive Logo" class="logo me-2">
             </a>
             
             <!-- Toggler button for small screens -->
@@ -463,7 +463,13 @@
                         </a>
                     </li>
                     
-                    {% if not user.is_authenticated %}
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج
+                            </a>
+                        </li>
+                    {% else %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'login' %}">
                                 <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول

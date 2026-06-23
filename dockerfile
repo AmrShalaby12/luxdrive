@@ -20,10 +20,9 @@ RUN apt-get update && \
 # نسخ ملف المتطلبات إلى الحاوية
 COPY requirements.txt .
 
-# تثبيت المتطلبات وتثبيت مكتبة Kashier
+# تثبيت المتطلبات
 RUN python3.11 -m pip install --no-cache-dir --upgrade pip && \
-    python3.11 -m pip install --no-cache-dir -r requirements.txt && \
-    python3.11 -m pip install --no-cache-dir Kashier==1.0.6
+    python3.11 -m pip install --no-cache-dir -r requirements.txt
 
 # نسخ باقي ملفات المشروع إلى الحاوية
 COPY . .
